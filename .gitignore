@@ -1,0 +1,12 @@
+# Godot import cache and generated resource database
+.godot/
+*.import.bak
+
+# Render output, screenshots, contact sheets, profiling artefacts
+build/
+
+# macOS
+.DS_Store
+
+# Local editor state
+*.tmp

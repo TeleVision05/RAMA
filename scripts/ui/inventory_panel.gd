@@ -1,0 +1,608 @@
+class_name InventoryPanel
+extends Control
+## Rama's satchel. A small grid, not an RPG spreadsheet.
+##
+## Icons are synthesised: each one is a handful of signed-distance shapes evaluated
+## into a 64x64 ImageTexture the first time it is asked for, then cached for the rest
+## of the process. That keeps the project license-clean and means a content system can
+## invent an item id at runtime and still get something legible on screen.
+
+const COLS := 5
+const SLOT := 92.0
+const SLOT_GAP := 10.0
+const ICON_PX := 64
+
+## id -> {name, desc, icon, tint}. Anything not listed still shows up, with a
+## prettified name and the lotus fallback icon.
+const CATALOGUE := {
+	"arrow":
+	{"name": "Arrow", "desc": "Cane shaft, iron head. Steady in a crosswind.", "icon": "arrow", "tint": "brass"},
+	"arrows": {"name": "Arrows", "desc": "A bundle bound with waxed thread.", "icon": "arrow", "tint": "brass"},
+	"healing_herb":
+	{
+		"name": "Healing Herb",
+		"desc": "Bitter leaf from the riverbank. Closes small wounds.",
+		"icon": "leaf",
+		"tint": "jade"
+	},
+	"herb": {"name": "Herb", "desc": "Gathered at the water's edge, still damp.", "icon": "leaf", "tint": "jade"},
+	"lotus":
+	{"name": "Lotus", "desc": "Offered at the shrine. It opens at first light.", "icon": "flower", "tint": "parchment"},
+	"blue_lotus":
+	{
+		"name": "Blue Lotus",
+		"desc": "Rare in still water. The priests ask for it by name.",
+		"icon": "flower",
+		"tint": "indigo"
+	},
+	"mango":
+	{"name": "Mango", "desc": "Sun-warm and heavy. Enough for the walk back.", "icon": "fruit", "tint": "saffron"},
+	"rice": {"name": "Rice", "desc": "A measure from the village store.", "icon": "bowl", "tint": "parchment"},
+	"ghee":
+	{
+		"name": "Ghee",
+		"desc": "Clarified butter in a stoppered pot. Lamp fuel, and food.",
+		"icon": "vial",
+		"tint": "saffron"
+	},
+	"honey": {"name": "Wild Honey", "desc": "Cut from a bough above the ford.", "icon": "vial", "tint": "brass"},
+	"water_skin":
+	{"name": "Water Skin", "desc": "Filled at the ford. Cool for about a mile.", "icon": "vial", "tint": "jade"},
+	"brass_bell":
+	{"name": "Brass Bell", "desc": "Its note carries further than a shout.", "icon": "bell", "tint": "brass"},
+	"oil_lamp":
+	{"name": "Oil Lamp", "desc": "A clay diya. Enough wick for one long night.", "icon": "lamp", "tint": "saffron"},
+	"amulet":
+	{"name": "Amulet", "desc": "Kaustubha glass on a knotted cord. Warm to hold.", "icon": "gem", "tint": "indigo"},
+	"ruby":
+	{"name": "Ruby", "desc": "Cut in the old style, from the ruins below the ridge.", "icon": "gem", "tint": "crimson"},
+	"gold_coin":
+	{"name": "Gold Coin", "desc": "Punch-marked, older than the village.", "icon": "coin", "tint": "brass"},
+	"coin": {"name": "Coin", "desc": "Small change from the market road.", "icon": "coin", "tint": "brass"},
+	"rope":
+	{
+		"name": "Coir Rope",
+		"desc": "Coconut fibre, three fathoms. It will hold a man.",
+		"icon": "ring",
+		"tint": "parchment"
+	},
+	"sacred_thread":
+	{
+		"name": "Sacred Thread",
+		"desc": "Three strands, worn over the left shoulder.",
+		"icon": "ring",
+		"tint": "parchment"
+	},
+	"palm_leaf":
+	{
+		"name": "Palm Leaf",
+		"desc": "Scratched with a stylus. Half the words have worn away.",
+		"icon": "scroll",
+		"tint": "parchment"
+	},
+	"scroll":
+	{
+		"name": "Scroll",
+		"desc": "Rolled and tied. Someone meant this to be found.",
+		"icon": "scroll",
+		"tint": "parchment"
+	},
+	"key":
+	{
+		"name": "Iron Key",
+		"desc": "Pitted with rust. Something in the ruins still locks.",
+		"icon": "key",
+		"tint": "brass"
+	},
+	"rakshasa_fang":
+	{
+		"name": "Rakshasa Fang",
+		"desc": "Proof, and a weight you would rather not carry.",
+		"icon": "fang",
+		"tint": "parchment"
+	},
+	"bow_string":
+	{"name": "Bowstring", "desc": "Twisted sinew, waxed against the damp.", "icon": "ring", "tint": "brass"},
+	"torch": {"name": "Torch", "desc": "Resin-soaked cloth on a hardwood shaft.", "icon": "lamp", "tint": "crimson"},
+	"flint": {"name": "Flint", "desc": "A struck edge and a scrap of char cloth.", "icon": "gem", "tint": "parchment"},
+	"sandalwood":
+	{
+		"name": "Sandalwood",
+		"desc": "Cut from the hill grove. It scents everything it touches.",
+		"icon": "blade",
+		"tint": "brass"
+	},
+}
+
+const TINTS := {
+	"brass": Color(0.784, 0.635, 0.290),
+	"saffron": Color(0.909, 0.568, 0.184),
+	"jade": Color(0.435, 0.560, 0.352),
+	"crimson": Color(0.647, 0.203, 0.152),
+	"indigo": Color(0.302, 0.372, 0.612),
+	"parchment": Color(0.800, 0.752, 0.658),
+}
+
+static var _icon_cache: Dictionary = {}
+
+var _entries: Array = []  # [{id, count, name, desc, icon, tint}]
+var _selected: int = 0
+var _hover: int = -1
+var _panel: StyleBoxTexture
+var _slot_style: StyleBoxFlat
+var _slot_sel: StyleBoxFlat
+var _t: float = 0.0
+
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_STOP
+	# Offsets must be reset too: setting anchors alone on a node that is already
+	# in the tree preserves the current (zero) rect and the panel never grows.
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	theme = UITheme.get_theme()
+	_panel = UITheme.panel_style(Color(0.066, 0.052, 0.043, 0.95), 26)
+	_slot_style = UITheme.flat_style(
+		Color(0.043, 0.035, 0.031, 0.72),
+		3,
+		1.0,
+		Color(UITheme.BRASS_DIM.r, UITheme.BRASS_DIM.g, UITheme.BRASS_DIM.b, 0.42),
+		0,
+		0
+	)
+	_slot_sel = UITheme.flat_style(
+		Color(0.192, 0.133, 0.062, 0.86),
+		3,
+		1.0,
+		Color(UITheme.SAFFRON.r, UITheme.SAFFRON.g, UITheme.SAFFRON.b, 0.95),
+		0,
+		0
+	)
+	set_process(true)
+	refresh()
+
+
+func _process(delta: float) -> void:
+	_t += delta
+	if visible:
+		queue_redraw()
+
+
+## Rebuild from GameState. Arrows are shown first because they are the resource the
+## player actually watches.
+func refresh() -> void:
+	_entries.clear()
+	if GameState.arrows > 0:
+		_entries.append(_entry("arrow", GameState.arrows))
+	var ids: Array = GameState.inventory.keys()
+	ids.sort()
+	for id in ids:
+		var c: int = int(GameState.inventory[id])
+		if c <= 0:
+			continue
+		_entries.append(_entry(String(id), c))
+	_selected = clampi(_selected, 0, maxi(_entries.size() - 1, 0))
+	queue_redraw()
+
+
+func entry_count() -> int:
+	return _entries.size()
+
+
+func selected_id() -> String:
+	if _selected < 0 or _selected >= _entries.size():
+		return ""
+	return _entries[_selected].id
+
+
+static func _entry(id: String, count: int) -> Dictionary:
+	var meta: Dictionary = CATALOGUE.get(id, {})
+	return {
+		"id": id,
+		"count": count,
+		"name": String(meta.get("name", UITheme.prettify(id))),
+		"desc": String(meta.get("desc", "Something picked up along the road.")),
+		"icon": String(meta.get("icon", "lotus")),
+		"tint": String(meta.get("tint", "parchment")),
+	}
+
+
+## Public so notifications and the journal can show the same icon for an item.
+static func icon_for(id: String) -> Texture2D:
+	var meta: Dictionary = CATALOGUE.get(id, {})
+	var kind: String = String(meta.get("icon", "lotus"))
+	var tint: String = String(meta.get("tint", "parchment"))
+	return icon_texture(kind, tint)
+
+
+static func icon_texture(kind: String, tint_name: String) -> Texture2D:
+	var key := kind + "|" + tint_name
+	if _icon_cache.has(key):
+		return _icon_cache[key]
+	var tint: Color = TINTS.get(tint_name, TINTS["parchment"])
+	var img := Image.create(ICON_PX, ICON_PX, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var n: float = float(ICON_PX - 1)
+	for y in range(ICON_PX):
+		for x in range(ICON_PX):
+			var u: float = (float(x) / n) * 2.0 - 1.0
+			var v: float = (float(y) / n) * 2.0 - 1.0
+			var c := _shade(kind, Vector2(u, v), tint)
+			if c.a > 0.002:
+				img.set_pixel(x, y, c)
+	var t := ImageTexture.create_from_image(img)
+	_icon_cache[key] = t
+	return t
+
+
+# --- signed distance helpers ----------------------------------------------
+static func _sd_circle(p: Vector2, r: float) -> float:
+	return p.length() - r
+
+
+static func _sd_box(p: Vector2, b: Vector2, r: float = 0.0) -> float:
+	var d := Vector2(absf(p.x), absf(p.y)) - b + Vector2(r, r)
+	return Vector2(maxf(d.x, 0.0), maxf(d.y, 0.0)).length() + minf(maxf(d.x, d.y), 0.0) - r
+
+
+static func _sd_seg(p: Vector2, a: Vector2, b: Vector2, w: float) -> float:
+	var pa := p - a
+	var ba := b - a
+	var h: float = clampf(pa.dot(ba) / maxf(ba.dot(ba), 0.00001), 0.0, 1.0)
+	return (pa - ba * h).length() - w
+
+
+static func _sd_tri(p: Vector2, a: Vector2, b: Vector2, c: Vector2) -> float:
+	# Distance to the triangle's boundary, negative inside. It has to be the distance
+	# to the three *segments*, not to the three lines: extending the lines lights up
+	# thin streaks right across the icon, which is how the arrow first came out as an
+	# X of hairlines.
+	var d: float = minf(minf(_sd_seg(p, a, b, 0.0), _sd_seg(p, b, c, 0.0)), _sd_seg(p, c, a, 0.0))
+	var e1 := _edge(p, a, b)
+	var e2 := _edge(p, b, c)
+	var e3 := _edge(p, c, a)
+	var inside: bool = (e1 <= 0.0 and e2 <= 0.0 and e3 <= 0.0) or (e1 >= 0.0 and e2 >= 0.0 and e3 >= 0.0)
+	return -d if inside else d
+
+
+static func _edge(p: Vector2, a: Vector2, b: Vector2) -> float:
+	var e := b - a
+	return (p.x - a.x) * e.y - (p.y - a.y) * e.x
+
+
+static func _rot(p: Vector2, a: float) -> Vector2:
+	var c := cos(a)
+	var s := sin(a)
+	return Vector2(p.x * c - p.y * s, p.x * s + p.y * c)
+
+
+static func _fill(d: float, col: Color, soft: float = 0.045) -> Color:
+	var a: float = 1.0 - smoothstep(0.0, soft, d)
+	return Color(col.r, col.g, col.b, col.a * clampf(a, 0.0, 1.0))
+
+
+static func _blend(dst: Color, src: Color) -> Color:
+	var a: float = src.a + dst.a * (1.0 - src.a)
+	if a <= 0.0001:
+		return Color(0, 0, 0, 0)
+	return Color(
+		(src.r * src.a + dst.r * dst.a * (1.0 - src.a)) / a,
+		(src.g * src.a + dst.g * dst.a * (1.0 - src.a)) / a,
+		(src.b * src.a + dst.b * dst.a * (1.0 - src.a)) / a,
+		a
+	)
+
+
+## Evaluate one icon at a normalised point. Layers are composited back to front.
+static func _shade(kind: String, p: Vector2, tint: Color) -> Color:
+	var out := Color(0, 0, 0, 0)
+	var dark := tint.darkened(0.55)
+	var light := tint.lightened(0.35)
+	var wood := Color(0.352, 0.243, 0.152)
+	var steel := Color(0.635, 0.647, 0.658)
+
+	match kind:
+		"arrow":
+			out = _blend(out, _fill(_sd_seg(p, Vector2(0, 0.78), Vector2(0, -0.44), 0.055), wood))
+			out = _blend(out, _fill(_sd_tri(p, Vector2(0, -0.86), Vector2(0.20, -0.40), Vector2(-0.20, -0.40)), steel))
+			out = _blend(out, _fill(_sd_tri(p, Vector2(0.05, 0.36), Vector2(0.34, 0.74), Vector2(0.05, 0.76)), tint))
+			out = _blend(
+				out,
+				_fill(_sd_tri(p, Vector2(-0.05, 0.36), Vector2(-0.34, 0.74), Vector2(-0.05, 0.76)), tint.darkened(0.15))
+			)
+		"leaf":
+			var q := _rot(p, -0.5)
+			var d: float = Vector2(q.x / 0.42, q.y / 0.82).length() - 1.0
+			out = _blend(out, _fill(d * 0.42, tint))
+			out = _blend(out, _fill(_sd_seg(q, Vector2(0, -0.78), Vector2(0, 0.78), 0.022), dark))
+			for i in range(4):
+				var yy: float = -0.45 + float(i) * 0.30
+				out = _blend(out, _fill(_sd_seg(q, Vector2(0, yy), Vector2(0.30, yy + 0.20), 0.014), dark))
+				out = _blend(out, _fill(_sd_seg(q, Vector2(0, yy), Vector2(-0.30, yy + 0.20), 0.014), dark))
+		"flower":
+			var ang: float = atan2(p.y, p.x)
+			var rad: float = p.length()
+			var petal: float = 0.56 + 0.30 * pow(absf(cos(ang * 4.0)), 1.4)
+			out = _blend(out, _fill((rad - petal) * 0.5, tint))
+			out = _blend(out, _fill((rad - petal * 0.52) * 0.5, tint.lightened(0.28)))
+			out = _blend(out, _fill(_sd_circle(p, 0.18), Color(0.909, 0.568, 0.184)))
+			out = _blend(out, _fill(_sd_circle(p, 0.07), Color(0.960, 0.850, 0.560)))
+		"vial":
+			out = _blend(
+				out, _fill(_sd_box(p + Vector2(0, -0.18), Vector2(0.34, 0.46), 0.24), Color(0.30, 0.27, 0.24, 0.92))
+			)
+			out = _blend(out, _fill(_sd_box(p + Vector2(0, -0.24), Vector2(0.26, 0.30), 0.18), tint))
+			out = _blend(out, _fill(_sd_box(p + Vector2(0, 0.52), Vector2(0.13, 0.22), 0.05), Color(0.30, 0.27, 0.24)))
+			out = _blend(out, _fill(_sd_box(p + Vector2(0, 0.74), Vector2(0.19, 0.09), 0.04), wood))
+		"gem":
+			var dd: float = absf(p.x) * 1.35 + absf(p.y) * 0.95 - 0.72
+			out = _blend(out, _fill(dd * 0.6, tint))
+			out = _blend(out, _fill(maxf(dd * 0.6, _edge(p, Vector2(-0.5, -0.1), Vector2(0.0, -0.62)) * 0.5), light))
+			out = _blend(out, _fill(_sd_seg(p, Vector2(-0.44, -0.06), Vector2(0.44, -0.06), 0.016), dark))
+		"coin":
+			out = _blend(out, _fill(_sd_circle(p, 0.80), tint))
+			out = _blend(out, _fill(absf(_sd_circle(p, 0.63)) - 0.030, dark))
+			var a2: float = atan2(p.y, p.x)
+			out = _blend(out, _fill(absf(p.length() - 0.34) - 0.05 + 0.04 * cos(a2 * 6.0), dark))
+			out = _blend(out, _fill(_sd_circle(p, 0.11), dark))
+		"scroll":
+			out = _blend(out, _fill(_sd_box(p, Vector2(0.50, 0.62), 0.03), tint))
+			out = _blend(out, _fill(_sd_box(p + Vector2(0, 0.66), Vector2(0.60, 0.13), 0.11), tint.darkened(0.22)))
+			out = _blend(out, _fill(_sd_box(p + Vector2(0, -0.66), Vector2(0.60, 0.13), 0.11), tint.darkened(0.22)))
+			for i in range(4):
+				var ly: float = -0.34 + float(i) * 0.22
+				var lw: float = 0.36 if i % 2 == 0 else 0.28
+				out = _blend(out, _fill(_sd_seg(p, Vector2(-lw, ly), Vector2(lw, ly), 0.022), Color(0.25, 0.19, 0.14)))
+		"bell":
+			out = _blend(out, _fill(maxf(_sd_circle(p + Vector2(0, -0.10), 0.62), p.y - 0.42) * 0.9, tint))
+			out = _blend(out, _fill(_sd_box(p + Vector2(0, -0.50), Vector2(0.66, 0.11), 0.06), tint.darkened(0.20)))
+			out = _blend(out, _fill(_sd_circle(p + Vector2(0, -0.66), 0.11), dark))
+			out = _blend(out, _fill(_sd_seg(p, Vector2(0, -0.66), Vector2(0, -0.86), 0.045), tint.darkened(0.30)))
+		"lamp":
+			out = _blend(
+				out,
+				_fill(maxf(_sd_circle(p + Vector2(0, -0.30), 0.58), -(p.y - 0.10)) * 0.9, Color(0.427, 0.278, 0.196))
+			)
+			out = _blend(
+				out, _fill(_sd_box(p + Vector2(0, -0.12), Vector2(0.62, 0.07), 0.05), Color(0.494, 0.333, 0.235))
+			)
+			var fq := Vector2(p.x / 0.24, (p.y + 0.44) / 0.40)
+			out = _blend(out, _fill((fq.length() - 1.0 + fq.y * 0.35) * 0.35, Color(0.980, 0.741, 0.317)))
+			out = _blend(
+				out, _fill((Vector2(p.x / 0.11, (p.y + 0.40) / 0.22).length() - 1.0) * 0.3, Color(1.0, 0.941, 0.760))
+			)
+		"key":
+			out = _blend(out, _fill(absf(_sd_circle(p + Vector2(0, 0.46), 0.28)) - 0.075, tint))
+			out = _blend(out, _fill(_sd_seg(p, Vector2(0, -0.18), Vector2(0, -0.86), 0.070), tint))
+			out = _blend(out, _fill(_sd_box(p + Vector2(-0.17, 0.62), Vector2(0.17, 0.065), 0.02), tint))
+			out = _blend(out, _fill(_sd_box(p + Vector2(-0.17, 0.44), Vector2(0.12, 0.060), 0.02), tint))
+		"fang":
+			out = _blend(
+				out,
+				_fill(
+					_sd_tri(p, Vector2(0, 0.88), Vector2(0.30, -0.72), Vector2(-0.24, -0.72)),
+					Color(0.870, 0.847, 0.784)
+				)
+			)
+			out = _blend(
+				out,
+				_fill(
+					maxf(_sd_tri(p, Vector2(0, 0.88), Vector2(0.30, -0.72), Vector2(-0.24, -0.72)), -(p.y + 0.44)),
+					Color(0.443, 0.372, 0.313)
+				)
+			)
+		"blade":
+			out = _blend(out, _fill(_sd_tri(p, Vector2(0, -0.90), Vector2(0.17, 0.26), Vector2(-0.17, 0.26)), steel))
+			out = _blend(out, _fill(_sd_box(p + Vector2(0, -0.30), Vector2(0.42, 0.055), 0.03), tint))
+			out = _blend(out, _fill(_sd_box(p + Vector2(0, -0.62), Vector2(0.085, 0.26), 0.05), wood))
+		"bowl":
+			out = _blend(
+				out,
+				_fill(maxf(_sd_circle(p + Vector2(0, -0.16), 0.66), -(p.y - 0.02)) * 0.9, Color(0.435, 0.313, 0.239))
+			)
+			out = _blend(
+				out, _fill(_sd_box(p + Vector2(0, -0.02), Vector2(0.70, 0.075), 0.05), Color(0.529, 0.396, 0.290))
+			)
+			out = _blend(out, _fill(maxf(_sd_circle(p + Vector2(0, -0.02), 0.56), p.y + 0.02) * 0.9, tint))
+		"fruit":
+			var fp := _rot(p, 0.35)
+			out = _blend(out, _fill((Vector2(fp.x / 0.62, fp.y / 0.74).length() - 1.0) * 0.5, tint))
+			out = _blend(
+				out,
+				_fill(
+					(Vector2((fp.x + 0.16) / 0.30, (fp.y + 0.16) / 0.34).length() - 1.0) * 0.5,
+					Color(tint.r, tint.g, tint.b, 0.45).lightened(0.4)
+				)
+			)
+			out = _blend(
+				out, _fill(_sd_seg(p, Vector2(0.10, -0.66), Vector2(0.24, -0.90), 0.030), Color(0.352, 0.313, 0.196))
+			)
+		"ring":
+			out = _blend(out, _fill(absf(_sd_circle(p, 0.62)) - 0.10, tint))
+			out = _blend(out, _fill(absf(_sd_circle(p, 0.62)) - 0.035, light))
+		_:
+			# The lotus rosette: the fallback for anything a content system invents.
+			var an: float = atan2(p.y, p.x)
+			var rr: float = p.length()
+			var pet: float = 0.50 + 0.32 * pow(absf(cos(an * 4.0 + 0.4)), 1.6)
+			out = _blend(out, _fill((rr - pet) * 0.5, tint.darkened(0.25)))
+			var pet2: float = 0.44 + 0.26 * pow(absf(cos(an * 4.0 - 0.39)), 1.6)
+			out = _blend(out, _fill((rr - pet2) * 0.5, tint))
+			out = _blend(out, _fill(absf(rr - 0.30) - 0.030, tint.darkened(0.45)))
+			out = _blend(out, _fill(_sd_circle(p, 0.15), Color(0.784, 0.635, 0.290)))
+			out = _blend(out, _fill(_sd_circle(p, 0.06), Color(0.960, 0.850, 0.560)))
+	return out
+
+
+# ==========================================================================
+# layout + drawing
+# ==========================================================================
+
+
+func _panel_rect() -> Rect2:
+	var w: float = COLS * SLOT + (COLS - 1) * SLOT_GAP + 64.0
+	var rows: int = maxi(2, int(ceil(float(maxi(_entries.size(), 1)) / float(COLS))))
+	rows = mini(rows, 4)
+	var h: float = 106.0 + rows * SLOT + (rows - 1) * SLOT_GAP + 152.0
+	return Rect2(Vector2((size.x - w) * 0.5, (size.y - h) * 0.5), Vector2(w, h))
+
+
+func _grid_origin(pr: Rect2) -> Vector2:
+	return pr.position + Vector2(32.0, 100.0)
+
+
+func _slot_rect(i: int, pr: Rect2) -> Rect2:
+	var o := _grid_origin(pr)
+	var cx: int = i % COLS
+	var cy: int = i / COLS
+	return Rect2(o + Vector2(cx * (SLOT + SLOT_GAP), cy * (SLOT + SLOT_GAP)), Vector2(SLOT, SLOT))
+
+
+func _gui_input(e: InputEvent) -> void:
+	var pr := _panel_rect()
+	if e is InputEventMouseMotion:
+		var mp: Vector2 = (e as InputEventMouseMotion).position
+		var was := _hover
+		_hover = -1
+		for i in range(_entries.size()):
+			if _slot_rect(i, pr).has_point(mp):
+				_hover = i
+				break
+		if _hover != was and _hover >= 0:
+			AudioDirector.play_ui("ui_hover")
+		return
+	if e is InputEventMouseButton:
+		var mb := e as InputEventMouseButton
+		if mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
+			for i in range(_entries.size()):
+				if _slot_rect(i, pr).has_point(mb.position):
+					select(i)
+					accept_event()
+					return
+	if e is InputEventKey and (e as InputEventKey).pressed:
+		var k := (e as InputEventKey).keycode
+		if k == KEY_RIGHT:
+			select(_selected + 1)
+			accept_event()
+		elif k == KEY_LEFT:
+			select(_selected - 1)
+			accept_event()
+		elif k == KEY_DOWN:
+			select(_selected + COLS)
+			accept_event()
+		elif k == KEY_UP:
+			select(_selected - COLS)
+			accept_event()
+
+
+func select(i: int) -> void:
+	if _entries.is_empty():
+		return
+	var n := clampi(i, 0, _entries.size() - 1)
+	if n != _selected:
+		_selected = n
+		AudioDirector.play_ui("ui_click")
+	queue_redraw()
+
+
+func _draw() -> void:
+	# Dim the world behind, so the panel reads as a held object, not an overlay.
+	draw_rect(Rect2(Vector2.ZERO, size), Color(0.020, 0.016, 0.012, 0.62), true)
+	var pr := _panel_rect()
+	draw_style_box(_panel, pr)
+
+	var f_eyebrow := UITheme.eyebrow_font()
+	var f_head := UITheme.label_font()
+	var f_body := UITheme.body_font()
+
+	UITheme.draw_text(self, f_eyebrow, pr.position + Vector2(32, 44), "SATCHEL", UITheme.FS_TINY, UITheme.BRASS)
+	var carried := 0
+	for e in _entries:
+		carried += int(e.count)
+	var right := "%d ITEMS" % carried
+	var rw := UITheme.text_width(f_eyebrow, right, UITheme.FS_TINY)
+	UITheme.draw_text(
+		self,
+		f_eyebrow,
+		Vector2(pr.end.x - 32 - rw, pr.position.y + 44),
+		right,
+		UITheme.FS_TINY,
+		UITheme.PARCHMENT_FAINT
+	)
+	UITheme.carved_rule(self, pr.position + Vector2(32, 62), pr.size.x - 64)
+
+	if _entries.is_empty():
+		UITheme.draw_text(
+			self,
+			f_body,
+			pr.position + Vector2(32, 132),
+			"Your satchel is empty.",
+			UITheme.FS_BODY,
+			UITheme.PARCHMENT_FAINT
+		)
+		return
+
+	# --- slots ------------------------------------------------------------
+	var shown: int = mini(_entries.size(), COLS * 4)
+	for i in range(shown):
+		var r := _slot_rect(i, pr)
+		var sel: bool = i == _selected
+		var sb: StyleBoxFlat = _slot_sel if sel else _slot_style
+		if not sel and i == _hover:
+			sb = _slot_style.duplicate() as StyleBoxFlat
+			sb.bg_color = Color(0.113, 0.086, 0.062, 0.80)
+			sb.border_color = Color(UITheme.BRASS.r, UITheme.BRASS.g, UITheme.BRASS.b, 0.70)
+		draw_style_box(sb, r)
+		var e: Dictionary = _entries[i]
+		var tex := icon_texture(e.icon, e.tint)
+		var pad := 15.0
+		draw_texture_rect(
+			tex,
+			Rect2(r.position + Vector2(pad, pad - 4.0), Vector2(r.size.x - pad * 2.0, r.size.y - pad * 2.0)),
+			false,
+			Color(1, 1, 1, 1.0 if sel else 0.88)
+		)
+		if int(e.count) > 1:
+			var cnt := str(e.count)
+			var cw := UITheme.text_width(f_body, cnt, UITheme.FS_SMALL)
+			UITheme.draw_text(
+				self,
+				f_body,
+				Vector2(r.end.x - 9.0 - cw, r.end.y - 9.0),
+				cnt,
+				UITheme.FS_SMALL,
+				UITheme.PARCHMENT if sel else UITheme.PARCHMENT_DIM
+			)
+
+	# --- detail -----------------------------------------------------------
+	var rows: int = int(ceil(float(shown) / float(COLS)))
+	var dy: float = _grid_origin(pr).y + rows * (SLOT + SLOT_GAP) + 16.0
+	UITheme.carved_rule(self, Vector2(pr.position.x + 32, dy), pr.size.x - 64)
+	var sel_e: Dictionary = _entries[_selected]
+	UITheme.draw_text(
+		self, f_head, Vector2(pr.position.x + 32, dy + 40.0), String(sel_e.name), UITheme.FS_HEAD, UITheme.PARCHMENT
+	)
+	if int(sel_e.count) > 1:
+		var cw2 := UITheme.text_width(f_head, String(sel_e.name), UITheme.FS_HEAD)
+		UITheme.draw_text(
+			self,
+			UITheme.font(1, 0.06),
+			Vector2(pr.position.x + 42 + cw2, dy + 40.0),
+			"x%d" % int(sel_e.count),
+			UITheme.FS_SMALL,
+			UITheme.BRASS
+		)
+	UITheme.draw_text(
+		self,
+		f_body,
+		Vector2(pr.position.x + 32, dy + 66.0),
+		String(sel_e.desc),
+		UITheme.FS_SMALL,
+		UITheme.PARCHMENT_DIM,
+		HORIZONTAL_ALIGNMENT_LEFT,
+		pr.size.x - 64
+	)
+	var hint := "ARROWS  SELECT      I  CLOSE"
+	var hw := UITheme.text_width(f_eyebrow, hint, UITheme.FS_TINY)
+	UITheme.draw_text(
+		self, f_eyebrow, Vector2(pr.end.x - 32 - hw, pr.end.y - 22), hint, UITheme.FS_TINY, UITheme.PARCHMENT_FAINT
+	)
