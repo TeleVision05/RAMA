@@ -41,12 +41,7 @@ func _init() -> void:
 		mi.position = Vector3(pair[1], 0, 0)
 		w.add_child(mi)
 		var a: AABB = pair[0].get_aabb()
-		print(
-			(
-				"%-5s aabb pos=%s size=%s  surfaces=%d"
-				% [pair[2], a.position, a.size, (pair[0] as ArrayMesh).get_surface_count()]
-			)
-		)
+		print("%-5s aabb pos=%s size=%s  surfaces=%d" % [pair[2], a.position, a.size, (pair[0] as ArrayMesh).get_surface_count()])
 	var cam := Camera3D.new()
 	cam.fov = 40.0
 	root.add_child(cam)

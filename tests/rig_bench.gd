@@ -9,16 +9,7 @@ func _ready() -> void:
 	for i in range(10):
 		var t0 := Time.get_ticks_usec()
 		var r := ProcRig.new()
-		r.configure(
-			{
-				"seed": i,
-				"skin": "skin_warm",
-				"cloth": "cloth_saffron",
-				"cloth2": "cloth_white",
-				"topknot": true,
-				"jewellery": true
-			}
-		)
+		r.configure({"seed": i, "skin": "skin_warm", "cloth": "cloth_saffron", "cloth2": "cloth_white", "topknot": true, "jewellery": true})
 		host.add_child(r)
 		r.build()
 		var ms := float(Time.get_ticks_usec() - t0) / 1000.0

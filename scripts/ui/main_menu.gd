@@ -340,15 +340,7 @@ class TitleArt:
 		var y := 318.0
 		var f := UITheme.display_font()
 		# The wordmark, with a warm shadow so it reads against a bright sky.
-		draw_string(
-			f,
-			Vector2(x + 3, y + 4),
-			"RAMA",
-			HORIZONTAL_ALIGNMENT_LEFT,
-			-1,
-			UITheme.FS_DISPLAY,
-			Color(0.05, 0.03, 0.02, 0.55)
-		)
+		draw_string(f, Vector2(x + 3, y + 4), "RAMA", HORIZONTAL_ALIGNMENT_LEFT, -1, UITheme.FS_DISPLAY, Color(0.05, 0.03, 0.02, 0.55))
 		draw_string(f, Vector2(x, y), "RAMA", HORIZONTAL_ALIGNMENT_LEFT, -1, UITheme.FS_DISPLAY, UITheme.PARCHMENT)
 
 		var wordmark_w: float = UITheme.text_width(f, "RAMA", UITheme.FS_DISPLAY)

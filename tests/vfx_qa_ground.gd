@@ -317,12 +317,7 @@ func _init() -> void:
 			note("bird_spot", dy2, "landing spot at (%.0f, %.0f)" % [sp.x, sp.z])
 			if dy2 < 0.0 or dy2 > 0.30:
 				bad.bird_spot += 1
-		print(
-			(
-				"  (forced landing: %d of %d birds down, %d landing targets checked)"
-				% [landed, bird_flock.n, counts.bird_spot]
-			)
-		)
+		print("  (forced landing: %d of %d birds down, %d landing targets checked)" % [landed, bird_flock.n, counts.bird_spot])
 
 	# =========================================================================
 	print("\n--- grounding audit (%d stops) ---" % tour.size())
@@ -361,10 +356,7 @@ func _init() -> void:
 	var splay_frac := float(splayed_deer) / maxf(float(deer_samples), 1.0)
 	ok(
 		splay_frac < 0.02,
-		(
-			"all four hooves have ground under them (%.1f%% splayed, worst spread %.2f m)"
-			% [splay_frac * 100.0, worst_splay]
-		)
+		"all four hooves have ground under them (%.1f%% splayed, worst spread %.2f m)" % [splay_frac * 100.0, worst_splay]
 	)
 
 	print("\n%s  (%d failures)" % ["ALL PASS" if fails == 0 else "FAILURES", fails])

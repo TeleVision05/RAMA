@@ -113,12 +113,7 @@ func _paired(a: Vector2, b: Vector2, label: String) -> void:
 			% ["", off_min, off_med, off_obj / maxf(float(off_n), 1.0), off_draw / maxf(float(off_n), 1.0), off_n]
 		)
 	)
-	print(
-		(
-			"  %-12s COST of WorldVFX + Wildlife: %+.2f ms best-case, %+.2f ms median"
-			% ["", on_min - off_min, on_med - off_med]
-		)
-	)
+	print("  %-12s COST of WorldVFX + Wildlife: %+.2f ms best-case, %+.2f ms median" % ["", on_min - off_min, on_med - off_med])
 
 
 func _run() -> void:

@@ -246,13 +246,7 @@ func _ground_and_air(delta: float, wish: Vector3) -> void:
 		_set_state(S.JUMP)
 		AudioDirector.play_3d("jump", global_position, -8.0)
 
-	if (
-		not _input_locked
-		and Input.is_action_just_pressed("dodge")
-		and _dodge_t < 0.0
-		and is_on_floor()
-		and GameState.stamina >= STAM_DODGE
-	):
+	if not _input_locked and Input.is_action_just_pressed("dodge") and _dodge_t < 0.0 and is_on_floor() and GameState.stamina >= STAM_DODGE:
 		_dodge_t = 0.0
 		_dodge_dir = wish if wish.length_squared() > 0.01 else -global_transform.basis.z
 		GameState.stamina -= STAM_DODGE
@@ -448,10 +442,7 @@ func aim_direction() -> Vector3:
 # --- stamina / damage -----------------------------------------------------
 func _update_stamina(delta: float) -> void:
 	var sprinting: bool = (
-		Input.is_action_pressed("sprint")
-		and not _input_locked
-		and Vector3(velocity.x, 0, velocity.z).length() > 3.0
-		and is_on_floor()
+		Input.is_action_pressed("sprint") and not _input_locked and Vector3(velocity.x, 0, velocity.z).length() > 3.0 and is_on_floor()
 	)
 	if sprinting:
 		GameState.stamina = maxf(0.0, GameState.stamina - STAM_SPRINT * delta)
@@ -568,9 +559,7 @@ func _drive_rig(delta: float) -> void:
 	)
 	# Carried across the body; brought upright as the draw begins.
 	if bow_node:
-		bow_node.rotation = bow_node.rotation.lerp(
-			Vector3(0.10, 0.0, lerpf(1.20, 0.06, rig.aim_weight)), 1.0 - pow(0.0005, delta)
-		)
+		bow_node.rotation = bow_node.rotation.lerp(Vector3(0.10, 0.0, lerpf(1.20, 0.06, rig.aim_weight)), 1.0 - pow(0.0005, delta))
 		var s: Node3D = bow_node.get_node_or_null("String")
 		if s:
 			s.position.z = 0.14 - draw_charge * 0.19
@@ -595,9 +584,7 @@ func _on_footstep(_side: String, pos: Vector3, sp: float) -> void:
 				_:
 					surf = "grass"
 	_last_footstep_surface = surf
-	AudioDirector.play_3d(
-		"footstep_%s_%d" % [surf, 1 + randi() % 4], pos, lerpf(-16.0, -6.0, clampf(sp / 8.0, 0.0, 1.0))
-	)
+	AudioDirector.play_3d("footstep_%s_%d" % [surf, 1 + randi() % 4], pos, lerpf(-16.0, -6.0, clampf(sp / 8.0, 0.0, 1.0)))
 	EventBus.footstep.emit(surf, pos, sp)
 
 

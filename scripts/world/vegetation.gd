@@ -33,16 +33,68 @@ const BUCKET := 32.0  # spatial index cell, metres
 ## deep forest; 8 m costs ~22k and one extra rebuild every 24 m.
 const NEAR_REBUILD_MOVE := 8.0
 
-const GRASS_CELL := 20.0
-const GRASS_RADIUS := 58.0
-const GRASS_PER_CELL := 560
-const FLOWERS_PER_CELL := 26
+## 14 m rather than the 20 m the card version used. The cell is the granularity of the
+## whole LOD scheme, and band 0 is "every cell within BAND_NEAR of the player" — which,
+## standing on a cell corner, is FOUR WHOLE CELLS however small BAND_NEAR is. At 20 m
+## that was 1600 m2 of full-detail tufts, 116k triangles, and the count swung by a
+## factor of four with nothing but where in a cell the player happened to stand. At 14 m
+## the same worst case is 784 m2, the swing is halved, and the number of cells in the
+## window is unchanged because the radius came down with it.
+const GRASS_CELL := 14.0
+## Nearest-point culling means a cell counts as "in the window" if any corner of it is
+## within this, so the cell count runs about pi*(R + 0.7*CELL)^2 / CELL^2 — 48 m cost
+## 54 cells and 136 draw nodes where 44 m costs 46 and 120.
+const GRASS_RADIUS := 44.0
+## Candidates per cell — i.e. the density of the NEAR band, 490 / 196 m2 = 2.5 tufts per
+## square metre. 1.6 was measured in-world and was not a meadow: at 0.8 m spacing the
+## tufts read as individual plants dotted on a green surface. Everything past the near
+## band is a PREFIX of this same list (see _apply_band), which is why the density can
+## fall with distance without rebuilding a single buffer.
+const GRASS_PER_CELL := 490
+## Flowers and ferns are cheap because they are rare: a couple of hundred instances in
+## the whole window against ten thousand tufts. They get the triangles the grass cannot
+## afford — a marigold clump is ~250 and a fern ~330.
+const FLOWERS_PER_CELL := 36
+const FERNS_PER_CELL := 38
+
+## Ground-cover LOD bands, measured to the NEAREST POINT of the cell rather than to its
+## centre. With the centre metric the cell the player is standing in is 0-14 m away
+## depending on where in it they stand, so whether the grass at their feet was full
+## detail depended on which corner they were near. Nearest-point makes the cell under
+## the player always band 0 and costs nothing.
+##
+## Band 0 is the full 58-triangle tuft, band 1 a 22-triangle one, band 2 a 6-triangle
+## one — still a folded, keeled, tapered ribbon, still not a card.
+const BAND_NEAR := 7.0
+const BAND_MID := 26.0
+
+## Fraction of each layer's instances drawn per band. Grass thins with distance because
+## it is the only layer with enough instances to matter; flowers and ferns simply stop
+## at band 2, by which point the shader has already faded them to nothing.
+## 0.42 / 0.20 was thinning the two bands that make up almost the whole frame in a
+## standing shot. With the LOD blade-area bug fixed in Ground3D._build_tuft, band 2 was
+## drawing 8.6% of the near band's blade area. Raised here because it is cheap in the
+## far tiers — a band-1 tuft is 16 triangles and a band-2 one 6, against 58 in band 0.
+##
+## Measured 2026-08-28 (tests/qa3d_cover.gd, tests/qa3d_ab.gd): together with the blade
+## widening this moved cover from 8.9% to 10.3% of a mid-field meadow frame for +39%
+## instances and +13% triangles, at no measurable frame cost (the paired in-process
+## delta stayed inside -0.26..+1.16 ms, the same band as before the change). It is a
+## real improvement and it is NOT sufficient on its own — see the note in _build_tuft.
+const LAYER_FRAC := [[1.0, 0.62, 0.38], [1.0, 1.0, 0.0], [1.0, 1.0, 0.0]]
+const LAYER_TAGS := ["grass", "flowers", "ferns"]
 ## Suitability is sampled on a coarse lattice over the cell and interpolated, rather
-## than queried per candidate. See _build_grass_cell for why. 7 nodes = a 3.33 m step.
+## than queried per candidate. See _work_cell for why. 7 nodes = a 2.33 m step.
 const GRASS_GRID := 7
-## Cells built per frame while the queue drains. Sprint is 8 m/s, a 20 m cell column
-## every 2.5 s, about 2.7 new cells a second — one a frame is four times the demand.
+## Cells FINISHED per frame while the queue drains. Sprint is 8 m/s, a 14 m cell column
+## every 1.75 s, about 5 new cells a second; the work inside a cell is itself spread over
+## frames by CELL_WORK, so this is a completion rate, not a spike.
 const GRASS_PER_FRAME := 1
+## Candidates placed per frame while a cell is being built. A whole cell is 724 of them
+## and measured 10 ms of GDScript on 2026-08-28; at 200 a frame it lands as four frames
+## of ~3 ms instead of one spike a third of the frame long. Sprint demands about 2.7
+## cells a second, so this is still more than three times the throughput needed.
+const CELL_WORK := 180
 
 ## Scatter tuning. Read these as "one candidate per N square metres, accepted with
 ## probability p" — the product is the density that actually lands.
@@ -63,12 +115,11 @@ var _buckets: Dictionary = {}  # bucket key -> Array[int]
 
 var _slots: Array = []  # (species*VARIANTS+variant)*LODS + lod
 var _grass_cells: Dictionary = {}
-var _grass_mesh: ArrayMesh
-var _flower_meshes: Array[ArrayMesh] = []
 
 var _near_at := Vector3(1e9, 0, 0)
 var _grass_at := Vector3(1e9, 0, 0)
 var _grass_pending: Array[Vector2i] = []
+var _wip: Dictionary = {}  # the cell currently being built, spread over several frames
 var _y_lo := 0.0
 var _y_hi := 120.0
 var _species_count := PackedInt32Array()
@@ -97,18 +148,14 @@ func setup(world_map: WorldMap, sky: SkySystem = null) -> void:
 	_bake_scatter()
 	_build_slots()
 	_build_far_static()
-	_grass_mesh = _make_grass_clump()
-	for i in range(3):
-		_flower_meshes.append(_make_flower_clump(i))
+	# 27 ground-cover meshes, built now rather than in whatever frame the player first
+	# steps off the road. They are shared by every instance in the world.
+	Ground3D.prebuild()
+	_setup_cover_materials()
 	_built = true
 	if sky != null:
 		set_wind(sky.wind_dir, sky.wind_strength, 1.0)
-	print(
-		(
-			"[veg] %d trees + %d clutter baked in %d ms"
-			% [_canopy.size(), _pos.size() - _canopy.size(), Time.get_ticks_msec() - t0]
-		)
-	)
+	print("[veg] %d trees + %d clutter baked in %d ms" % [_canopy.size(), _pos.size() - _canopy.size(), Time.get_ticks_msec() - t0])
 
 
 ## Move the streaming window. Cheap when the focus has barely moved; `immediate`
@@ -134,7 +181,7 @@ func update_focus(pos: Vector3, immediate: bool = false) -> void:
 ## Hand the current weather to every foliage shader at once.
 func set_wind(dir: Vector2, strength: float, speed: float = 1.0) -> void:
 	TreeBuilder.set_wind(dir, strength, speed)
-	for m in [_grass_material(), _flower_material()]:
+	for m in Ground3D.all_materials():
 		m.set_shader_parameter("wind_dir", dir.normalized())
 		m.set_shader_parameter("wind_strength", strength)
 		m.set_shader_parameter("wind_speed", speed)
@@ -395,12 +442,7 @@ func _add(p: Vector2, species: int, variant: int, scale: float, occ: Dictionary,
 
 	# Dryness: east and south-east of the valley bakes, the wet river margin does not.
 	var dry := clampf(
-		(
-			inverse_lerp(-90.0, 250.0, p.x) * 0.75
-			+ clampf(1.0 - p.distance_to(WorldMap.P_BADLANDS) / 190.0, 0.0, 1.0) * 0.5
-		),
-		0.0,
-		1.0
+		inverse_lerp(-90.0, 250.0, p.x) * 0.75 + clampf(1.0 - p.distance_to(WorldMap.P_BADLANDS) / 190.0, 0.0, 1.0) * 0.5, 0.0, 1.0
 	)
 	dry *= 1.0 - map.wet_at(p.x, p.y) * 0.85
 
@@ -470,8 +512,7 @@ func _build_slots() -> void:
 				# instances to derive it, which is exactly the per-frame cost the
 				# streaming design exists to avoid.
 				mi.custom_aabb = AABB(
-					Vector3(-WorldMap.HALF, _y_lo, -WorldMap.HALF),
-					Vector3(WorldMap.WORLD_SIZE, _y_hi - _y_lo, WorldMap.WORLD_SIZE)
+					Vector3(-WorldMap.HALF, _y_lo, -WorldMap.HALF), Vector3(WorldMap.WORLD_SIZE, _y_hi - _y_lo, WorldMap.WORLD_SIZE)
 				)
 				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 				mi.visible = false
@@ -524,9 +565,7 @@ func _fill(indices: Array, lod: int, focus: Vector3, radius: float) -> void:
 		mm.buffer = buf
 		mm.visible_instance_count = n
 		node.visible = true
-		node.custom_aabb = AABB(
-			Vector3(focus.x - radius, _y_lo, focus.z - radius), Vector3(radius * 2.0, _y_hi - _y_lo, radius * 2.0)
-		)
+		node.custom_aabb = AABB(Vector3(focus.x - radius, _y_lo, focus.z - radius), Vector3(radius * 2.0, _y_hi - _y_lo, radius * 2.0))
 
 
 func _rebuild_near(focus: Vector3) -> void:
@@ -557,9 +596,7 @@ func _rebuild_near(focus: Vector3) -> void:
 				var p: Vector3 = _pos[i]
 				var d := Vector2(focus.x - p.x, focus.z - p.z).length()
 				var sp: int = _kind[i] / VARIANTS
-				var limit: float = (
-					clutter_end if (sp == TreeBuilder.Species.BUSH or sp == TreeBuilder.Species.ROCK) else mid_end
-				)
+				var limit: float = clutter_end if (sp == TreeBuilder.Species.BUSH or sp == TreeBuilder.Species.ROCK) else mid_end
 				if d > limit:
 					continue
 				# The FULL/MID swap distance is jittered per tree so a stand hands over
@@ -590,111 +627,65 @@ func _build_far_static() -> void:
 	_fill(list, TreeBuilder.Lod.FAR, Vector3.ZERO, WorldMap.HALF + 8.0)
 
 
-# --- Grass -----------------------------------------------------------------
-static var _grass_mat: ShaderMaterial = null
-static var _flower_mat: ShaderMaterial = null
+# --- Ground cover ----------------------------------------------------------
+## Hide or show every ground-cover node. Exists so the cost of this layer can be
+## measured as a PAIRED DIFFERENCE inside one process (tests/ground3d_ab.gd) — two runs
+## on this project disagree by more than the thing being measured.
+func set_cover_visible(on: bool) -> void:
+	for cell in _grass_cells:
+		var rec: Dictionary = _grass_cells[cell]
+		var band: int = maxi(int(rec.band), 0)
+		for li in range(3):
+			var lay: Dictionary = rec.layers[li]
+			if int(lay.n) <= 0:
+				continue
+			var nodes: Array = lay.nodes
+			if not on:
+				for node in nodes:
+					if node != null:
+						node.visible = false
+				continue
+			nodes[0].visible = band == 0 or float(LAYER_FRAC[li][band]) > 0.0
+			for vi in [1, 2]:
+				if nodes[vi] != null:
+					nodes[vi].visible = band == 0 and int(lay.counts[vi]) > 0
 
 
-func _grass_material() -> ShaderMaterial:
-	if _grass_mat != null:
-		return _grass_mat
-	var m := ShaderMaterial.new()
-	m.shader = load("res://shaders/grass.gdshader")
-	m.set_shader_parameter("albedo_tex", Mats.tex("grass_blades"))
-	m.set_shader_parameter("fade_begin", GRASS_RADIUS - 16.0)
-	m.set_shader_parameter("fade_end", GRASS_RADIUS)
-	m.set_shader_parameter("ground_tint", Color(0.28, 0.24, 0.15))
-	# 0.72 read well in an open meadow and was far too strong under a canopy, where the
-	# tinted lower half of every blade went black. 0.58 still seats the grass in the dirt.
-	m.set_shader_parameter("ground_blend", 0.58)
-	_grass_mat = m
-	return m
+## Fade distances per layer. They have to finish INSIDE the band where the layer's
+## nodes switch off, or a flower does not fade out, it blinks out.
+func _setup_cover_materials() -> void:
+	for m in Ground3D.layer_materials(Ground3D.Layer.GRASS):
+		m.set_shader_parameter("fade_begin", GRASS_RADIUS - 13.0)
+		m.set_shader_parameter("fade_end", GRASS_RADIUS)
+	# Both of these must be GONE by BAND_MID, where their nodes switch off. A fade that
+	# finishes after the band edge is not a fade, it is a blink.
+	for m in Ground3D.layer_materials(Ground3D.Layer.FLOWER):
+		m.set_shader_parameter("fade_begin", 16.0)
+		m.set_shader_parameter("fade_end", 25.0)
+	for m in Ground3D.layer_materials(Ground3D.Layer.FERN):
+		m.set_shader_parameter("fade_begin", 14.0)
+		m.set_shader_parameter("fade_end", 24.0)
 
 
-func _flower_material() -> ShaderMaterial:
-	if _flower_mat != null:
-		return _flower_mat
-	var m := ShaderMaterial.new()
-	m.shader = load("res://shaders/grass.gdshader")
-	m.set_shader_parameter("albedo_tex", Mats.tex("flowers"))
-	m.set_shader_parameter("fade_begin", GRASS_RADIUS * 0.62)
-	m.set_shader_parameter("fade_end", GRASS_RADIUS * 0.82)
-	m.set_shader_parameter("ground_blend", 0.12)
-	m.set_shader_parameter("tint_a", Vector3(1.0, 1.0, 1.0))
-	m.set_shader_parameter("tint_b", Vector3(1.0, 0.95, 0.9))
-	m.set_shader_parameter("albedo_gain", 1.0)
-	m.set_shader_parameter("bend_scale", 0.16)
-	m.set_shader_parameter("translucency", 0.4)
-	m.set_shader_parameter("alpha_cut", 0.5)
-	_flower_mat = m
-	return m
-
-
-## Three crossed cards. The three sample different thirds of the blade texture so a
-## single clump already has variety in it before per-instance scale and tint.
-func _make_grass_clump() -> ArrayMesh:
-	var s := TreeBuilder.Surf.new()
-	# A clump is ankle-to-shin high. At 0.55 m base x 1.55 scale x 1.5 y-stretch the
-	# grass reached 1.28 m and read as ferns the player was wading through.
-	var w := 0.30
-	var h := 0.30
-	for k in range(3):
-		var a := PI * float(k) / 3.0
-		var right := Vector3(cos(a), 0.0, sin(a)) * w
-		var nrm := Vector3(-sin(a), 0.0, cos(a))
-		var u0 := float(k) / 3.0
-		var u1 := float(k + 1) / 3.0
-		var lo := Color(0.0, 0.4, 0.5, 0.0)
-		var hi := Color(1.0, 1.0, 0.5, 0.0)
-		var rn := right.normalized()
-		var i0 := s.vert(-right, nrm, rn, lo, Vector2(u0, 1.0))
-		var i1 := s.vert(right, nrm, rn, lo, Vector2(u1, 1.0))
-		var i2 := s.vert(right + Vector3(0, h, 0), nrm, rn, hi, Vector2(u1, 0.0))
-		var i3 := s.vert(-right + Vector3(0, h, 0), nrm, rn, hi, Vector2(u0, 0.0))
-		s.quad(i0, i1, i2, i3, nrm)
-	var m := ArrayMesh.new()
-	m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, s.to_arrays())
-	m.surface_set_material(0, _grass_material())
-	return m
-
-
-const FLOWER_RECTS := [
-	Rect2(0.06, 0.10, 0.27, 0.28),  # marigold
-	Rect2(0.60, 0.10, 0.30, 0.28),  # marigold
-	Rect2(0.30, 0.55, 0.28, 0.29),  # marigold
-	Rect2(0.04, 0.60, 0.28, 0.30),  # hibiscus
-	Rect2(0.60, 0.55, 0.30, 0.29),  # hibiscus
-	Rect2(0.40, 0.04, 0.20, 0.24),  # jasmine
-	Rect2(0.04, 0.46, 0.22, 0.20),  # jasmine
-	Rect2(0.46, 0.84, 0.26, 0.16),  # jasmine
-]
-
-
-func _make_flower_clump(variant: int) -> ArrayMesh:
-	var s := TreeBuilder.Surf.new()
-	var rng := RandomNumberGenerator.new()
-	rng.seed = SEED ^ (variant * 7717)
-	for k in range(4):
-		var rect: Rect2 = FLOWER_RECTS[(variant * 3 + k) % FLOWER_RECTS.size()]
-		var a := rng.randf() * TAU
-		var off := Vector3(cos(a), 0.0, sin(a)) * rng.randf_range(0.0, 0.22)
-		var sz := rng.randf_range(0.16, 0.26)
-		var yaw := rng.randf() * TAU
-		var right := Vector3(cos(yaw), 0.0, sin(yaw)) * sz
-		var nrm := Vector3(-sin(yaw), 0.0, cos(yaw))
-		var base := off + Vector3(0, rng.randf_range(0.02, 0.10), 0)
-		var lo := Color(0.15, 0.5, 0.5, 0.0)
-		var hi := Color(1.0, 1.0, 0.5, 0.0)
-		var rn := right.normalized()
-		var i0 := s.vert(base - right, nrm, rn, lo, Vector2(rect.position.x, rect.end.y))
-		var i1 := s.vert(base + right, nrm, rn, lo, Vector2(rect.end.x, rect.end.y))
-		var i2 := s.vert(base + right + Vector3(0, sz * 2.0, 0), nrm, rn, hi, Vector2(rect.end.x, rect.position.y))
-		var i3 := s.vert(base - right + Vector3(0, sz * 2.0, 0), nrm, rn, hi, Vector2(rect.position.x, rect.position.y))
-		s.quad(i0, i1, i2, i3, nrm)
-	var m := ArrayMesh.new()
-	m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, s.to_arrays())
-	m.surface_set_material(0, _flower_material())
-	return m
+## The ground frame at one lattice node: Y LEANING WITH THE GROUND, not standing plumb
+## on a hillside like a row of pins. Only partway toward the surface normal — a real
+## plant grows toward the light, so a blade on a 30-degree bank leans about half that.
+##
+## Built once per lattice node rather than per instance, and yaw-free, so a candidate
+## only has to post-multiply its own spin and scale onto it.
+##
+## `Basis.looking_at` is not used here on purpose: the substitute axis it needs is
+## itself degenerate when the two inputs line up, which happens on any cliff.
+func _cover_basis(nrm: Vector3) -> Basis:
+	var up := (Vector3.UP * 0.45 + nrm * 0.55).normalized()
+	var right := up.cross(Vector3.FORWARD)
+	if right.length_squared() < 1e-6:
+		right = up.cross(Vector3.RIGHT)
+	if right.length_squared() < 1e-6:
+		right = Vector3.RIGHT
+	right = right.normalized()
+	var fwd := right.cross(up).normalized()
+	return Basis(right, up, fwd)
 
 
 func _grass_weight(p: Vector2) -> float:
@@ -734,20 +725,29 @@ func _grass_weight(p: Vector2) -> float:
 ## The lattice includes both edges, so neighbouring cells sample the same boundary
 ## values and no seam appears between them.
 ##
-## Returns [ag, kg, blocked]:
+## Returns [ag, kg, blocked, nrm, fg]:
 ##   ag       accept probability (biome/dryness weight x path/slope gate)
 ##   kg       the path/slope gate alone, which the flowers want on its own
 ##   blocked  one flag per lattice QUAD, set if any of its four corners is water,
 ##            river channel or off the edge of the map. A hard reject rather than an
 ##            interpolated one: widening the setback by a lattice step is invisible,
 ##            and it is the safe direction to be wrong in.
+##   gb       the ground BASIS at the node — yaw-free, already leaned toward the surface
+##            normal. Measured 2026-08-28: `normal_at` is 75 us (four bilinear height
+##            samples) and `slope_at` is literally `1 - normal_at().y`, so asking for
+##            both cost 7.3 ms of the 15 ms a cell took. One normal, both answers.
+##   fg       forest density, which decides where ferns are allowed
 func _sample_grid(ox: float, oz: float) -> Array:
 	var n := GRASS_GRID * GRASS_GRID
 	var ag := PackedFloat32Array()
 	var kg := PackedFloat32Array()
+	var fg := PackedFloat32Array()
+	var gb: Array = []
 	var wet := PackedByteArray()
 	ag.resize(n)
 	kg.resize(n)
+	fg.resize(n)
+	gb.resize(n)
 	wet.resize(n)
 	var step := GRASS_CELL / float(GRASS_GRID - 1)
 	for j in range(GRASS_GRID):
@@ -758,17 +758,18 @@ func _sample_grid(ox: float, oz: float) -> Array:
 			# of the map straddle the edge. height_at CLAMPS outside the grid, so a
 			# blade placed out there is grounded on the edge height and hangs in the air
 			# off the end of the terrain mesh; QA found 415 of them on the western rim.
+			gb[k] = Basis.IDENTITY
 			if not map.in_bounds(p.x, p.y):
 				wet[k] = 1
 				continue
 			if map.water_depth_at(p.x, p.y) > 0.0 or map.river_dist(p) < 5.0:
 				wet[k] = 1
 				continue
-			var gate := (
-				clampf(1.0 - map.path_at(p.x, p.y) * 2.4, 0.0, 1.0)
-				* clampf(1.0 - map.slope_at(p.x, p.y) * 1.7, 0.0, 1.0)
-			)
+			var nn := map.normal_at(p.x, p.y)
+			var gate := clampf(1.0 - map.path_at(p.x, p.y) * 2.4, 0.0, 1.0) * clampf(1.0 - (1.0 - nn.y) * 1.7, 0.0, 1.0)
 			kg[k] = gate
+			fg[k] = map.forest_density(p)
+			gb[k] = _cover_basis(nn)
 			ag[k] = _grass_weight(p) * gate
 	var q := GRASS_GRID - 1
 	var blocked := PackedByteArray()
@@ -777,101 +778,200 @@ func _sample_grid(ox: float, oz: float) -> Array:
 		for i in range(q):
 			var r := j * GRASS_GRID + i
 			blocked[j * q + i] = 1 if (wet[r] | wet[r + 1] | wet[r + GRASS_GRID] | wet[r + GRASS_GRID + 1]) != 0 else 0
-	return [ag, kg, blocked]
+	return [ag, kg, blocked, gb, fg]
 
 
-func _build_grass_cell(cell: Vector2i) -> Dictionary:
+## Sample the cell's suitability lattice and open a work-in-progress record. The
+## candidates themselves are placed by _work_cell, which is resumable.
+func _start_cell(cell: Vector2i) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = SEED ^ (cell.x * 73856093) ^ (cell.y * 19349663)
 	var ox := float(cell.x) * GRASS_CELL
 	var oz := float(cell.y) * GRASS_CELL
-
 	var grids := _sample_grid(ox, oz)
-	var ag: PackedFloat32Array = grids[0]
-	var kg: PackedFloat32Array = grids[1]
-	var blocked: PackedByteArray = grids[2]
-
 	var gbuf := PackedFloat32Array()
 	var fbuf := PackedFloat32Array()
+	var pbuf := PackedFloat32Array()
 	gbuf.resize(GRASS_PER_CELL * ROW)
 	fbuf.resize(FLOWERS_PER_CELL * ROW)
-	var gn := 0
-	var fn := 0
+	pbuf.resize(FERNS_PER_CELL * ROW)
+	return {
+		"cell": cell,
+		"rng": rng,
+		"ox": ox,
+		"oz": oz,
+		"ag": grids[0],
+		"kg": grids[1],
+		"blocked": grids[2],
+		"gb": grids[3],
+		"fg": grids[4],
+		"gbuf": gbuf,
+		"fbuf": fbuf,
+		"pbuf": pbuf,
+		"gn": 0,
+		"fn": 0,
+		"pn": 0,
+		"i": 0,
+	}
+
+
+## Place candidates until the cell is finished or `budget` of them have been tried.
+## Returns the budget left over.
+##
+## RESUMABLE ON PURPOSE. A cell is 724 candidates and, measured 2026-08-28, about 10 ms
+## of GDScript — which as one lump is a third of the frame, once or twice a second at a
+## sprint. The candidate index is a single counter walked in a fixed order, and the RNG
+## is drawn the same number of times per index whatever happens to that candidate, so
+## splitting the work across frames produces the identical cell. The same world still
+## grows the same grass.
+func _work_cell(wip: Dictionary, budget: int) -> int:
+	var rng: RandomNumberGenerator = wip.rng
+	var ag: PackedFloat32Array = wip.ag
+	var kg: PackedFloat32Array = wip.kg
+	var blocked: PackedByteArray = wip.blocked
+	var gbs: Array = wip.gb
+	var fgs: PackedFloat32Array = wip.fg
+	var ox: float = wip.ox
+	var oz: float = wip.oz
 	var quads := GRASS_GRID - 1
 	var inv := float(quads) / GRASS_CELL
+	var total := GRASS_PER_CELL + FLOWERS_PER_CELL + FERNS_PER_CELL
+	var i: int = wip.i
 
-	# The lattice lookup is written out inline rather than called. At 560 candidates a
-	# cell and a cell a frame, a GDScript function call per candidate is not free.
-	for i in range(GRASS_PER_CELL):
+	while i < total and budget > 0:
+		budget -= 1
+		var stage := 0
+		if i >= GRASS_PER_CELL + FLOWERS_PER_CELL:
+			stage = 2
+		elif i >= GRASS_PER_CELL:
+			stage = 1
+		i += 1
 		var lx := rng.randf() * GRASS_CELL
 		var lz := rng.randf() * GRASS_CELL
 		var u := lx * inv
 		var v := lz * inv
-		var gi := int(u)
-		var gj := int(v)
+		# CLAMPED, not trusted. `RandomNumberGenerator.randf()` is documented as
+		# inclusive of 1.0, so lx can be exactly GRASS_CELL and the lattice index one
+		# past the end. It fired once in a perf run of about a million candidates — rare
+		# enough to survive review and frequent enough to be a crash in the wild.
+		var gi := mini(int(u), quads - 1)
+		var gj := mini(int(v), quads - 1)
 		if blocked[gj * quads + gi] != 0:
 			continue
 		var r := gj * GRASS_GRID + gi
 		var tu := u - float(gi)
 		var tv := v - float(gj)
-		var a := lerpf(lerpf(ag[r], ag[r + 1], tu), lerpf(ag[r + GRASS_GRID], ag[r + GRASS_GRID + 1], tu), tv)
-		if a <= 0.0 or rng.randf() > a:
-			continue
 		var px := ox + lx
 		var pz := oz + lz
-		var y := map.height_at(px, pz) - 0.06
-		var sc := rng.randf_range(0.62, 1.15)
-		var basis := Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(sc, sc * rng.randf_range(0.75, 1.25), sc))
-		var o := gn * ROW
-		gn += 1
-		_write_row(gbuf, o, basis, Vector3(px, y, pz), rng.randf(), rng.randf_range(0.78, 1.2), rng.randf(), 0.0)
+		# The ground frame is taken from the NEAREST lattice corner, not the quad's
+		# lower-left one. Blending four bases per candidate is the function call this
+		# loop exists to avoid; rounding instead of flooring costs two comparisons and
+		# halves the worst-case distance to the sample from 3.3 m to 1.65 m, which took
+		# the worst lean error from 44 degrees to a few.
+		var gr := r + (1 if tu > 0.5 else 0) + (GRASS_GRID if tv > 0.5 else 0)
 
-	# Flowers only where the grass is actually lush, and never on the forest floor.
-	# Twenty-six candidates, so the biome test stays exact; only the expensive
-	# slope/path/water gate comes off the lattice.
-	for i in range(FLOWERS_PER_CELL):
-		var lx := rng.randf() * GRASS_CELL
-		var lz := rng.randf() * GRASS_CELL
-		var u := lx * inv
-		var v := lz * inv
-		var gi := int(u)
-		var gj := int(v)
-		if blocked[gj * quads + gi] != 0:
+		if stage == 0:
+			var acc := lerpf(lerpf(ag[r], ag[r + 1], tu), lerpf(ag[r + GRASS_GRID], ag[r + GRASS_GRID + 1], tu), tv)
+			if acc <= 0.0 or rng.randf() > acc:
+				continue
+			# Height is the one field still queried exactly. It is bilinear on a 1 m grid
+			# and a tuft that misses it by 10 cm is a tuft hanging in the air.
+			var y := map.height_at(px, pz) - 0.02
+			var sc := rng.randf_range(0.72, 1.20)
+			var b: Basis = gbs[gr] * Basis(Vector3.UP, rng.randf() * TAU)
+			b = b.scaled(Vector3(sc, sc * rng.randf_range(0.82, 1.22), sc))
+			var o: int = int(wip.gn) * ROW
+			wip.gn = int(wip.gn) + 1
+			_write_row(wip.gbuf, o, b, Vector3(px, y, pz), rng.randf(), rng.randf_range(0.80, 1.18), rng.randf(), 0.0)
 			continue
-		var r := gj * GRASS_GRID + gi
-		var tu := u - float(gi)
-		var tv := v - float(gj)
-		var k := lerpf(lerpf(kg[r], kg[r + 1], tu), lerpf(kg[r + GRASS_GRID], kg[r + GRASS_GRID + 1], tu), tv)
-		if k < 0.62 or rng.randf() > 0.42:
-			continue
-		var px := ox + lx
-		var pz := oz + lz
-		var b := map.biome_at(px, pz)
-		if b != WorldMap.Biome.MEADOW and b != WorldMap.Biome.FIELD and b != WorldMap.Biome.VILLAGE:
-			continue
-		var y := map.height_at(px, pz) - 0.03
-		var sc := rng.randf_range(0.42, 0.72)
-		var basis := Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(sc, sc, sc))
-		var o := fn * ROW
-		fn += 1
-		_write_row(fbuf, o, basis, Vector3(px, y, pz), rng.randf(), rng.randf_range(0.85, 1.15), rng.randf(), 0.0)
 
-	var res := {"g": null, "f": null, "gn": gn, "fn": fn}
+		var gate := lerpf(lerpf(kg[r], kg[r + 1], tu), lerpf(kg[r + GRASS_GRID], kg[r + GRASS_GRID + 1], tu), tv)
+		if stage == 1:
+			# Flowers only where the grass is actually lush, and never on the forest
+			# floor. Forty-four candidates, so the biome test stays exact; only the
+			# expensive slope/path/water gate comes off the lattice.
+			if gate < 0.62 or rng.randf() > 0.5:
+				continue
+			var bi := map.biome_at(px, pz)
+			if bi != WorldMap.Biome.MEADOW and bi != WorldMap.Biome.FIELD and bi != WorldMap.Biome.VILLAGE:
+				continue
+			var y := map.height_at(px, pz) - 0.01
+			var sc := rng.randf_range(0.85, 1.30)
+			var b: Basis = gbs[gr] * Basis(Vector3.UP, rng.randf() * TAU)
+			b = b.scaled(Vector3(sc, sc * rng.randf_range(0.9, 1.15), sc))
+			var o: int = int(wip.fn) * ROW
+			wip.fn = int(wip.fn) + 1
+			_write_row(wip.fbuf, o, b, Vector3(px, y, pz), rng.randf(), rng.randf_range(0.9, 1.1), rng.randf(), 0.0)
+			continue
+
+		# Ferns and broad-leaved undergrowth: the forest floor, which until now was a
+		# ground texture with a few cards standing on it. Gated on forest_density rather
+		# than on the biome enum so the cover thins out at the edge of the wood instead
+		# of stopping at a line, and biased into the shade, where a fern actually grows.
+		var fd := lerpf(lerpf(fgs[r], fgs[r + 1], tu), lerpf(fgs[r + GRASS_GRID], fgs[r + GRASS_GRID + 1], tu), tv)
+		if gate < 0.55 or fd < 0.30 or rng.randf() > clampf((fd - 0.30) * 1.6, 0.0, 0.86):
+			continue
+		var y := map.height_at(px, pz) - 0.015
+		var sc := rng.randf_range(0.68, 1.35)
+		var b: Basis = gbs[gr] * Basis(Vector3.UP, rng.randf() * TAU)
+		b = b.scaled(Vector3(sc, sc * rng.randf_range(0.85, 1.25), sc))
+		var o: int = int(wip.pn) * ROW
+		wip.pn = int(wip.pn) + 1
+		_write_row(wip.pbuf, o, b, Vector3(px, y, pz), rng.randf(), rng.randf_range(0.82, 1.12), rng.randf(), 0.0)
+
+	wip.i = i
+	return budget
+
+
+## Turn a finished work-in-progress record into live MultiMesh nodes.
+func _finish_cell(wip: Dictionary) -> Dictionary:
+	var gn: int = wip.gn
+	var fn: int = wip.fn
+	var pn: int = wip.pn
+	var gbuf: PackedFloat32Array = wip.gbuf
+	var fbuf: PackedFloat32Array = wip.fbuf
+	var pbuf: PackedFloat32Array = wip.pbuf
 	# Size the upload to what was actually written. Uploading the full candidate count
 	# pushed 35 kB per cell where a typical cell needs a third of that.
-	if gn > 0:
-		gbuf.resize(gn * ROW)
-		res.g = _make_cell_node(_grass_mesh, gbuf, gn, gn, ox, oz, "grass")
-	if fn > 0:
-		fbuf.resize(fn * ROW)
-		var fm: ArrayMesh = _flower_meshes[posmod(cell.x + cell.y, 3)]
-		res.f = _make_cell_node(fm, fbuf, fn, fn, ox, oz, "flowers")
-	return res
+	gbuf.resize(gn * ROW)
+	fbuf.resize(fn * ROW)
+	pbuf.resize(pn * ROW)
+	var ox: float = wip.ox
+	var oz: float = wip.oz
+	return {
+		"band": -1,
+		"layers":
+		[
+			_make_layer(Ground3D.Layer.GRASS, gbuf, gn, ox, oz),
+			_make_layer(Ground3D.Layer.FLOWER, fbuf, fn, ox, oz),
+			_make_layer(Ground3D.Layer.FERN, pbuf, pn, ox, oz),
+		]
+	}
 
 
-func _write_row(
-	buf: PackedFloat32Array, o: int, b: Basis, origin: Vector3, c0: float, c1: float, c2: float, c3: float
-) -> void:
+## One layer of one cell.
+##
+## VARIANT BLOCKS. The instances were generated in random spatial order, so any prefix
+## and any contiguous third of the list is an even sample of the cell. The list is
+## therefore simply DECLARED to be three blocks — no sorting, no second pass, no extra
+## allocation — and near-band cells draw each block with a different tuft mesh from its
+## own MultiMeshInstance. That is what stops a meadow being one clump repeated, and it
+## costs two extra draw calls only for the handful of cells the player is standing in.
+## Further out the whole list goes through ONE node as a prefix, which is where the
+## density falls off.
+func _make_layer(layer: int, buf: PackedFloat32Array, n: int, ox: float, oz: float) -> Dictionary:
+	var counts := [0, 0, 0]
+	if n > 0:
+		counts[0] = n / 3
+		counts[1] = n / 3
+		counts[2] = n - counts[0] - counts[1]
+	var lay := {"buf": buf, "n": n, "counts": counts, "nodes": [null, null, null]}
+	if n > 0:
+		lay.nodes[0] = _make_cell_node(layer, buf, n, ox, oz, 0)
+	return lay
+
+
+func _write_row(buf: PackedFloat32Array, o: int, b: Basis, origin: Vector3, c0: float, c1: float, c2: float, c3: float) -> void:
 	buf[o + 0] = b.x.x
 	buf[o + 1] = b.y.x
 	buf[o + 2] = b.z.x
@@ -890,21 +990,22 @@ func _write_row(
 	buf[o + 15] = c3
 
 
-func _make_cell_node(
-	mesh: ArrayMesh, buf: PackedFloat32Array, n: int, cap: int, ox: float, oz: float, tag: String
-) -> MultiMeshInstance3D:
+func _make_cell_node(layer: int, buf: PackedFloat32Array, n: int, ox: float, oz: float, slot: int) -> MultiMeshInstance3D:
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.use_custom_data = true
-	mm.mesh = mesh
-	mm.instance_count = cap
+	mm.mesh = Ground3D.mesh(layer, slot, 0)
+	mm.instance_count = n
 	mm.buffer = buf
 	mm.visible_instance_count = n
 	var mi := MultiMeshInstance3D.new()
-	mi.name = "%s_%d_%d" % [tag, int(ox), int(oz)]
+	mi.name = "%s%d_%d_%d" % [LAYER_TAGS[layer], slot, int(ox), int(oz)]
 	mi.multimesh = mm
-	# Thousands of thin cards are a terrible shadow caster: the shadow map fills with
-	# noise and the cost is real. Ground cover takes light, it does not give shade.
+	# Thousands of tufts are a terrible shadow caster: the shadow map fills with noise
+	# and the cost is real. Ground cover takes light, it does not give shade. Flowers and
+	# undergrowth are the exception and only in the near band — there are a couple of
+	# hundred of them, and a little shadow under a marigold is most of what says the
+	# petals are standing up off the ground rather than painted on it.
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var lo := map.height_at(ox + GRASS_CELL * 0.5, oz + GRASS_CELL * 0.5)
 	mi.custom_aabb = AABB(Vector3(ox - 1.0, lo - 14.0, oz - 1.0), Vector3(GRASS_CELL + 2.0, 30.0, GRASS_CELL + 2.0))
@@ -912,17 +1013,91 @@ func _make_cell_node(
 	return mi
 
 
-## Build the next few queued cells. Called every frame the window has not moved far
+## Point one cell at the meshes and instance counts its distance band calls for. Called
+## only when a cell CHANGES band, which needs about 10 m of walking, so the slice and
+## the buffer upload for the two extra near-band nodes are paid a few times a minute.
+func _apply_band(cell: Vector2i, rec: Dictionary, band: int) -> void:
+	for li in range(3):
+		var lay: Dictionary = rec.layers[li]
+		var n: int = lay.n
+		if n <= 0:
+			continue
+		var frac: float = LAYER_FRAC[li][band]
+		var nodes: Array = lay.nodes
+		if band == 0:
+			var counts: Array = lay.counts
+			var off := 0
+			for vi in range(3):
+				var cnt: int = counts[vi]
+				# Node 0 owns the whole buffer and simply shows the first block as a
+				# prefix; nodes 1 and 2 get a copy of their own block, made once, the
+				# first time this cell is ever the one the player is standing in.
+				if nodes[vi] == null:
+					var slice: PackedFloat32Array = lay.buf.slice(off * ROW, (off + cnt) * ROW)
+					nodes[vi] = _make_cell_node(li, slice, cnt, cell.x * GRASS_CELL, cell.y * GRASS_CELL, vi)
+				off += cnt
+				var node: MultiMeshInstance3D = nodes[vi]
+				node.multimesh.mesh = Ground3D.mesh(li, vi, 0)
+				node.multimesh.visible_instance_count = cnt
+				node.visible = cnt > 0
+				node.cast_shadow = (
+					GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+					if li != Ground3D.Layer.GRASS
+					else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				)
+		else:
+			# One shape for the whole cell out here. At 20 m a tuft is a few pixels tall
+			# and the variant it was built from is not a thing the eye can recover; the
+			# yaw, scale and hue still vary per instance.
+			var vsel := posmod(cell.x * 3 + cell.y * 5 + li, Ground3D.VARIANTS)
+			var main: MultiMeshInstance3D = nodes[0]
+			main.multimesh.mesh = Ground3D.mesh(li, vsel, band)
+			main.multimesh.visible_instance_count = maxi(0, int(float(n) * frac))
+			main.visible = frac > 0.0
+			main.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			for vi in [1, 2]:
+				if nodes[vi] != null:
+					nodes[vi].visible = false
+
+
+func _free_cell(rec: Dictionary) -> void:
+	for li in range(3):
+		var lay: Dictionary = rec.layers[li]
+		for node in lay.nodes:
+			if node != null:
+				node.queue_free()
+
+
+## Build the next queued cell or two. Called every frame the window has not moved far
 ## enough to warrant a full re-evaluation, which is what turns a once-a-second hitch
 ## into a cost you cannot see.
+##
+## In the steady state (`budget` is GRASS_PER_FRAME) this does at most CELL_WORK
+## candidates and then stops MID-CELL, so a 10 ms cell is paid over four frames. The
+## render harness passes the whole queue as the budget and gets the old all-at-once
+## behaviour, because a screenshot cannot wait four frames for its foreground.
 func _drain_grass(budget: int) -> void:
-	var n := mini(budget, _grass_pending.size())
-	for i in range(n):
-		var cell: Vector2i = _grass_pending[i]
-		if not _grass_cells.has(cell):
-			_grass_cells[cell] = _build_grass_cell(cell)
-	if n > 0:
-		_grass_pending = _grass_pending.slice(n)
+	var work: int = CELL_WORK if budget <= GRASS_PER_FRAME else 0x7FFF_FFFF
+	var done := 0
+	while done < budget:
+		if _wip.is_empty():
+			if _grass_pending.is_empty():
+				return
+			var cell: Vector2i = _grass_pending[0]
+			_grass_pending.remove_at(0)
+			if _grass_cells.has(cell):
+				continue
+			_wip = _start_cell(cell)
+			# The 49-node lattice costs about as much as 200 candidates; charge for it
+			# or the frame that opens a cell is the spike the rest of this avoids.
+			work -= 200
+		work = _work_cell(_wip, work)
+		if int(_wip.i) >= GRASS_PER_CELL + FLOWERS_PER_CELL + FERNS_PER_CELL:
+			_grass_cells[_wip.cell] = _finish_cell(_wip)
+			_wip = {}
+			done += 1
+		if work <= 0:
+			return
 
 
 func _update_grass(focus: Vector3, immediate: bool) -> void:
@@ -935,12 +1110,14 @@ func _update_grass(focus: Vector3, immediate: bool) -> void:
 	for dz in range(-r, r + 1):
 		for dx in range(-r, r + 1):
 			var cell := Vector2i(cx + dx, cz + dz)
-			var centre := Vector2((float(cell.x) + 0.5) * GRASS_CELL, (float(cell.y) + 0.5) * GRASS_CELL)
-			var d := Vector2(focus.x, focus.z).distance_to(centre)
-			if d > GRASS_RADIUS + GRASS_CELL:
+			# Distance to the nearest point of the cell, not to its centre: see BAND_NEAR.
+			var lo := Vector2(float(cell.x) * GRASS_CELL, float(cell.y) * GRASS_CELL)
+			var q := Vector2(clampf(focus.x, lo.x, lo.x + GRASS_CELL), clampf(focus.z, lo.y, lo.y + GRASS_CELL))
+			var d := Vector2(focus.x, focus.z).distance_to(q)
+			if d > GRASS_RADIUS:
 				continue
 			wanted[cell] = d
-			if not _grass_cells.has(cell):
+			if not _grass_cells.has(cell) and not (not _wip.is_empty() and _wip.cell == cell):
 				pending.append(cell)
 
 	# Nearest first. Building a cell is the most expensive thing this system does per
@@ -948,29 +1125,23 @@ func _update_grass(focus: Vector3, immediate: bool) -> void:
 	# the rest go on a queue that drains a cell a frame.
 	pending.sort_custom(func(a, b): return float(wanted[a]) < float(wanted[b]))
 	_grass_pending = pending
+	# A half-built cell the window has walked away from is thrown away rather than
+	# finished: nothing has been added to the tree yet, so there is nothing to free.
+	if not _wip.is_empty() and not wanted.has(_wip.cell):
+		_wip = {}
 	_drain_grass(_grass_pending.size() if immediate else GRASS_PER_FRAME)
 
 	for cell in _grass_cells.keys():
 		var rec: Dictionary = _grass_cells[cell]
 		if not wanted.has(cell):
-			if rec.g:
-				rec.g.queue_free()
-			if rec.f:
-				rec.f.queue_free()
+			_free_cell(rec)
 			_grass_cells.erase(cell)
 			continue
-		# Density falls off with distance by drawing fewer of the same instances. They
-		# were generated in random order, so any prefix is already an even thinning.
 		var d: float = wanted[cell]
-		var frac := 1.0
-		if d > 34.0:
-			frac = 0.38
-		elif d > 19.0:
-			frac = 0.72
-		if rec.g:
-			rec.g.multimesh.visible_instance_count = maxi(1, int(float(rec.gn) * frac))
-		if rec.f:
-			rec.f.multimesh.visible_instance_count = maxi(1, int(float(rec.fn) * frac))
+		var band := 0 if d <= BAND_NEAR else (1 if d <= BAND_MID else 2)
+		if int(rec.band) != band:
+			rec.band = band
+			_apply_band(cell, rec, band)
 
 
 # --- Reporting -------------------------------------------------------------
@@ -1010,16 +1181,24 @@ func stats() -> Dictionary:
 				tri += int(slot.n) * int(slot.tris)
 	var g_inst := 0
 	var g_tri := 0
+	var by_layer := [0, 0, 0]
+	var tri_layer := [0, 0, 0]
 	for cell in _grass_cells:
 		var rec: Dictionary = _grass_cells[cell]
-		if rec.g:
-			var n: int = rec.g.multimesh.visible_instance_count
-			g_inst += n
-			g_tri += n * 6
-		if rec.f:
-			var n2: int = rec.f.multimesh.visible_instance_count
-			g_inst += n2
-			g_tri += n2 * 8
+		var band: int = maxi(int(rec.band), 0)
+		for li in range(3):
+			var lay: Dictionary = rec.layers[li]
+			for vi in range(3):
+				var node: MultiMeshInstance3D = lay.nodes[vi]
+				if node == null or not node.visible:
+					continue
+				var n: int = node.multimesh.visible_instance_count
+				var vsel: int = vi if band == 0 else posmod(cell.x * 3 + cell.y * 5 + li, Ground3D.VARIANTS)
+				g_inst += n
+				by_layer[li] += n
+				var t: int = n * Ground3D.tris(li, vsel, band)
+				g_tri += t
+				tri_layer[li] += t
 	var counts: Dictionary = {}
 	for sp in range(SPECIES_N):
 		counts[TreeBuilder.SPECIES_NAMES[sp]] = _species_count[sp]
@@ -1032,6 +1211,8 @@ func stats() -> Dictionary:
 		"by_lod": by_lod,
 		"grass_instances": g_inst,
 		"grass_triangles": g_tri,
+		"cover_by_layer": by_layer,
+		"cover_tris_by_layer": tri_layer,
 		"grass_cells": _grass_cells.size(),
 		"total_triangles": tri + g_tri,
 		"draw_nodes": inst_node_count(),

@@ -47,14 +47,14 @@ func _init() -> void:
 	cam.current = true
 
 	var poses := [
-		{"n": "idle_front", "sp": 0.0, "cam": Vector3(0, 1.05, 3.4), "st": {}},
-		{"n": "idle_side", "sp": 0.0, "cam": Vector3(3.2, 1.05, 0.6), "st": {}},
-		{"n": "walk", "sp": 1.9, "cam": Vector3(3.2, 1.05, 1.6), "st": {}},
-		{"n": "run", "sp": 5.2, "cam": Vector3(3.4, 1.10, 1.8), "st": {}},
-		{"n": "aim", "sp": 0.0, "cam": Vector3(2.6, 1.25, 2.4), "st": {"aim": 1.0}},
-		{"n": "attack", "sp": 0.0, "cam": Vector3(2.6, 1.25, 2.4), "st": {"atk": 0.45}},
-		{"n": "jump", "sp": 3.0, "cam": Vector3(3.2, 1.20, 1.8), "st": {"air": true}},
-		{"n": "dead", "sp": 0.0, "cam": Vector3(2.8, 1.10, 2.2), "st": {"dead": 1.0}},
+		{"n": "idle_front", "sp": 0.0, "cam": Vector3(0, 1.05, -3.4), "st": {}},
+		{"n": "idle_side", "sp": 0.0, "cam": Vector3(3.2, 1.05, -0.6), "st": {}},
+		{"n": "walk", "sp": 1.9, "cam": Vector3(3.2, 1.05, -1.6), "st": {}},
+		{"n": "run", "sp": 5.2, "cam": Vector3(3.4, 1.10, -1.8), "st": {}},
+		{"n": "aim", "sp": 0.0, "cam": Vector3(2.6, 1.25, -2.4), "st": {"aim": 1.0}},
+		{"n": "attack", "sp": 0.0, "cam": Vector3(2.6, 1.25, -2.4), "st": {"atk": 0.45}},
+		{"n": "jump", "sp": 3.0, "cam": Vector3(3.2, 1.20, -1.8), "st": {"air": true}},
+		{"n": "dead", "sp": 0.0, "cam": Vector3(2.8, 1.10, -2.2), "st": {"dead": 1.0}},
 	]
 
 	for p in poses:
@@ -96,9 +96,7 @@ func _init() -> void:
 		for i in range(6):
 			await process_frame
 		await RenderingServer.frame_post_draw
-		root.get_texture().get_image().save_png(
-			"res://build/screenshots/rig_%s%s.png" % [p.n, "_nm" if not ProcRig.merge_enabled else ""]
-		)
+		root.get_texture().get_image().save_png("res://build/screenshots/rig_%s%s.png" % [p.n, "_nm" if not ProcRig.merge_enabled else ""])
 		print("rig_%s" % p.n)
 		rig.queue_free()
 		await process_frame

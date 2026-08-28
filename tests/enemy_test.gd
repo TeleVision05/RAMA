@@ -49,12 +49,7 @@ func _run() -> void:
 	dir_node.name = "EnemyDirector"
 	game.world.add_child(dir_node)
 	dir_node.setup(game.world.map, game.world.sky)
-	print(
-		(
-			"[populate] %d enemies in %d ms — %s"
-			% [dir_node.enemies().size(), Time.get_ticks_msec() - t0, dir_node.summary()]
-		)
-	)
+	print("[populate] %d enemies in %d ms — %s" % [dir_node.enemies().size(), Time.get_ticks_msec() - t0, dir_node.summary()])
 
 	await _test_population()
 	await _move_to_arena(p)
@@ -205,9 +200,7 @@ func _move_to_arena(p: Player) -> void:
 #  2. Each archetype spawns on the ground in front of the player and holds it.
 # ===========================================================================
 func _test_grounding_and_look(p: Player) -> void:
-	var made := await _spawn_line(
-		p, [EnemyTypes.Kind.WARRIOR, EnemyTypes.Kind.ARCHER, EnemyTypes.Kind.ELITE, EnemyTypes.Kind.BEAST], 11.0
-	)
+	var made := await _spawn_line(p, [EnemyTypes.Kind.WARRIOR, EnemyTypes.Kind.ARCHER, EnemyTypes.Kind.ELITE, EnemyTypes.Kind.BEAST], 11.0)
 	for i in range(20):
 		await get_tree().process_frame
 	if made.size() != 4:
@@ -302,12 +295,7 @@ func _test_paths_to_player(p: Player) -> void:
 			if d < 4.0 and closed_at < 0.0:
 				closed_at = float(i) / 60.0
 		var d1: float = e.global_position.distance_to(p.global_position)
-		print(
-			(
-				"[chase] %-18s %.1f m -> %.1f m  state=%s  reached<4m at %.2f s"
-				% [e.display_name(), d0, d1, e.state_name(), closed_at]
-			)
-		)
+		print("[chase] %-18s %.1f m -> %.1f m  state=%s  reached<4m at %.2f s" % [e.display_name(), d0, d1, e.state_name(), closed_at])
 		if d1 > d0 - 6.0:
 			fails.append("%s did not close on the player (%.1f -> %.1f m)" % [e.display_name(), d0, d1])
 		if closed_at < 0.0:
@@ -547,15 +535,7 @@ func _test_perception_meter(p: Player) -> void:
 	print(
 		(
 			"[perception] facing away=%.2f  after noise=%.2f  after sight=%.2f  saw at %.2f s  d=%.1f m  committed=%s alerted=%s"
-			% [
-				blind,
-				heard,
-				e.awareness(),
-				first_seen,
-				e.global_position.distance_to(p.global_position),
-				e.perc.committed,
-				alerted
-			]
+			% [blind, heard, e.awareness(), first_seen, e.global_position.distance_to(p.global_position), e.perc.committed, alerted]
 		)
 	)
 	if blind > 0.30:
@@ -593,9 +573,7 @@ func _test_streaming(p: Player) -> void:
 			worst = maxf(worst, dy)
 			if dy > 0.30:
 				far_ok = false
-	print(
-		"[streaming] lods=%s  worst dormant off-ground=%.3f m  player at %s" % [lods, worst, p.global_position.round()]
-	)
+	print("[streaming] lods=%s  worst dormant off-ground=%.3f m  player at %s" % [lods, worst, p.global_position.round()])
 	if not far_ok:
 		fails.append("a dormant enemy drifted %.2f m off the ground" % worst)
 	if int(lods.get("dormant", 0)) < 10:
@@ -639,12 +617,7 @@ func _test_contract(p: Player) -> void:
 		# would still be in there and this director's whole population would be
 		# streamed out for the rest of the session.
 		if ed._focus.distance_to(p.global_position) > 1.0:
-			fails.append(
-				(
-					"Game does not call update_focus on the EnemyDirector each frame (focus stuck at %s)"
-					% ed._focus.round()
-				)
-			)
+			fails.append("Game does not call update_focus on the EnemyDirector each frame (focus stuck at %s)" % ed._focus.round())
 		ed.update_focus(p.global_position)
 		notes.append("Game builds, sets up and drives an EnemyDirector: %s" % ed.summary())
 
@@ -666,12 +639,7 @@ func _test_contract(p: Player) -> void:
 	e.take_damage(9.0, p, e.global_position + Vector3(0, 1.4, 0), false)
 	await steps(4)
 	EventBus.enemy_alerted.disconnect(_note_alert)
-	print(
-		(
-			"[contract] shot from behind: committed=%s alerted=%s state=%s"
-			% [e.perc.committed, _alert_hits.has(e), e.state_name()]
-		)
-	)
+	print("[contract] shot from behind: committed=%s alerted=%s state=%s" % [e.perc.committed, _alert_hits.has(e), e.state_name()])
 	if not e.perc.committed:
 		fails.append("a rakshasa shot in the back did not commit to the fight")
 	if not _alert_hits.has(e):
@@ -708,13 +676,7 @@ func _test_25_enemies(p: Player) -> void:
 	var mix := []
 	for i in range(25):
 		mix.append(
-			[
-				EnemyTypes.Kind.WARRIOR,
-				EnemyTypes.Kind.WARRIOR,
-				EnemyTypes.Kind.ARCHER,
-				EnemyTypes.Kind.BEAST,
-				EnemyTypes.Kind.ELITE
-			][i % 5]
+			[EnemyTypes.Kind.WARRIOR, EnemyTypes.Kind.WARRIOR, EnemyTypes.Kind.ARCHER, EnemyTypes.Kind.BEAST, EnemyTypes.Kind.ELITE][i % 5]
 		)
 	var made := await _spawn_ring(p, mix, 15.0, 26.0)
 	print("[perf] spawned %d enemies in %d ms" % [made.size(), Time.get_ticks_msec() - t_build])
@@ -736,12 +698,7 @@ func _test_25_enemies(p: Player) -> void:
 	var meshes := 0
 	for e in made:
 		meshes += e.mesh_count()
-	print(
-		(
-			"[perf] %d mesh instances across %d bodies (%.1f each)"
-			% [meshes, made.size(), float(meshes) / float(maxi(made.size(), 1))]
-		)
-	)
+	print("[perf] %d mesh instances across %d bodies (%.1f each)" % [meshes, made.size(), float(meshes) / float(maxi(made.size(), 1))])
 
 	# --- what they cost, measured the way ARCHITECTURE.md says ---------------
 	# "Do not compare two runs... Alternate the two conditions inside one process and
@@ -786,31 +743,17 @@ func _test_25_enemies(p: Player) -> void:
 			alive += 1
 	print("[perf] %d of %d still alive and fighting through the whole sweep" % [alive, made.size()])
 	print(
-		(
-			"[perf] median frame: %.2f ms (%.1f FPS) inert  ->  %.2f ms (%.1f FPS) fighting"
-			% [ms_off, 1000.0 / ms_off, ms_on, 1000.0 / ms_on]
-		)
+		"[perf] median frame: %.2f ms (%.1f FPS) inert  ->  %.2f ms (%.1f FPS) fighting" % [ms_off, 1000.0 / ms_off, ms_on, 1000.0 / ms_on]
 	)
 	print(
 		(
 			"[perf] MEDIAN PAIRED COST of %d enemies: posing %+.2f | brain+motion %+.2f | TOTAL %+.2f ms/frame (%.3f ms each)"
-			% [
-				made.size(),
-				d_pose[d_pose.size() / 2],
-				d_brain[d_brain.size() / 2],
-				cost,
-				cost / float(maxi(made.size(), 1))
-			]
+			% [made.size(), d_pose[d_pose.size() / 2], d_brain[d_brain.size() / 2], cost, cost / float(maxi(made.size(), 1))]
 		)
 	)
 	print(_mon_line("fighting"))
 	if alive < made.size():
-		fails.append(
-			(
-				"%d of the %d enemies died during the perf sweep, so the cost is understated"
-				% [made.size() - alive, made.size()]
-			)
-		)
+		fails.append("%d of the %d enemies died during the perf sweep, so the cost is understated" % [made.size() - alive, made.size()])
 	if cost > 8.0:
 		fails.append("25 enemies cost %.1f ms/frame, over the 8 ms budget" % cost)
 
@@ -821,17 +764,11 @@ func _test_25_enemies(p: Player) -> void:
 	print("[perf] worst frame: %.0f ms fighting vs %.0f ms inert" % [worst_on, worst_off])
 	if worst_on > 260.0 and worst_on > worst_off * 1.6:
 		fails.append(
-			(
-				"a %.0f ms hitch appeared while 25 enemies were fighting (the same windows inert peaked at %.0f ms)"
-				% [worst_on, worst_off]
-			)
+			"a %.0f ms hitch appeared while 25 enemies were fighting (the same windows inert peaked at %.0f ms)" % [worst_on, worst_off]
 		)
 	elif worst_on > 260.0:
 		notes.append(
-			(
-				"worst frame %.0f ms fighting, but the inert windows peaked at %.0f ms — the machine, not the AI"
-				% [worst_on, worst_off]
-			)
+			"worst frame %.0f ms fighting, but the inert windows peaked at %.0f ms — the machine, not the AI" % [worst_on, worst_off]
 		)
 
 	# The 45 FPS requirement is about the whole game, so it can only be judged where
@@ -841,14 +778,10 @@ func _test_25_enemies(p: Player) -> void:
 	if 1000.0 / ms_on >= 45.0:
 		notes.append("25 enemies at once: %.1f FPS fighting vs %.1f FPS inert" % [1000.0 / ms_on, 1000.0 / ms_off])
 	elif 1000.0 / ms_off < 45.0:
-		(
-			fails
-			. append(
-				(
-					"NOT VERIFIED: the scene ran at %.1f FPS with the AI switched OFF (load %s), so the 45 FPS target "
-							+ "could not be judged; the enemies themselves cost %.2f ms/frame"
-					% [1000.0 / ms_off, _load_average(), cost]
-				)
+		fails.append(
+			(
+				"NOT VERIFIED: the scene ran at %.1f FPS with the AI switched OFF (load %s), so the 45 FPS target "
+				+ "could not be judged; the enemies themselves cost %.2f ms/frame" % [1000.0 / ms_off, _load_average(), cost]
 			)
 		)
 	else:
@@ -908,9 +841,7 @@ func _test_look(p: Player) -> void:
 		e.set_physics_process(false)
 		e.rotation.y = e._facing_to(e.global_position + dir_a)
 		_look_at_lens(e, dir_a, h)
-		await _shot_at(
-			"enemy_10_%s_idle" % names[i], e.global_position, dir_a, _portrait_dist(h), h * 0.72, h * 0.55, e
-		)
+		await _shot_at("enemy_10_%s_idle" % names[i], e.global_position, dir_a, _portrait_dist(h), h * 0.72, h * 0.55, e)
 		e.set_physics_process(true)
 		# Mid wind-up: the telegraph the player is supposed to read.
 		e.alert_from(p.global_position, true)
@@ -924,9 +855,7 @@ func _test_look(p: Player) -> void:
 		var dir_b := _clear_azimuth(e.global_position, h, -0.6)
 		e.rotation.y = e._facing_to(e.global_position + dir_b)
 		_look_at_lens(e, dir_b, h)
-		await _shot_at(
-			"enemy_11_%s_windup" % names[i], e.global_position, dir_b, _portrait_dist(h), h * 0.70, h * 0.55, e
-		)
+		await _shot_at("enemy_11_%s_windup" % names[i], e.global_position, dir_b, _portrait_dist(h), h * 0.70, h * 0.55, e)
 		e.set_physics_process(true)
 		print("[look] %-18s portraits rendered (%d mesh instances)" % [e.display_name(), e.mesh_count()])
 		e.queue_free()
@@ -1012,9 +941,7 @@ func _portrait_dist(h: float) -> float:
 ## Frame a subject deliberately: `from_dir` is where the camera stands relative to it.
 ## The interface is hidden for the exposure: a character-sheet portrait with a health
 ## bar across the corner is not a picture of the character.
-func _shot_at(
-	name: String, target: Vector3, from_dir: Vector3, dist: float, height: float, look_h: float, subject: Node3D = null
-) -> void:
+func _shot_at(name: String, target: Vector3, from_dir: Vector3, dist: float, height: float, look_h: float, subject: Node3D = null) -> void:
 	var hud_was := true
 	if game.hud != null and is_instance_valid(game.hud):
 		hud_was = game.hud.visible
@@ -1153,15 +1080,7 @@ func _load_average() -> String:
 func _mon_line(tag: String) -> String:
 	return (
 		"[perf] %s  script: process %.2f ms + physics %.2f ms   render: %d draw calls, %d objects, %.0fk tris, %d nodes"
-		% [
-			tag,
-			_mon.process_ms,
-			_mon.physics_ms,
-			int(_mon.draw_calls),
-			int(_mon.objects),
-			float(_mon.prims) / 1000.0,
-			int(_mon.nodes)
-		]
+		% [tag, _mon.process_ms, _mon.physics_ms, int(_mon.draw_calls), int(_mon.objects), float(_mon.prims) / 1000.0, int(_mon.nodes)]
 	)
 
 

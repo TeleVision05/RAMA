@@ -152,9 +152,7 @@ func _init() -> void:
 	if n_short > 0:
 		fails.append("%d drawn instances index past the end of their buffer" % n_short)
 	if bad_rows > 0:
-		fails.append(
-			"%d drawn instances are off the ground (worst %+.3f m, node %s)" % [bad_rows, worst_gap, worst_node]
-		)
+		fails.append("%d drawn instances are off the ground (worst %+.3f m, node %s)" % [bad_rows, worst_gap, worst_node])
 	if bad_basis > 0:
 		fails.append("%d drawn instances have a degenerate or absurd basis" % bad_basis)
 

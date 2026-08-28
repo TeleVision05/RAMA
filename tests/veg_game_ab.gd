@@ -59,15 +59,8 @@ func _run() -> void:
 	off.sort()
 	var mid := REPS / 2
 	print("village walk : with %6.2f ms   without %6.2f ms" % [on[mid], off[mid]])
-	print(
-		(
-			"VEGETATION   : %+.2f ms median of %d pairs (spread %+.2f .. %+.2f)"
-			% [deltas[mid], REPS, deltas[0], deltas[REPS - 1]]
-		)
-	)
-	print(
-		"RESULT: " + ("PASS" if deltas[mid] <= 9.0 else "FAIL") + "  (budget 9.0 ms, measured %+.2f ms)" % deltas[mid]
-	)
+	print("VEGETATION   : %+.2f ms median of %d pairs (spread %+.2f .. %+.2f)" % [deltas[mid], REPS, deltas[0], deltas[REPS - 1]])
+	print("RESULT: " + ("PASS" if deltas[mid] <= 9.0 else "FAIL") + "  (budget 9.0 ms, measured %+.2f ms)" % deltas[mid])
 	get_tree().quit()
 
 

@@ -218,18 +218,10 @@ func _section_model(qs: QuestSystem) -> void:
 			bad.append("%s is not at %s" % [pid, str(named[pid])])
 		if String(d.get("name", "")) == "" or float(d.get("r", 0.0)) < 10.0:
 			bad.append("%s has no name or too small a zone" % pid)
-	ok(
-		"all ten named places are discoverable zones on their landmarks",
-		bad.is_empty() and QuestData.PLACES.size() == 10,
-		str(bad)
-	)
+	ok("all ten named places are discoverable zones on their landmarks", bad.is_empty() and QuestData.PLACES.size() == 10, str(bad))
 
 	ok("an unknown quest cannot start", not qs.start_quest("q_nonsense"))
-	ok(
-		"q_wild is gated behind the shrine",
-		not qs.can_start("q_wild") and not qs.start_quest("q_wild"),
-		"state=" + qs.state_of("q_wild")
-	)
+	ok("q_wild is gated behind the shrine", not qs.can_start("q_wild") and not qs.start_quest("q_wild"), "state=" + qs.state_of("q_wild"))
 
 
 # ---------------------------------------------------------------------------
@@ -238,11 +230,7 @@ func _section_q1(qs: QuestSystem, p: Player) -> void:
 	ok("q_lost_goat starts", qs.start_quest("q_lost_goat"))
 	ok("starting twice is refused", not qs.start_quest("q_lost_goat"))
 	var seeded: Dictionary = GameState.quests["q_lost_goat"]["objectives"]
-	ok(
-		"every visible step is seeded into the log for the journal",
-		seeded.size() == 7,
-		"%d keys: %s" % [seeded.size(), str(seeded.keys())]
-	)
+	ok("every visible step is seeded into the log for the journal", seeded.size() == 7, "%d keys: %s" % [seeded.size(), str(seeded.keys())])
 	ok("the first step is to hear Gopa out", qs.current_objective("q_lost_goat").id == "speak")
 
 	# A step behind a gate cannot be advanced out of order.
@@ -261,11 +249,7 @@ func _section_q1(qs: QuestSystem, p: Player) -> void:
 	await until(func(): return qs.objective_done("q_lost_goat", "travel"), 3.0)
 	await teleport(Vector2(-196.0, -34.0))
 	await until(func(): return GameState.discovered.has("forest_camp"), 3.0)
-	ok(
-		"walking into a named place discovers it once",
-		found.has("forest_camp") and found.count("forest_camp") == 1,
-		str(found)
-	)
+	ok("walking into a named place discovers it once", found.has("forest_camp") and found.count("forest_camp") == 1, str(found))
 	await teleport(Vector2(-184.0, -14.0))
 	await frames(6)
 	ok("walking to the marked place clears the GO_TO step", qs.objective_done("q_lost_goat", "travel"))
@@ -279,19 +263,9 @@ func _section_q1(qs: QuestSystem, p: Player) -> void:
 		qs.progress("q_lost_goat", "investigate") == 1,
 		"%d/2" % qs.progress("q_lost_goat", "investigate")
 	)
-	await free_shot(
-		"q1_evidence",
-		eye_over(Vector2(-179.8, -11.6), Vector2(-183.6, -15.6), 3.0),
-		ground(Vector2(-183.6, -15.6), 1.0),
-		66.0
-	)
+	await free_shot("q1_evidence", eye_over(Vector2(-179.8, -11.6), Vector2(-183.6, -15.6), 3.0), ground(Vector2(-183.6, -15.6), 1.0), 66.0)
 	# The gouges face world +Z, so the camera has to be on that side of the trunk.
-	await free_shot(
-		"q1_claws",
-		eye_over(Vector2(-181.3, -13.9), Vector2(-181.6, -17.2), 1.8),
-		ground(Vector2(-181.6, -17.2), 1.45),
-		42.0
-	)
+	await free_shot("q1_claws", eye_over(Vector2(-181.3, -13.9), Vector2(-181.6, -17.2), 1.8), ground(Vector2(-181.6, -17.2), 1.45), 42.0)
 	ok("the clawed tree is there", await use("ClawedTree"))
 	ok("both pieces of evidence clear the step", qs.objective_done("q_lost_goat", "investigate"))
 
@@ -403,19 +377,11 @@ func _section_q2(qs: QuestSystem, _p: Player) -> void:
 	var at_b := carved.findn(String(QuestData.LAMP_EMBLEM_NAMES[QuestData.LAMP_ORDER[1]]))
 	var at_c := carved.findn(String(QuestData.LAMP_EMBLEM_NAMES[QuestData.LAMP_ORDER[2]]))
 	ok("the inscription names all three lamps", at_a >= 0 and at_b >= 0 and at_c >= 0, carved.replace("\n", " / "))
-	ok(
-		"and names them in the order the puzzle wants",
-		at_a < at_b and at_b < at_c,
-		"positions %d, %d, %d" % [at_a, at_b, at_c]
-	)
+	ok("and names them in the order the puzzle wants", at_a < at_b and at_b < at_c, "positions %d, %d, %d" % [at_a, at_b, at_c])
 	for emblem in QuestData.LAMP_ORDER:
 		var lamp: Node3D = obj_node("Lamp_" + String(emblem))
 		var prompt := String(lamp.call("interact_prompt"))
-		ok(
-			"the %s lamp says which one it is" % emblem,
-			prompt.findn(String(QuestData.LAMP_EMBLEM_NAMES[emblem])) >= 0,
-			prompt
-		)
+		ok("the %s lamp says which one it is" % emblem, prompt.findn(String(QuestData.LAMP_EMBLEM_NAMES[emblem])) >= 0, prompt)
 	ok("lighting the river lamp first is refused", not puzzle.call("light", obj_node("Lamp_river")))
 	await frames(2)
 	ok("a wrong lamp leaves the step at zero", qs.progress("q_shrine", "lamps") == 0)
@@ -423,32 +389,16 @@ func _section_q2(qs: QuestSystem, _p: Player) -> void:
 	await frames(2)
 	ok("the fig lamp out of turn puts every flame out", not puzzle.call("light", obj_node("Lamp_fig")))
 	await frames(2)
-	ok(
-		"and the step goes back to zero",
-		qs.progress("q_shrine", "lamps") == 0,
-		"%d/3" % qs.progress("q_shrine", "lamps")
-	)
+	ok("and the step goes back to zero", qs.progress("q_shrine", "lamps") == 0, "%d/3" % qs.progress("q_shrine", "lamps"))
 	ok("no lamp is left burning after a reset", not _any_lamp_lit())
 	for emblem in QuestData.LAMP_ORDER:
 		ok("lamp of %s lights in turn" % emblem, puzzle.call("light", obj_node("Lamp_" + String(emblem))))
 		await frames(2)
-	ok(
-		"three lamps in the right order clear the step",
-		qs.objective_done("q_shrine", "lamps"),
-		"%d/3" % qs.progress("q_shrine", "lamps")
-	)
+	ok("three lamps in the right order clear the step", qs.objective_done("q_shrine", "lamps"), "%d/3" % qs.progress("q_shrine", "lamps"))
 	await free_shot(
-		"q2_lamp_emblem",
-		eye_over(Vector2(165.42, -79.50), Vector2(166.0, -80.6), 0.80),
-		ground(Vector2(166.0, -80.6), 0.38),
-		30.0
+		"q2_lamp_emblem", eye_over(Vector2(165.42, -79.50), Vector2(166.0, -80.6), 0.80), ground(Vector2(166.0, -80.6), 0.38), 30.0
 	)
-	await free_shot(
-		"q2_lamps_lit",
-		eye_over(Vector2(170.9, -81.9), Vector2(166.4, -78.5), 2.3),
-		ground(Vector2(166.3, -78.5), 1.0),
-		62.0
-	)
+	await free_shot("q2_lamps_lit", eye_over(Vector2(170.9, -81.9), Vector2(166.4, -78.5), 2.3), ground(Vector2(166.3, -78.5), 1.0), 62.0)
 
 	# The optional threshold lamp, which needs the traveller's oil.
 	var tl := obj_node("ThresholdLamp")
@@ -467,11 +417,7 @@ func _section_q2(qs: QuestSystem, _p: Player) -> void:
 	if game.hud != null:
 		game.hud.open_panel(game.hud.journal)
 		await frames(8)
-		ok(
-			"the journal lists both quests",
-			game.hud.journal.quest_count() >= 2,
-			"%d quests" % game.hud.journal.quest_count()
-		)
+		ok("the journal lists both quests", game.hud.journal.quest_count() >= 2, "%d quests" % game.hud.journal.quest_count())
 		await shot("q2_journal_active")
 		game.hud.close_all()
 		await frames(4)
@@ -492,10 +438,7 @@ func _section_q2(qs: QuestSystem, _p: Player) -> void:
 		"%d -> %d enemies" % [before, get_tree().get_nodes_in_group("enemy").size()]
 	)
 	await free_shot(
-		"q2_ruin_gate",
-		eye_over(Vector2(-150.4, -139.4), Vector2(-158.6, -143.9), 4.2),
-		ground(Vector2(-159.4, -144.4), 1.7),
-		60.0
+		"q2_ruin_gate", eye_over(Vector2(-150.4, -139.4), Vector2(-158.6, -143.9), 4.2), ground(Vector2(-159.4, -144.4), 1.7), 60.0
 	)
 	topup()
 
@@ -511,18 +454,9 @@ func _section_q2(qs: QuestSystem, _p: Player) -> void:
 	ok("the bell is hung", await use("BellFrame"))
 	await until(func(): return qs.is_complete("q_shrine"), 3.0)
 	ok("hanging and ringing the bell finishes the quest", qs.is_complete("q_shrine"), qs.state_of("q_shrine"))
-	ok(
-		"the blessing raised max health",
-		GameState.max_health > hp_before,
-		"%.0f -> %.0f" % [hp_before, GameState.max_health]
-	)
+	ok("the blessing raised max health", GameState.max_health > hp_before, "%.0f -> %.0f" % [hp_before, GameState.max_health])
 	ok("the quest set its flag", bool(GameState.get_flag("blessing_of_the_bell", false)))
-	await free_shot(
-		"q2_bell_hung",
-		eye_over(Vector2(169.8, -71.4), Vector2(164.6, -74.4), 2.6),
-		ground(Vector2(164.6, -74.4), 1.5),
-		52.0
-	)
+	await free_shot("q2_bell_hung", eye_over(Vector2(169.8, -71.4), Vector2(164.6, -74.4), 2.6), ground(Vector2(164.6, -74.4), 1.5), 52.0)
 
 
 # ---------------------------------------------------------------------------
@@ -545,10 +479,7 @@ func _section_q3(qs: QuestSystem, _p: Player) -> void:
 	ok("the badlands are logged", qs.objective_done("q_wild", "badlands"))
 	ok(
 		"three readings reveal the grove",
-		(
-			qs.objective_visible("q_wild", "grove")
-			and (GameState.quests["q_wild"]["objectives"] as Dictionary).has("grove")
-		),
+		qs.objective_visible("q_wild", "grove") and (GameState.quests["q_wild"]["objectives"] as Dictionary).has("grove"),
 		str((GameState.quests["q_wild"]["objectives"] as Dictionary).keys())
 	)
 
@@ -558,34 +489,18 @@ func _section_q3(qs: QuestSystem, _p: Player) -> void:
 	ok("the grove gave up its seed", GameState.has_item("grove_seed"))
 	ok("the walk was worth a longer wind", GameState.max_stamina > 100.0, "%.0f stamina" % GameState.max_stamina)
 	# Above the canopy: at head height the grove is a wall of ferns.
+	await free_shot("q3_grove", eye_over(Vector2(-303.0, 99.0), Vector2(-322.0, 118.0), 24.0), ground(Vector2(-322.0, 118.0), 5.0), 62.0)
 	await free_shot(
-		"q3_grove",
-		eye_over(Vector2(-303.0, 99.0), Vector2(-322.0, 118.0), 24.0),
-		ground(Vector2(-322.0, 118.0), 5.0),
-		62.0
-	)
-	await free_shot(
-		"q3_grove_close",
-		eye_over(Vector2(-316.4, 123.6), Vector2(-322.0, 118.0), 3.4),
-		ground(Vector2(-322.0, 118.0), 1.5),
-		62.0
+		"q3_grove_close", eye_over(Vector2(-316.4, 123.6), Vector2(-322.0, 118.0), 3.4), ground(Vector2(-322.0, 118.0), 1.5), 62.0
 	)
 	ok(
 		"the grove is built where the quest says it is",
 		(
 			obj_node("GroveHeart") != null
-			and (
-				obj_node("GroveHeart").global_position.distance_to(
-					Vector3(-322.0, obj_node("GroveHeart").global_position.y, 118.0)
-				)
-				< 1.0
-			)
+			and (obj_node("GroveHeart").global_position.distance_to(Vector3(-322.0, obj_node("GroveHeart").global_position.y, 118.0)) < 1.0)
 		)
 	)
-	ok(
-		"the grove keeps something worth the walk",
-		obj_node("GroveGift") != null and (obj_node("GroveGift") as Node3D).visible
-	)
+	ok("the grove keeps something worth the walk", obj_node("GroveGift") != null and (obj_node("GroveGift") as Node3D).visible)
 	ok("and it can be taken", await use("GroveGift"))
 	ok("the amulet is in the pack", GameState.has_item("amulet"))
 	ok("the pickup left the world once taken", not (obj_node("GroveGift") as Node3D).visible)
@@ -618,10 +533,7 @@ func _section_marker(qs: QuestSystem, _p: Player) -> void:
 	var want := Vector2(-184.0, -14.0)
 	ok(
 		"the marker stands over the current step",
-		(
-			qs.marker_is_active()
-			and Vector2(qs.marker_position().x - want.x, qs.marker_position().z - want.y).length() < 1.5
-		),
+		qs.marker_is_active() and Vector2(qs.marker_position().x - want.x, qs.marker_position().z - want.y).length() < 1.5,
 		"marker at %s" % str(qs.marker_position())
 	)
 
@@ -631,10 +543,7 @@ func _section_marker(qs: QuestSystem, _p: Player) -> void:
 	await frames(20)
 	ok(
 		"the compass was told where to point",
-		(
-			bool(seen["active"])
-			and Vector2(Vector3(seen["pos"]).x - want.x, Vector3(seen["pos"]).z - want.y).length() < 1.5
-		),
+		bool(seen["active"]) and Vector2(Vector3(seen["pos"]).x - want.x, Vector3(seen["pos"]).z - want.y).length() < 1.5,
 		"%d emissions, last at %s" % [int(seen["n"]), str(seen["pos"])]
 	)
 	var at := qs.marker_position()
@@ -651,17 +560,8 @@ func _section_marker(qs: QuestSystem, _p: Player) -> void:
 	marker.visible = true
 	qs.process_mode = Node.PROCESS_MODE_INHERIT
 	var ab := _column_diff("marker_on", "marker_off")
-	print(
-		(
-			"    marker column diff: peak %.4f at x=%d, median %.4f, ratio %.1f"
-			% [ab["peak"], int(ab["peak_x"]), ab["median"], ab["ratio"]]
-		)
-	)
-	ok(
-		"the shaft actually reached the screen",
-		ab["ratio"] >= 4.0,
-		"peak column is %.1fx the median column (needs 4.0x)" % ab["ratio"]
-	)
+	print("    marker column diff: peak %.4f at x=%d, median %.4f, ratio %.1f" % [ab["peak"], int(ab["peak_x"]), ab["median"], ab["ratio"]])
+	ok("the shaft actually reached the screen", ab["ratio"] >= 4.0, "peak column is %.1fx the median column (needs 4.0x)" % ab["ratio"])
 	ok(
 		"and it stands where the marker stands",
 		absf(float(ab["peak_x"]) - float(ab["width"]) * 0.5) < float(ab["width"]) * 0.22,
@@ -673,11 +573,7 @@ func _section_marker(qs: QuestSystem, _p: Player) -> void:
 	await teleport(Vector2(-185.0, -12.0))
 	await frames(20)
 	var near_alpha := _marker_alpha(qs)
-	ok(
-		"the marker fades out as you arrive",
-		near_alpha < far_alpha * 0.35,
-		"alpha %.3f at 38 m, %.3f at 2 m" % [far_alpha, near_alpha]
-	)
+	ok("the marker fades out as you arrive", near_alpha < far_alpha * 0.35, "alpha %.3f at 38 m, %.3f at 2 m" % [far_alpha, near_alpha])
 
 	# Put the world back.
 	GameState.quests = keep
@@ -738,11 +634,7 @@ func _section_persistence(qs: QuestSystem) -> void:
 	ok("the reset really cleared the log", GameState.quests.is_empty())
 	ok("the game loads", game.load_game(5))
 	await frames(8)
-	ok(
-		"every quest came back",
-		GameState.quests.size() == snapshot.size(),
-		"%d of %d" % [GameState.quests.size(), snapshot.size()]
-	)
+	ok("every quest came back", GameState.quests.size() == snapshot.size(), "%d of %d" % [GameState.quests.size(), snapshot.size()])
 	var identical := true
 	var diff := ""
 	for qid in snapshot:
@@ -764,28 +656,13 @@ func _section_persistence(qs: QuestSystem) -> void:
 				diff = "%s/%s %d vs %d" % [qid, oid, int(ao[oid]), int(bo.get(oid, -1))]
 				break
 	ok("the quest log round-trips byte for byte", identical, diff)
-	ok(
-		"discoveries round-trip",
-		GameState.discovered.size() == disc.size(),
-		"%d of %d" % [GameState.discovered.size(), disc.size()]
-	)
-	ok(
-		"the inventory round-trips",
-		GameState.inventory.size() == inv.size(),
-		"%d of %d" % [GameState.inventory.size(), inv.size()]
-	)
-	ok(
-		"the blessing survived the load",
-		is_equal_approx(GameState.max_health, mh),
-		"%.0f vs %.0f" % [GameState.max_health, mh]
-	)
+	ok("discoveries round-trip", GameState.discovered.size() == disc.size(), "%d of %d" % [GameState.discovered.size(), disc.size()])
+	ok("the inventory round-trips", GameState.inventory.size() == inv.size(), "%d of %d" % [GameState.inventory.size(), inv.size()])
+	ok("the blessing survived the load", is_equal_approx(GameState.max_health, mh), "%.0f vs %.0f" % [GameState.max_health, mh])
 	ok("a completed quest cannot restart", not qs.start_quest("q_shrine") and qs.is_complete("q_shrine"))
 	var lamps_before := qs.progress("q_shrine", "lamps")
 	qs.advance_quest("q_shrine", "lamps", 1)
-	ok(
-		"a completed quest cannot be advanced",
-		qs.is_complete("q_shrine") and qs.progress("q_shrine", "lamps") == lamps_before
-	)
+	ok("a completed quest cannot be advanced", qs.is_complete("q_shrine") and qs.progress("q_shrine", "lamps") == lamps_before)
 	# The world objects came back the way the log says.
 	ok("the bell is still hanging in its frame", bool((obj_node("BellFrame") as Node).get("hung")))
 	ok("the lamps are still lit after the load", _lit_lamp_count() == 3, "%d of 3 lit" % _lit_lamp_count())
@@ -887,11 +764,7 @@ func _section_dialogue(qs: QuestSystem, p: Player) -> void:
 			ds.choose(pick)
 		await frames(3)
 	ok("the conversation ran to its end", not ds.is_active(), "%d steps" % steps)
-	ok(
-		"the dialogue action started the quest through this system",
-		qs.is_active("q_lost_goat"),
-		qs.state_of("q_lost_goat")
-	)
+	ok("the dialogue action started the quest through this system", qs.is_active("q_lost_goat"), qs.state_of("q_lost_goat"))
 	ok(
 		"ending the conversation cleared the TALK_TO step",
 		qs.objective_done("q_lost_goat", "speak"),

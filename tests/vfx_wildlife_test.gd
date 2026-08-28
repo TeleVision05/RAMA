@@ -156,9 +156,7 @@ func _init() -> void:
 	await shot_abs("river_fish", fishp + Vector2(7.5, 7.5), fwy + 1.5, fishp, fwy - 0.35, 12.5)
 
 	# --- a wind gust crossing open ground -----------------------------------
-	await shot_gust(
-		"gust", WorldMap.P_FIELDS + Vector2(16.0, 20.0), 3.5, WorldMap.P_FIELDS + Vector2(-14.0, -6.0), 1.2, 16.4
-	)
+	await shot_gust("gust", WorldMap.P_FIELDS + Vector2(16.0, 20.0), 3.5, WorldMap.P_FIELDS + Vector2(-14.0, -6.0), 1.2, 16.4)
 
 	# --- rain -----------------------------------------------------------------
 	vfx.set_rain(0.9)
@@ -170,9 +168,7 @@ func _init() -> void:
 
 
 func shot(nm: String, eye2: Vector2, eye_h: float, tgt2: Vector2, tgt_h: float, hour: float, frames: int = 100) -> void:
-	await shot_abs(
-		nm, eye2, map.height_at(eye2.x, eye2.y) + eye_h, tgt2, map.height_at(tgt2.x, tgt2.y) + tgt_h, hour, frames
-	)
+	await shot_abs(nm, eye2, map.height_at(eye2.x, eye2.y) + eye_h, tgt2, map.height_at(tgt2.x, tgt2.y) + tgt_h, hour, frames)
 
 
 ## Same, but with absolute world Y for eye and target - needed for water shots where
@@ -185,20 +181,11 @@ func shot_gust(nm: String, eye2: Vector2, eye_h: float, tgt2: Vector2, tgt_h: fl
 	for i in range(20):
 		await process_frame
 	print("gust fired: ", vfx.trigger_gust())
-	await shot_abs(
-		nm, eye2, map.height_at(eye2.x, eye2.y) + eye_h, tgt2, map.height_at(tgt2.x, tgt2.y) + tgt_h, hour, 55
-	)
+	await shot_abs(nm, eye2, map.height_at(eye2.x, eye2.y) + eye_h, tgt2, map.height_at(tgt2.x, tgt2.y) + tgt_h, hour, 55)
 
 
 func shot_abs(
-	nm: String,
-	eye2: Vector2,
-	eye_y: float,
-	tgt2: Vector2,
-	tgt_y: float,
-	hour: float,
-	frames: int = 100,
-	focus_at: Vector3 = Vector3.INF
+	nm: String, eye2: Vector2, eye_y: float, tgt2: Vector2, tgt_y: float, hour: float, frames: int = 100, focus_at: Vector3 = Vector3.INF
 ) -> void:
 	if only.size() > 0 and not only.has(nm):
 		return

@@ -51,8 +51,7 @@ func _phase_pure() -> void:
 	check(UITheme.clock(7.0) == "07:00", "clock(7.0) = %s" % UITheme.clock(7.0))
 	check(UITheme.clock(19.25) == "19:15", "clock(19.25) = %s" % UITheme.clock(19.25))
 	check(
-		UITheme.clock(17.999) == "18:00",
-		"clock(17.999) = %s, expected 18:00 (minute rounding must carry the hour)" % UITheme.clock(17.999)
+		UITheme.clock(17.999) == "18:00", "clock(17.999) = %s, expected 18:00 (minute rounding must carry the hour)" % UITheme.clock(17.999)
 	)
 	check(UITheme.clock(23.999) == "00:00", "clock(23.999) = %s, expected 00:00" % UITheme.clock(23.999))
 	check(UITheme.clock(24.5) == "00:30", "clock(24.5) = %s" % UITheme.clock(24.5))
@@ -62,16 +61,11 @@ func _phase_pure() -> void:
 	check(UITheme.duration(8040.0) == "2 h 14 m", "duration(8040) = %s" % UITheme.duration(8040.0))
 
 	check(UITheme.prettify("hidden_grove") == "Hidden Grove", "prettify = %s" % UITheme.prettify("hidden_grove"))
-	check(
-		UITheme.prettify("the-forest-camp") == "The Forest Camp", "prettify = %s" % UITheme.prettify("the-forest-camp")
-	)
+	check(UITheme.prettify("the-forest-camp") == "The Forest Camp", "prettify = %s" % UITheme.prettify("the-forest-camp"))
 
 	# Bearings are clockwise from north, and north is -Z.
 	var o := Vector2.ZERO
-	check(
-		absf(Compass.bearing_to(o, Vector2(0, -10))) < 0.01,
-		"north bearing is %.1f, expected 0" % Compass.bearing_to(o, Vector2(0, -10))
-	)
+	check(absf(Compass.bearing_to(o, Vector2(0, -10))) < 0.01, "north bearing is %.1f, expected 0" % Compass.bearing_to(o, Vector2(0, -10)))
 	check(
 		absf(Compass.bearing_to(o, Vector2(10, 0)) - 90.0) < 0.01,
 		"east bearing is %.1f, expected 90" % Compass.bearing_to(o, Vector2(10, 0))
@@ -112,9 +106,7 @@ func _phase_pure() -> void:
 			thinnest_kind = String(k)
 		check(cover > 0.04, "icon '%s' covers only %.1f%% of its tile — it will read as empty" % [k, cover * 100.0])
 		check(cover < 0.92, "icon '%s' covers %.1f%% of its tile — it is a filled square" % [k, cover * 100.0])
-	print(
-		"  %d icon shapes drawn; thinnest is '%s' at %.1f%% coverage" % [kinds.size(), thinnest_kind, thinnest * 100.0]
-	)
+	print("  %d icon shapes drawn; thinnest is '%s' at %.1f%% coverage" % [kinds.size(), thinnest_kind, thinnest * 100.0])
 
 	# An id no content system ever registered still has to produce a usable entry.
 	var unknown := InventoryPanel._entry("moon_pearl", 2)
@@ -141,9 +133,7 @@ func _phase_title() -> void:
 	for b in btns:
 		labels.append((b as Button).text)
 	print("  buttons: %s" % [labels])
-	check(
-		labels.has("Continue") and labels.has("New Game") and labels.has("Quit"), "title buttons are missing an entry"
-	)
+	check(labels.has("Continue") and labels.has("New Game") and labels.has("Quit"), "title buttons are missing an entry")
 
 	# Continue must be dead until a save exists.
 	_wipe_saves()
@@ -202,10 +192,7 @@ func _phase_session() -> void:
 		return
 	check(_count_huds(get_tree().root) == 1, "%d HUDs in the tree, expected exactly 1" % _count_huds(get_tree().root))
 	check(hud.layer == HUD.HUD_LAYER, "HUD is on canvas layer %d, expected %d" % [hud.layer, HUD.HUD_LAYER])
-	check(
-		hud.process_mode == Node.PROCESS_MODE_ALWAYS,
-		"the HUD stops processing while the tree is paused, so its own menus freeze"
-	)
+	check(hud.process_mode == Node.PROCESS_MODE_ALWAYS, "the HUD stops processing while the tree is paused, so its own menus freeze")
 	await frames(60)
 
 	check(hud.player == game.player, "HUD did not bind to the player")
@@ -262,10 +249,7 @@ func _test_hud_quiet() -> void:
 	print("  stat bar strip: full %s  quarter %s  delta %.3f" % [full, quarter, delta])
 	check(
 		delta > 0.02,
-		(
-			"the stat bar strip is identical at full and quarter health (delta %.3f) — " % delta
-			+ "the bar has no readable extent"
-		)
+		"the stat bar strip is identical at full and quarter health (delta %.3f) — " % delta + "the bar has no readable extent"
 	)
 	# And the channel must be visible even where nothing is filled: sample the far
 	# end of the health bar, which is empty at 25%.
@@ -305,10 +289,7 @@ func _test_notifications() -> void:
 	var before := hud.notes.visible_count()
 	hud.notes.push("Gained", "Arrow 0", "item")
 	await frames(2)
-	check(
-		hud.notes.visible_count() == before,
-		"a duplicate notification took a new slot (%d -> %d)" % [before, hud.notes.visible_count()]
-	)
+	check(hud.notes.visible_count() == before, "a duplicate notification took a new slot (%d -> %d)" % [before, hud.notes.visible_count()])
 
 	# The queue has to drain on its own: cards hold, fade, and the next one is let in.
 	var waited := 0.0
@@ -391,10 +372,7 @@ func _test_hud_loud() -> void:
 	await pframes(32)
 	print("    draw charge at the busy shot: %.2f" % game.player.draw_charge)
 	check(game.player.aiming, "the player did not enter the aim state")
-	check(
-		game.player.draw_charge > 0.25 and game.player.draw_charge < 0.95,
-		"expected a mid draw, got %.2f" % game.player.draw_charge
-	)
+	check(game.player.draw_charge > 0.25 and game.player.draw_charge < 0.95, "expected a mid draw, got %.2f" % game.player.draw_charge)
 	await shot("ui_hud_busy")
 
 	# Full draw, so the crosshair is at its widest.
@@ -406,10 +384,7 @@ func _test_hud_loud() -> void:
 	var before := GameState.arrows
 	Input.action_release("aim")
 	await pframes(8)
-	check(
-		GameState.arrows == before - 1,
-		"releasing a full draw did not spend an arrow (%d -> %d)" % [before, GameState.arrows]
-	)
+	check(GameState.arrows == before - 1, "releasing a full draw did not spend an arrow (%d -> %d)" % [before, GameState.arrows])
 	EventBus.interact_target_changed.emit(null, "")
 	await frames(20)
 	hud.notes.mute = false
@@ -438,10 +413,7 @@ func _test_panels() -> void:
 	check(hud.is_menu_open(), "inventory did not register as an open menu")
 	check(get_tree().paused, "opening a panel did not pause the tree")
 	check(hud._hud_alpha < 0.9, "the diegetic HUD did not start fading behind a panel")
-	check(
-		hud.inventory.entry_count() >= 7,
-		"inventory shows %d entries, expected at least 7" % hud.inventory.entry_count()
-	)
+	check(hud.inventory.entry_count() >= 7, "inventory shows %d entries, expected at least 7" % hud.inventory.entry_count())
 	hud.inventory.select(3)
 	await frames(30)
 	await shot("ui_inventory")
@@ -534,14 +506,8 @@ func _test_settings_roundtrip() -> void:
 
 	# Now prove it survived the file, not just the process.
 	var reloaded := SettingsMenu.reload_from_disk()
-	check(
-		absf(float(reloaded["audio/music"]) - 0.31) < 0.001,
-		"music volume did not persist: %s" % reloaded["audio/music"]
-	)
-	check(
-		absf(float(reloaded["input/sensitivity"]) - 2.15) < 0.001,
-		"sensitivity did not persist: %s" % reloaded["input/sensitivity"]
-	)
+	check(absf(float(reloaded["audio/music"]) - 0.31) < 0.001, "music volume did not persist: %s" % reloaded["audio/music"])
+	check(absf(float(reloaded["input/sensitivity"]) - 2.15) < 0.001, "sensitivity did not persist: %s" % reloaded["input/sensitivity"])
 	check(bool(reloaded["input/invert_y"]), "invert_y did not persist")
 	check(int(reloaded["video/quality"]) == 1, "quality tier did not persist")
 	check(not bool(reloaded["ui/show_prompts"]), "prompt toggle did not persist")
@@ -584,23 +550,11 @@ func _test_save_load() -> void:
 	await frames(10)
 	check(GameState.day == 4, "day did not restore (%d)" % GameState.day)
 	check(GameState.arrows == 9, "arrows did not restore (%d)" % GameState.arrows)
-	check(
-		GameState.inventory.size() >= 6,
-		"inventory restored %d entries, expected at least 6" % GameState.inventory.size()
-	)
-	check(
-		GameState.discovered.size() >= 3,
-		"discovered restored %d places, expected at least 3" % GameState.discovered.size()
-	)
+	check(GameState.inventory.size() >= 6, "inventory restored %d entries, expected at least 6" % GameState.inventory.size())
+	check(GameState.discovered.size() >= 3, "discovered restored %d places, expected at least 3" % GameState.discovered.size())
 	var back := game.player.global_position
-	check(
-		back.distance_to(here) < 1.5,
-		"the player did not return to the saved position (%.1f m away)" % back.distance_to(here)
-	)
-	check(
-		absf(game.world.sky.time_of_day - 19.25) < 0.05,
-		"time of day did not restore (%.2f)" % game.world.sky.time_of_day
-	)
+	check(back.distance_to(here) < 1.5, "the player did not return to the saved position (%.1f m away)" % back.distance_to(here))
+	check(absf(game.world.sky.time_of_day - 19.25) < 0.05, "time of day did not restore (%.2f)" % game.world.sky.time_of_day)
 	check(hud.compass.place_count() == 3, "compass did not rebuild after a load (%d)" % hud.compass.place_count())
 	check(not hud.is_menu_open(), "loading a save left a menu open")
 
@@ -624,10 +578,7 @@ func _test_save_load() -> void:
 	var qback := game.player.global_position
 	check(
 		qback.distance_to(spot) < 1.5,
-		(
-			"quick save wrote a stale position: came back %.1f m from where the key was " % qback.distance_to(spot)
-			+ "pressed"
-		)
+		"quick save wrote a stale position: came back %.1f m from where the key was " % qback.distance_to(spot) + "pressed"
 	)
 
 	# One press, one save. The Game used to poll the same key the HUD consumes, so a

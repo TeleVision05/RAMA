@@ -75,14 +75,7 @@ func _run() -> void:
 
 	# A circuit through the thickest forest in the valley — where this system is at its
 	# most expensive. Measuring in the meadow would flatter it.
-	_route = [
-		Vector2(-196, -34),
-		Vector2(-232, 10),
-		Vector2(-244, 60),
-		Vector2(-200, 96),
-		Vector2(-160, 40),
-		Vector2(-196, -34)
-	]
+	_route = [Vector2(-196, -34), Vector2(-232, 10), Vector2(-244, 60), Vector2(-200, 96), Vector2(-160, 40), Vector2(-196, -34)]
 	for i in range(_route.size() - 1):
 		_route_len += _route[i].distance_to(_route[i + 1])
 
@@ -181,9 +174,7 @@ func _cover(v: bool) -> void:
 func _shadows(v: bool) -> void:
 	for c in veg.get_children():
 		if c is MultiMeshInstance3D and not _is_cover(String(c.name)):
-			c.cast_shadow = (
-				GeometryInstance3D.SHADOW_CASTING_SETTING_ON if v else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-			)
+			c.cast_shadow = (GeometryInstance3D.SHADOW_CASTING_SETTING_ON if v else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF)
 
 
 func _is_cover(n: String) -> bool:
@@ -211,13 +202,7 @@ func _sample() -> Dictionary:
 		prims += int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME))
 		draws += int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
 	var f := float(FRAMES)
-	return {
-		"cpu": cpu / f,
-		"peak": peak,
-		"objs": int(objs / FRAMES),
-		"prims": int(prims / FRAMES),
-		"draws": int(draws / FRAMES)
-	}
+	return {"cpu": cpu / f, "peak": peak, "objs": int(objs / FRAMES), "prims": int(prims / FRAMES), "draws": int(draws / FRAMES)}
 
 
 func _walk() -> void:

@@ -51,18 +51,10 @@ func _run() -> void:
 	ds = dir.dialogue
 	if ds == null:
 		ds = DialogueSystem.instance(self)
-	print(
-		(
-			"[npc] npc group total=%d (a duplicate director would double this)"
-			% get_tree().get_nodes_in_group("npc").size()
-		)
-	)
+	print("[npc] npc group total=%d (a duplicate director would double this)" % get_tree().get_nodes_in_group("npc").size())
 	if get_tree().get_nodes_in_group("npc").size() != dir.npcs.size():
 		fails.append(
-			(
-				"the npc group holds %d nodes but the director owns %d"
-				% [get_tree().get_nodes_in_group("npc").size(), dir.npcs.size()]
-			)
+			"the npc group holds %d nodes but the director owns %d" % [get_tree().get_nodes_in_group("npc").size(), dir.npcs.size()]
 		)
 	await steps(30)
 
@@ -182,19 +174,14 @@ func _check_faces() -> void:
 			fails.append("%s has no hair mesh at all" % n.id)
 		elif float(f["hair_over_x"]) <= 0.0:
 			fails.append(
-				(
-					"%s is BALD: the hair cap is %.3f m narrower than the skull, so it draws inside the head"
-					% [n.id, -float(f["hair_over_x"])]
-				)
+				"%s is BALD: the hair cap is %.3f m narrower than the skull, so it draws inside the head" % [n.id, -float(f["hair_over_x"])]
 			)
 		if int(f["eyes"]) != 2:
 			fails.append("%s has %d eyes" % [n.id, int(f["eyes"])])
 		if float(f["eye_proud"]) <= 0.001:
 			fails.append("%s: the eye is buried %.1f mm inside the skull" % [n.id, -float(f["eye_proud"]) * 1000.0])
 		if float(f["eye_proud"]) > 0.014:
-			fails.append(
-				"%s: the eye stands %.1f mm proud — that is a stuck-on ball" % [n.id, float(f["eye_proud"]) * 1000.0]
-			)
+			fails.append("%s: the eye stands %.1f mm proud — that is a stuck-on ball" % [n.id, float(f["eye_proud"]) * 1000.0])
 		if float(f["nose_proud"]) <= 0.002:
 			fails.append("%s has no nose clearing the face (%.1f mm)" % [n.id, float(f["nose_proud"]) * 1000.0])
 		if float(f["mouth_proud"]) <= 0.0:
@@ -202,10 +189,7 @@ func _check_faces() -> void:
 		# The whole head must lie forward of the origin on -Z.
 		if float(f["front_z"]) > -sk.z * 0.9:
 			fails.append(
-				(
-					"%s: the face is not on -Z (front-most head vertex at z=%+.3f, skull half-depth %.3f)"
-					% [n.id, float(f["front_z"]), sk.z]
-				)
+				"%s: the face is not on -Z (front-most head vertex at z=%+.3f, skull half-depth %.3f)" % [n.id, float(f["front_z"]), sk.z]
 			)
 
 
@@ -281,10 +265,7 @@ func _check_work_poses() -> void:
 		print("  %-11s work=%-2d arms differ from rest by %5.1f deg (L %.1f, R %.1f)" % [n.id, real, moved, dl, dr])
 		if real != NPC.Work.NONE and moved < 8.0:
 			fails.append(
-				(
-					"%s has work kind %d but the pose does not move the arms (%.1f deg) — a missing `match` case"
-					% [n.id, real, moved]
-				)
+				"%s has work kind %d but the pose does not move the arms (%.1f deg) — a missing `match` case" % [n.id, real, moved]
 			)
 		if woke:
 			n.set_active(false)
@@ -358,10 +339,7 @@ func _check_neck_drift() -> void:
 	print("  neck pitch under a +0.06 rad additive pose: %.4f -> %.4f rad after 60 s" % [early, late])
 	if absf(late) > 0.20:
 		fails.append(
-			(
-				"the additive neck pose compounded to %.3f rad (%.0f deg) — it is being fed back into itself"
-				% [late, rad_to_deg(late)]
-			)
+			"the additive neck pose compounded to %.3f rad (%.0f deg) — it is being fed back into itself" % [late, rad_to_deg(late)]
 		)
 	if absf(late - early) > 0.06:
 		fails.append("the neck pose drifted %.3f rad over 60 s instead of holding" % (late - early))
@@ -533,9 +511,7 @@ func _check_dialogue(p: Player) -> void:
 		fails.append("the elder's hub offered %d choices" % hub.size())
 	ds.choose(hub.size() - 1)
 	await steps(4)
-	print(
-		"  after ending: active=%s locked=%s box_visible=%s" % [ds.is_active(), p.get("_input_locked"), ds.box.visible]
-	)
+	print("  after ending: active=%s locked=%s box_visible=%s" % [ds.is_active(), p.get("_input_locked"), ds.box.visible])
 	if ds.is_active():
 		fails.append("the conversation did not end on the closing choice")
 	if bool(p.get("_input_locked")):
@@ -636,12 +612,7 @@ func _check_conditions() -> void:
 		fails.append("the traveller's thread reached '%s', expected 'b_lamp'" % ds.current_node_id)
 	ds.choose(0)  # "I will climb up and light it."
 	await steps(2)
-	print(
-		(
-			"  quest q_shrine=%s  lamp_oil=%d  events=%s"
-			% [ds.quest_state("q_shrine"), GameState.item_count("lamp_oil"), events]
-		)
-	)
+	print("  quest q_shrine=%s  lamp_oil=%d  events=%s" % [ds.quest_state("q_shrine"), GameState.item_count("lamp_oil"), events])
 	if ds.quest_state("q_shrine") != "active":
 		fails.append("accepting the errand did not start q_shrine")
 	if GameState.item_count("lamp_oil") < 1:
@@ -664,12 +635,7 @@ func _check_conditions() -> void:
 	print(
 		(
 			"  after lighting: quest=%s oil=%d health=%.0f shrine_lit=%s"
-			% [
-				ds.quest_state("q_shrine"),
-				GameState.item_count("lamp_oil"),
-				GameState.health,
-				GameState.get_flag("shrine_lit", false)
-			]
+			% [ds.quest_state("q_shrine"), GameState.item_count("lamp_oil"), GameState.health, GameState.get_flag("shrine_lit", false)]
 		)
 	)
 	if ds.quest_state("q_shrine") != "complete":
@@ -758,9 +724,7 @@ func _shots() -> void:
 
 ## Frame one or more villagers from the open side, with the player parked just behind
 ## the camera so terrain and NPC streaming stay centred on the shot.
-func npc_shot(
-	nm: String, ids: Array, hour: float, warm: float, back: float, high: float, fov: float, aim_h: float = 1.02
-) -> void:
+func npc_shot(nm: String, ids: Array, hour: float, warm: float, back: float, high: float, fov: float, aim_h: float = 1.02) -> void:
 	var first := dir.get_npc(String(ids[0]))
 	game.world.sky.paused = true
 	game.world.sky.set_time(hour)
@@ -791,12 +755,7 @@ func npc_shot(
 	await capture(nm)
 	var n0 := dir.get_npc(String(ids[0]))
 	var facing: float = (-n0.global_transform.basis.z).dot((eye - n0.global_position).normalized())
-	print(
-		(
-			"  %-16s hour=%4.1f active=%d subject=(%.0f,%.0f) faces_camera=%+.2f"
-			% [nm, hour, dir.active_count(), aim.x, aim.z, facing]
-		)
-	)
+	print("  %-16s hour=%4.1f active=%d subject=(%.0f,%.0f) faces_camera=%+.2f" % [nm, hour, dir.active_count(), aim.x, aim.z, facing])
 	if facing < 0.2:
 		fails.append("%s: the subject is turned away from the camera (%.2f)" % [nm, facing])
 
@@ -975,12 +934,7 @@ func _check_perf() -> void:
 	game.world.sky.paused = true
 	game.world.sky.set_time(12.0)
 	# Stand in the middle of the village, where every villager is loaded and drawing.
-	_park(
-		(
-			Vector3(dir.get_npc("suryadatta").global_position.x, 0.0, dir.get_npc("suryadatta").global_position.z)
-			+ Vector3(6.0, 0.0, 6.0)
-		)
-	)
+	_park(Vector3(dir.get_npc("suryadatta").global_position.x, 0.0, dir.get_npc("suryadatta").global_position.z) + Vector3(6.0, 0.0, 6.0))
 	scam.current = false
 	game.cam.camera().current = true
 	game.world.terrain.update_focus(game.player.global_position, true)

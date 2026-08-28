@@ -186,11 +186,7 @@ func _scatter_xform(p: Vector2, yaw: float, tilt: float, y_off: float, lo: float
 	var sc: float = _rng.randf_range(lo, hi)
 	t.basis = (
 		t.basis
-		* Basis.from_scale(
-			Vector3(
-				sc * _rng.randf_range(0.90, 1.12), sc * _rng.randf_range(0.86, 1.15), sc * _rng.randf_range(0.90, 1.12)
-			)
-		)
+		* Basis.from_scale(Vector3(sc * _rng.randf_range(0.90, 1.12), sc * _rng.randf_range(0.86, 1.15), sc * _rng.randf_range(0.90, 1.12)))
 	)
 	return t
 
@@ -459,9 +455,7 @@ func _build_village() -> void:
 			continue
 		lamps += 1
 		var lq: Vector2 = (
-			h.p
-			+ Vector2(cos(h.yaw), -sin(h.yaw)) * 4.1
-			+ Vector2(cos(h.yaw + 1.5), -sin(h.yaw + 1.5)) * rg.randf_range(-0.7, 0.7)
+			h.p + Vector2(cos(h.yaw), -sin(h.yaw)) * 4.1 + Vector2(cos(h.yaw + 1.5), -sin(h.yaw + 1.5)) * rg.randf_range(-0.7, 0.7)
 		)
 		var dl := Arch.oil_lamp(true)
 		_place_prop(dl, lq, 0.0, 0.9)
@@ -545,12 +539,7 @@ func _build_shrine() -> void:
 	_place_level(ws, Vector2(157.5, -62.0), _yaw_to(Vector2(157.5, -62.0), KNOLL_STAIR_A), 1.3, 1.2, 0.05, 0.9, 0.90)
 
 	_poi.append(
-		{
-			"name": "The Shrine of the Rising Sun",
-			"position": Vector3(TEMPLE.x, plinth_top, TEMPLE.y),
-			"radius": 30.0,
-			"kind": "shrine"
-		}
+		{"name": "The Shrine of the Rising Sun", "position": Vector3(TEMPLE.x, plinth_top, TEMPLE.y), "radius": 30.0, "kind": "shrine"}
 	)
 	_poi.append({"name": "The Knoll Stair", "position": a, "radius": 10.0, "kind": "landmark"})
 
@@ -646,9 +635,7 @@ func _build_ruins() -> void:
 		k.box(
 			"stone_ruin",
 			Transform3D(
-				bxf.rotated(Vector3.UP, rg.randf_range(-0.10, 0.10)).rotated(
-					bxf * Vector3.RIGHT, rg.randf_range(-0.09, 0.09)
-				),
+				bxf.rotated(Vector3.UP, rg.randf_range(-0.10, 0.10)).rotated(bxf * Vector3.RIGHT, rg.randf_range(-0.09, 0.09)),
 				Vector3(eu, top - base - 0.30 + rg.randf_range(-0.22, 0.06), ev)
 			),
 			Vector3(seg * rg.randf_range(0.74, 0.96), 1.05, rg.randf_range(0.85, 1.05)),
@@ -821,11 +808,7 @@ func _build_camp() -> void:
 		var r2: float = want - 3.0
 		while r2 <= want + 3.0:
 			var cand: Vector2 = hearth + dir2 * r2
-			if (
-				map.in_bounds(cand.x, cand.y)
-				and map.slope_at(cand.x, cand.y) <= 0.26
-				and map.height_at(cand.x, cand.y) - base_h <= 5.0
-			):
+			if map.in_bounds(cand.x, cand.y) and map.slope_at(cand.x, cand.y) <= 0.26 and map.height_at(cand.x, cand.y) - base_h <= 5.0:
 				var dd: float = absf(r2 - want)
 				if dd < best_d:
 					best_d = dd
@@ -847,11 +830,7 @@ func _build_camp() -> void:
 		used.append(q2)
 		# driven in leaning OUTWARD from the fire, the way a stake is set against a charge
 		stakes.append(
-			_lean(
-				_scatter_xform(q2, ang2 + rg.randf_range(-0.5, 0.5), 0.20, -0.14, 0.80, 1.34),
-				dir2,
-				rg.randf_range(0.13, 0.30)
-			)
+			_lean(_scatter_xform(q2, ang2 + rg.randf_range(-0.5, 0.5), 0.20, -0.14, 0.80, 1.34), dir2, rg.randf_range(0.13, 0.30))
 		)
 		if stakes.size() >= 46:
 			break
@@ -863,12 +842,7 @@ func _build_camp() -> void:
 			continue
 		bones.append(
 			_scatter_xform(
-				q3 + Vector2(rg.randf_range(-0.8, 0.8), rg.randf_range(-0.8, 0.8)),
-				rg.randf_range(0.0, TAU),
-				1.0,
-				0.02,
-				0.68,
-				1.38
+				q3 + Vector2(rg.randf_range(-0.8, 0.8), rg.randf_range(-0.8, 0.8)), rg.randf_range(0.0, TAU), 1.0, 0.02, 0.68, 1.38
 			)
 		)
 		if bones.size() >= 30:
@@ -920,12 +894,7 @@ func _build_fields() -> void:
 				continue
 			plots += 1
 			var ring: Array = []
-			var corners := [
-				Vector2(-w * 0.5, -h * 0.5),
-				Vector2(w * 0.5, -h * 0.5),
-				Vector2(w * 0.5, h * 0.5),
-				Vector2(-w * 0.5, h * 0.5)
-			]
+			var corners := [Vector2(-w * 0.5, -h * 0.5), Vector2(w * 0.5, -h * 0.5), Vector2(w * 0.5, h * 0.5), Vector2(-w * 0.5, h * 0.5)]
 			for ci in range(5):
 				var a0: Vector2 = corners[ci % 4]
 				var b0: Vector2 = corners[(ci + 1) % 4]
@@ -1072,9 +1041,7 @@ func _build_ford() -> void:
 	var yaw: float = atan2(-dir.y, dir.x)
 	var pitch: float = atan2(yb - ya, length)
 	var br := Arch.bridge(length, camber, 8.0)
-	br.transform = Transform3D(
-		Basis(Vector3.UP, yaw) * Basis(Vector3.BACK, pitch), Vector3((a.x + b.x) * 0.5, mid_y, (a.y + b.y) * 0.5)
-	)
+	br.transform = Transform3D(Basis(Vector3.UP, yaw) * Basis(Vector3.BACK, pitch), Vector3((a.x + b.x) * 0.5, mid_y, (a.y + b.y) * 0.5))
 	add_child(br)
 
 	# Boulders in the shallows on either bank, where people still wade across.

@@ -97,9 +97,7 @@ func update_focus(focus: Vector3, immediate: bool = false) -> void:
 		if want != c.lod and not _pending.has(i):
 			_pending.append(i)
 	# Nearest first, so what the player is standing on sharpens before the horizon.
-	_pending.sort_custom(
-		func(a, b): return _focus.distance_squared_to(_chunks[a].centre) < _focus.distance_squared_to(_chunks[b].centre)
-	)
+	_pending.sort_custom(func(a, b): return _focus.distance_squared_to(_chunks[a].centre) < _focus.distance_squared_to(_chunks[b].centre))
 	if immediate:
 		while not _pending.is_empty():
 			_apply(_pending.pop_front())

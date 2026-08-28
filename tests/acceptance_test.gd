@@ -216,11 +216,7 @@ func _run() -> void:
 		# it picks depends on its archetype and its range. What must NOT happen is that
 		# it stays in its idle state and stands still.
 		var engaged: bool = now_state in ["chase", "attack", "strafe", "investigate", "retreat"]
-		ok(
-			"enemy AI engages the player",
-			engaged or moved > 0.8,
-			"%s -> %s, moved %.2f m" % [idle_state, now_state, moved]
-		)
+		ok("enemy AI engages the player", engaged or moved > 0.8, "%s -> %s, moved %.2f m" % [idle_state, now_state, moved])
 
 		var hp_before: float = target.get("health") if target.get("health") != null else -1.0
 		target.call("take_damage", 40.0, p, target.global_position + Vector3(0, 1, 0), false)
@@ -271,11 +267,7 @@ func _run() -> void:
 	await frames(4)
 	ok("load works", game.load_game(4))
 	await frames(8)
-	ok(
-		"load restores position",
-		p.global_position.distance_to(mark) < 2.0,
-		"%.2f m away" % p.global_position.distance_to(mark)
-	)
+	ok("load restores position", p.global_position.distance_to(mark) < 2.0, "%.2f m away" % p.global_position.distance_to(mark))
 	ok("load restores flags", GameState.get_flag("acceptance_marker") == true)
 
 	# --- 21 day / night ---------------------------------------------------

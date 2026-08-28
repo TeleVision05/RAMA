@@ -45,12 +45,7 @@ func _ready() -> void:
 	_font_title = UITheme.font(2, 0.10)
 	_font_body = UITheme.body_font()
 	_card_style = UITheme.flat_style(
-		Color(0.062, 0.049, 0.040, 0.90),
-		3,
-		1.0,
-		Color(UITheme.BRASS_DIM.r, UITheme.BRASS_DIM.g, UITheme.BRASS_DIM.b, 0.55),
-		0,
-		0
+		Color(0.062, 0.049, 0.040, 0.90), 3, 1.0, Color(UITheme.BRASS_DIM.r, UITheme.BRASS_DIM.g, UITheme.BRASS_DIM.b, 0.55), 0, 0
 	)
 	_card_style.shadow_size = 10
 	_card_style.shadow_color = Color(0, 0, 0, 0.45)
@@ -165,11 +160,7 @@ func _draw_card(c: Dictionary) -> void:
 	draw_style_box(sb, rect)
 
 	# accent edge
-	draw_rect(
-		Rect2(rect.position + Vector2(1, 3), Vector2(2.5, rect.size.y - 6)),
-		Color(accent.r, accent.g, accent.b, alpha),
-		true
-	)
+	draw_rect(Rect2(rect.position + Vector2(1, 3), Vector2(2.5, rect.size.y - 6)), Color(accent.r, accent.g, accent.b, alpha), true)
 
 	var tx: float = rect.position.x + 18.0
 	var title: String = c.title

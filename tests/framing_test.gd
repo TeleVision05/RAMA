@@ -89,9 +89,7 @@ func _run() -> void:
 		elif not clear:
 			fails.append("%s: something is between the camera and Rama" % s[0])
 		await RenderingServer.frame_post_draw
-		get_viewport().get_texture().get_image().save_png(
-			"res://build/screenshots/frame_%s.png" % String(s[0]).replace(" ", "_")
-		)
+		get_viewport().get_texture().get_image().save_png("res://build/screenshots/frame_%s.png" % String(s[0]).replace(" ", "_"))
 	print("RESULT: " + ("PASS" if fails.is_empty() else "FAIL"))
 	for f in fails:
 		print("  ! " + f)

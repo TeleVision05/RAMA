@@ -224,15 +224,7 @@ func _build_river() -> void:
 static func _catmull(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, t: float) -> Vector2:
 	var t2 := t * t
 	var t3 := t2 * t
-	return (
-		0.5
-		* (
-			(2.0 * p1)
-			+ (-p0 + p2) * t
-			+ (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * t2
-			+ (-p0 + 3.0 * p1 - 3.0 * p2 + p3) * t3
-		)
-	)
+	return 0.5 * ((2.0 * p1) + (-p0 + p2) * t + (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * t2 + (-p0 + 3.0 * p1 - 3.0 * p2 + p3) * t3)
 
 
 ## Distance in metres from p to the river centreline. Reads the baked field.
@@ -375,9 +367,7 @@ func _seed_point_wy(f: PackedFloat32Array, carry: PackedFloat32Array, p: Vector2
 	carry[i] = wy
 
 
-func _seed_segment_wy(
-	f: PackedFloat32Array, carry: PackedFloat32Array, a: Vector2, b: Vector2, wa: float, wb: float
-) -> void:
+func _seed_segment_wy(f: PackedFloat32Array, carry: PackedFloat32Array, a: Vector2, b: Vector2, wa: float, wb: float) -> void:
 	var steps := int(maxf(2.0, a.distance_to(b) / (CELL * 0.5)))
 	for s in range(steps + 1):
 		var t := float(s) / float(steps)
@@ -620,11 +610,7 @@ func _bake() -> void:
 				# sides were visibly concentric.
 				var rdn: float = rd
 				if rd > hw:
-					rdn = (
-						rd
-						+ _n_hill.get_noise_2d(x * 2.6, z * 2.6) * 8.0
-						+ _n_detail.get_noise_2d(x * 1.1, z * 1.1) * 2.6
-					)
+					rdn = (rd + _n_hill.get_noise_2d(x * 2.6, z * 2.6) * 8.0 + _n_detail.get_noise_2d(x * 1.1, z * 1.1) * 2.6)
 					rdn = maxf(rdn, hw + 0.05)
 				var carved: float
 				if rd <= hw:

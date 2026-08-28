@@ -145,11 +145,7 @@ func _place_ruins() -> void:
 	var gate := RuinGate.new()
 	_add(gate, _g(-158.6, -143.9), "RuinGate")
 	gate.face(_g(-168.0, -148.0))
-	_add(
-		Pickup.new("temple_bell", "Take the bronze bell", "bell"),
-		_g(-155.0, -145.5) + Vector3(0, 0.62, 0),
-		"BellPickup"
-	)
+	_add(Pickup.new("temple_bell", "Take the bronze bell", "bell"), _g(-155.0, -145.5) + Vector3(0, 0.62, 0), "BellPickup")
 	_add(OfferingChest.new("ruin_chest", {"arrow_bundle": 1, "healing_salve": 1}), _g(-153.5, -141.6), "RuinOffering")
 
 
@@ -412,9 +408,7 @@ class ShrineLamp:
 		add_child(cap)
 		var stem := MeshInstance3D.new()
 		stem.mesh = MeshKit.profile_loft(
-			0.74,
-			[[0.0, 0.15, 0.15], [0.12, 0.07, 0.07], [0.78, 0.055, 0.055], [0.90, 0.19, 0.19], [1.0, 0.16, 0.16]],
-			12
+			0.74, [[0.0, 0.15, 0.15], [0.12, 0.07, 0.07], [0.78, 0.055, 0.055], [0.90, 0.19, 0.19], [1.0, 0.16, 0.16]], 12
 		)
 		stem.material_override = Mats.brass()
 		stem.position = Vector3(0, 0.68, 0)
@@ -573,13 +567,9 @@ class LampPuzzle:
 		AudioDirector.play_3d("ui_close", lamp.global_position, -3.0)
 		var named: String = String(QuestData.LAMP_EMBLEM_NAMES.get(order()[0], order()[0]))
 		if sequence.is_empty():
-			EventBus.notify.emit(
-				"Nothing takes", "The wick will not hold a flame. The stone names %s first." % named, "warn"
-			)
+			EventBus.notify.emit("Nothing takes", "The wick will not hold a flame. The stone names %s first." % named, "warn")
 		else:
-			EventBus.notify.emit(
-				"The flames go out", "All three, together. The order on the stone was not this one.", "warn"
-			)
+			EventBus.notify.emit("The flames go out", "All three, together. The order on the stone was not this one.", "warn")
 		reset()
 
 	func reset() -> void:
@@ -625,9 +615,7 @@ class ThresholdLamp:
 	func post_place() -> void:
 		interact_range = 3.2
 		var post := MeshInstance3D.new()
-		post.mesh = MeshKit.profile_loft(
-			1.24, [[0.0, 0.20, 0.20], [0.10, 0.13, 0.13], [0.85, 0.11, 0.11], [1.0, 0.16, 0.16]], 10
-		)
+		post.mesh = MeshKit.profile_loft(1.24, [[0.0, 0.20, 0.20], [0.10, 0.13, 0.13], [0.85, 0.11, 0.11], [1.0, 0.16, 0.16]], 10)
 		post.material_override = Mats.pbr("temple_stone", 1.1)
 		add_child(post)
 		var cup := MeshInstance3D.new()
@@ -663,9 +651,7 @@ class ThresholdLamp:
 			return
 		if not GameState.remove_item("lamp_oil", 1):
 			AudioDirector.play_2d("ui_close", -8.0)
-			EventBus.notify.emit(
-				"Dry", "There is a wick, and no oil in the world " + "will get here on its own.", "warn"
-			)
+			EventBus.notify.emit("Dry", "There is a wick, and no oil in the world " + "will get here on its own.", "warn")
 			return
 		_set_lit(true)
 		AudioDirector.play_3d("torch_light", global_position, -3.0)
@@ -842,9 +828,7 @@ class BrokenCart:
 		examined = true
 		AudioDirector.play_3d("pickup_item", global_position, -4.0)
 		EventBus.notify.emit(
-			"The cart",
-			"Split along the axle and pushed off the road. Under the boards, a brass " + "bell with a split lip.",
-			"item"
+			"The cart", "Split along the axle and pushed off the road. Under the boards, a brass " + "bell with a split lip.", "item"
 		)
 		GameState.set_flag("saw_cart", true)
 		GameState.add_item("goat_bell", 1)
@@ -864,9 +848,7 @@ class ClawedTree:
 	func post_place() -> void:
 		interact_range = 3.4
 		var trunk := MeshInstance3D.new()
-		trunk.mesh = MeshKit.profile_loft(
-			4.6, [[0.0, 0.46, 0.46], [0.16, 0.34, 0.34], [0.62, 0.27, 0.27], [1.0, 0.21, 0.21]], 12
-		)
+		trunk.mesh = MeshKit.profile_loft(4.6, [[0.0, 0.46, 0.46], [0.16, 0.34, 0.34], [0.62, 0.27, 0.27], [1.0, 0.21, 0.21]], 12)
 		trunk.material_override = Interactables.alt_pbr("bark_banyan", 2.2)
 		add_child(trunk)
 		# Four gouges, chest high. Authored at radius 0.30 they sat INSIDE the bark —
@@ -903,10 +885,7 @@ class ClawedTree:
 		AudioDirector.play_2d("ui_open", -9.0)
 		EventBus.notify.emit(
 			"The tree",
-			(
-				"Four gouges, a hand's width apart and taller than a tiger can reach. "
-				+ "Whatever made them was standing up."
-			),
+			"Four gouges, a hand's width apart and taller than a tiger can reach. " + "Whatever made them was standing up.",
 			"info"
 		)
 		GameState.set_flag("saw_claws", true)
@@ -1153,9 +1132,7 @@ class Escortee:
 			elif d > FOLLOW_MIN:
 				rotation.y = lerp_angle(rotation.y, atan2(to.x, to.z), 1.0 - pow(0.02, delta))
 		else:
-			global_position = Vector3(
-				global_position.x, m.height_at(global_position.x, global_position.z), global_position.z
-			)
+			global_position = Vector3(global_position.x, m.height_at(global_position.x, global_position.z), global_position.z)
 		_speed = lerpf(_speed, want, 1.0 - pow(0.002, delta))
 		_gait += delta * (2.4 + _speed * 2.6)
 		if _body != null:
@@ -1425,9 +1402,7 @@ class Pickup:
 			_:
 				var bell := MeshInstance3D.new()
 				bell.mesh = MeshKit.profile_loft(
-					0.42,
-					[[0.0, 0.24, 0.24], [0.28, 0.21, 0.21], [0.66, 0.13, 0.13], [0.90, 0.07, 0.07], [1.0, 0.04, 0.04]],
-					14
+					0.42, [[0.0, 0.24, 0.24], [0.28, 0.21, 0.21], [0.66, 0.13, 0.13], [0.90, 0.07, 0.07], [1.0, 0.04, 0.04]], 14
 				)
 				bell.material_override = Mats.brass()
 				bell.position = Vector3(0, -0.21, 0)
@@ -1642,9 +1617,7 @@ class MerchantStall:
 		var t := _affordable()
 		if t.is_empty():
 			return "Trade: he wants claws, horns, fangs or scrap"
-		return (
-			"Trade %d %s for %s" % [int(t["n"]), QuestData.item_name(String(t["give"])).to_lower(), String(t["label"])]
-		)
+		return "Trade %d %s for %s" % [int(t["n"]), QuestData.item_name(String(t["give"])).to_lower(), String(t["label"])]
 
 	func interact(_player) -> void:
 		var t := _affordable()
@@ -1674,9 +1647,7 @@ class GroveHeart:
 	func post_place() -> void:
 		interact_range = 3.8
 		var step := MeshInstance3D.new()
-		step.mesh = MeshKit.profile_loft(
-			0.52, [[0.0, 2.10, 2.10], [0.55, 1.92, 1.92], [0.80, 1.72, 1.72], [1.0, 1.66, 1.66]], 22
-		)
+		step.mesh = MeshKit.profile_loft(0.52, [[0.0, 2.10, 2.10], [0.55, 1.92, 1.92], [0.80, 1.72, 1.72], [1.0, 1.66, 1.66]], 22)
 		step.material_override = Mats.pbr("temple_stone", 1.6)
 		add_child(step)
 		var dais := MeshInstance3D.new()
@@ -1787,9 +1758,7 @@ class GroveHeart:
 		GameState.stamina = GameState.max_stamina
 		GameState.set_flag("respawn_point", [global_position.x, global_position.y, global_position.z])
 		AudioDirector.play_3d("heal", global_position, -3.0)
-		EventBus.notify.emit(
-			"The bowl", "Cold, and faintly green, and older than " + "anyone who could have told you about it.", "info"
-		)
+		EventBus.notify.emit("The bowl", "Cold, and faintly green, and older than " + "anyone who could have told you about it.", "info")
 
 
 # ---------------------------------------------------------------------------
@@ -1805,9 +1774,7 @@ class GroveStone:
 		interact_range = 2.6
 		var shaft := MeshInstance3D.new()
 		shaft.mesh = MeshKit.profile_loft(
-			1.62 + float(idx % 3) * 0.20,
-			[[0.0, 0.34, 0.26], [0.35, 0.29, 0.22], [0.82, 0.24, 0.19], [1.0, 0.26, 0.20]],
-			9
+			1.62 + float(idx % 3) * 0.20, [[0.0, 0.34, 0.26], [0.35, 0.29, 0.22], [0.82, 0.24, 0.19], [1.0, 0.26, 0.20]], 9
 		)
 		shaft.material_override = Mats.pbr("temple_stone", 0.75)
 		shaft.rotation = Vector3(0.03 * float(idx - 3), 0, 0.025 * float(idx - 2))
@@ -1847,7 +1814,5 @@ class GroveStone:
 	func interact(_player) -> void:
 		AudioDirector.play_2d("ui_open", -10.0)
 		EventBus.notify.emit(
-			"The %s stone" % ["first", "second", "third", "fourth", "fifth", "sixth"][idx % 6],
-			String(LINES[idx % LINES.size()]),
-			"info"
+			"The %s stone" % ["first", "second", "third", "fourth", "fifth", "sixth"][idx % 6], String(LINES[idx % LINES.size()]), "info"
 		)

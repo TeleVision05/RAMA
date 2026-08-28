@@ -17,12 +17,7 @@ func _run() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var p := game.player
-	print(
-		(
-			"spawn: %s  ground=%.2f"
-			% [p.global_position, game.world.map.height_at(p.global_position.x, p.global_position.z)]
-		)
-	)
+	print("spawn: %s  ground=%.2f" % [p.global_position, game.world.map.height_at(p.global_position.x, p.global_position.z)])
 
 	# --- settle -----------------------------------------------------------
 	await steps(60)

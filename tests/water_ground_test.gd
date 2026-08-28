@@ -102,12 +102,7 @@ func _inventory(water: Node3D, setup_ms: float) -> void:
 				mm_inst += mm.instance_count
 		elif n is GPUParticles3D:
 			parts += (n as GPUParticles3D).amount
-	print(
-		(
-			"[inv] setup() %.1f ms | %d nodes | %d MeshInstance3D | %d tris | %d verts"
-			% [setup_ms, nodes, meshes, tris, verts]
-		)
-	)
+	print("[inv] setup() %.1f ms | %d nodes | %d MeshInstance3D | %d tris | %d verts" % [setup_ms, nodes, meshes, tris, verts])
 	print("[inv] MultiMesh instances %d | GPUParticles amount %d" % [mm_inst, parts])
 
 
@@ -248,10 +243,7 @@ func _height_and_float(water: Node3D) -> Dictionary:
 		)
 	)
 	print(
-		(
-			"[float] %d rim cells hang more than %.2f m over lower dry ground (worst %.2f m at %s)"
-			% [spill, FLOAT_TOL, worst_spill, worst_at]
-		)
+		"[float] %d rim cells hang more than %.2f m over lower dry ground (worst %.2f m at %s)" % [spill, FLOAT_TOL, worst_spill, worst_at]
 	)
 	offenders.sort_custom(func(a, b): return float(a[0]) > float(b[0]))
 	for i in range(mini(8, offenders.size())):
@@ -259,10 +251,7 @@ func _height_and_float(water: Node3D) -> Dictionary:
 	var pct_spill: float = 100.0 * float(spill) / maxf(float(edge_cells), 1.0)
 	_ok(
 		pct_spill < 4.0,
-		(
-			"%.1f%% of the water rim (%d cells) hangs over lower ground - worst %.2f m at %s"
-			% [pct_spill, spill, worst_spill, worst_at]
-		)
+		"%.1f%% of the water rim (%d cells) hangs over lower ground - worst %.2f m at %s" % [pct_spill, spill, worst_spill, worst_at]
 	)
 	return cover
 
@@ -383,31 +372,15 @@ func _queries(water: Node3D) -> void:
 	# The query API is the contract the player controller wades and swims against, so it
 	# has to agree with the geometry, not just with itself.
 	var probes := [
-		WorldMap.P_FORD,
-		Vector2(34.0, -184.0),
-		Vector2(-150.0, 140.0),
-		WorldMap.P_VILLAGE,
-		WorldMap.P_SHRINE,
-		RiverWater.WELL_POOL
+		WorldMap.P_FORD, Vector2(34.0, -184.0), Vector2(-150.0, 140.0), WorldMap.P_VILLAGE, WorldMap.P_SHRINE, RiverWater.WELL_POOL
 	]
 	for q in probes:
 		var wy: float = water.water_height_at(q.x, q.y)
 		var dep: float = water.water_depth_at(q.x, q.y)
 		var wet: bool = wy > RiverWater.NO_WATER * 0.5
-		print(
-			(
-				"[query] %-16s water=%s depth=%.2f  map_depth=%.2f"
-				% [q, ("%.2f" % wy) if wet else "dry", dep, map.water_depth_at(q.x, q.y)]
-			)
-		)
+		print("[query] %-16s water=%s depth=%.2f  map_depth=%.2f" % [q, ("%.2f" % wy) if wet else "dry", dep, map.water_depth_at(q.x, q.y)])
 		if map.water_depth_at(q.x, q.y) > 0.5:
-			_ok(
-				wet,
-				(
-					"the map says %s is under %.2f m of water but water_height_at says dry"
-					% [q, map.water_depth_at(q.x, q.y)]
-				)
-			)
+			_ok(wet, "the map says %s is under %.2f m of water but water_height_at says dry" % [q, map.water_depth_at(q.x, q.y)])
 		if map.water_depth_at(q.x, q.y) < 0.01 and not _near_pool(water, q):
 			_ok(not wet, "water_height_at says %s is wet but the map says it is dry land" % q)
 

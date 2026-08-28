@@ -421,9 +421,7 @@ func _timers(dt: float) -> void:
 		_growl_t = _rng.randf_range(9.0, 26.0)
 		if _focus_d < 40.0:
 			var pool: Array = def.idle_sfx if state <= St.PATROL else def.alert_sfx
-			AudioDirector.play_3d(
-				String(pool[_rng.randi() % pool.size()]), global_position + Vector3(0, float(def.eye_h), 0), -14.0
-			)
+			AudioDirector.play_3d(String(pool[_rng.randi() % pool.size()]), global_position + Vector3(0, float(def.eye_h), 0), -14.0)
 
 
 # --- perception ------------------------------------------------------------
@@ -441,9 +439,7 @@ func _perceive(dt: float) -> void:
 func _on_commit() -> void:
 	EventBus.enemy_alerted.emit(self)
 	var pool: Array = def.alert_sfx
-	AudioDirector.play_3d(
-		String(pool[_rng.randi() % pool.size()]), global_position + Vector3(0, float(def.eye_h), 0), -2.0
-	)
+	AudioDirector.play_3d(String(pool[_rng.randi() % pool.size()]), global_position + Vector3(0, float(def.eye_h), 0), -2.0)
 	if director != null and director.has_method("alert_near"):
 		director.alert_near(global_position, 24.0, self, perc.last_known)
 
@@ -538,9 +534,7 @@ func _st_idle(dt: float) -> void:
 		_glance_t = _rng.randf_range(1.6, 4.5)
 		var a: float = rotation.y + _rng.randf_range(-1.5, 1.5)
 		_look_target = (
-			global_position
-			+ Vector3(-sin(a), 0.0, -cos(a)) * 9.0
-			+ Vector3(0, float(def.eye_h) + _rng.randf_range(-0.6, 0.6), 0)
+			global_position + Vector3(-sin(a), 0.0, -cos(a)) * 9.0 + Vector3(0, float(def.eye_h) + _rng.randf_range(-0.6, 0.6), 0)
 		)
 	_look_w = lerpf(_look_w, 0.55, 1.0 - pow(0.02, dt))
 	# The weight shift: a slow drift of the whole body toward a new facing.
@@ -610,9 +604,7 @@ func _st_investigate(dt: float) -> void:
 		_desired = Vector3.ZERO
 		var sweep: float = sin(_scan_t * 1.35) * 1.15
 		_face(_facing_to(perc.last_known) + sweep, dt, 2.2)
-		_look_target = (
-			global_position + Vector3(-sin(rotation.y), 0.0, -cos(rotation.y)) * 10.0 + Vector3(0, float(def.eye_h), 0)
-		)
+		_look_target = (global_position + Vector3(-sin(rotation.y), 0.0, -cos(rotation.y)) * 10.0 + Vector3(0, float(def.eye_h), 0))
 		if _scan_t > 4.5:
 			perc.awareness *= 0.4
 			perc.has_last_known = false
@@ -793,9 +785,7 @@ func _phase_enter() -> void:
 	var ph: Dictionary = _atk_seq[_atk_i]
 	_atk_hit = false
 	if ph.has("sfx"):
-		AudioDirector.play_3d(
-			String(ph.sfx), global_position + Vector3(0, float(def.eye_h), 0), float(ph.get("sfx_db", -4.0))
-		)
+		AudioDirector.play_3d(String(ph.sfx), global_position + Vector3(0, float(def.eye_h), 0), float(ph.get("sfx_db", -4.0)))
 	match String(ph.p):
 		"shoot":
 			_fire_arrow(float(ph.get("dmg", 10.0)))
@@ -892,9 +882,7 @@ func _try_hit(ph: Dictionary) -> void:
 	var dmg: float = float(ph.get("dmg", 10.0))
 	if p.has_method("take_damage"):
 		p.take_damage(dmg, self, p.global_position + Vector3(0, 1.1, 0), false)
-	AudioDirector.play_3d(
-		"sword_hit_flesh" if kind != EnemyTypes.Kind.BEAST else "sword_hit_block", p.global_position, -3.0
-	)
+	AudioDirector.play_3d("sword_hit_flesh" if kind != EnemyTypes.Kind.BEAST else "sword_hit_block", p.global_position, -3.0)
 
 
 func _launch(speed: float, up: float) -> void:
@@ -944,9 +932,7 @@ func _shot_direction(p: Node3D) -> Vector3:
 	to.y += 0.5 * 11.0 * pow(dist / 30.0, 2.0)
 	var dir := to.normalized()
 	var spread: float = 0.017
-	dir = (
-		(dir + Vector3(_rng.randfn(0.0, spread), _rng.randfn(0.0, spread * 0.6), _rng.randfn(0.0, spread))).normalized()
-	)
+	dir = ((dir + Vector3(_rng.randfn(0.0, spread), _rng.randfn(0.0, spread * 0.6), _rng.randfn(0.0, spread))).normalized())
 	return dir
 
 
@@ -1377,9 +1363,7 @@ func _on_own_footstep(_side: String, pos: Vector3, sp: float) -> void:
 			surf = "stone"
 		WorldMap.Biome.SAND, WorldMap.Biome.RIVERBED:
 			surf = "dirt"
-	AudioDirector.play_3d(
-		"footstep_%s_%d" % [surf, 1 + _rng.randi() % 4], pos, lerpf(-20.0, -11.0, clampf(sp / 8.0, 0.0, 1.0))
-	)
+	AudioDirector.play_3d("footstep_%s_%d" % [surf, 1 + _rng.randi() % 4], pos, lerpf(-20.0, -11.0, clampf(sp / 8.0, 0.0, 1.0)))
 
 
 # ===========================================================================
@@ -1393,11 +1377,7 @@ func take_damage(amount: float, source: Node = null, hit_pos: Vector3 = Vector3.
 		return
 	health -= amount
 	EventBus.enemy_damaged.emit(self, amount, crit, hit_pos)
-	AudioDirector.play_3d(
-		String(def.hurt_sfx[_rng.randi() % def.hurt_sfx.size()]),
-		global_position + Vector3(0, float(def.eye_h), 0),
-		-3.0
-	)
+	AudioDirector.play_3d(String(def.hurt_sfx[_rng.randi() % def.hurt_sfx.size()]), global_position + Vector3(0, float(def.eye_h), 0), -3.0)
 
 	if source is Node3D:
 		var sp: Vector3 = (source as Node3D).global_position
@@ -1479,9 +1459,7 @@ func _die() -> void:
 	collision_mask = 0
 	GameState.kills += 1
 	AudioDirector.play_3d(
-		String(def.death_sfx[_rng.randi() % def.death_sfx.size()]),
-		global_position + Vector3(0, float(def.eye_h) * 0.6, 0),
-		-1.0
+		String(def.death_sfx[_rng.randi() % def.death_sfx.size()]), global_position + Vector3(0, float(def.eye_h) * 0.6, 0), -1.0
 	)
 	_drop_loot()
 	died.emit(self)

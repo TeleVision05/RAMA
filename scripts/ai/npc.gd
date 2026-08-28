@@ -213,6 +213,12 @@ func _rig_config(height: float) -> Dictionary:
 ## is how proc_rig.gd builds them. If that ever changes the loop simply finds nothing
 ## and the garment is left alone, which is the safe failure.
 func _fit_garments(s: float) -> void:
+	# ProcRig now hangs its garments off their own nodes so they can swing, and knows
+	# how to scale them itself. Everything below is the correction for the old rigid
+	# lofted cone and finds nothing on the new one.
+	if rig.has_method("fit_garments"):
+		rig.fit_garments(s, role == Role.CHILD)
+		return
 	if absf(s - 1.0) < 0.04:
 		return
 	var kids := rig.hips.get_children()
@@ -245,6 +251,8 @@ func _fit_garments(s: float) -> void:
 ## else — the torso, the pectorals and the brass torque all have thickness in three
 ## axes, so the flatness test cannot pick them up by accident.
 func _fit_sash(s: float) -> void:
+	if rig.has_method("fit_garments"):
+		return  # handled with the rest of the garments, above
 	var torso_z := 0.0
 	var panels: Array[MeshInstance3D] = []
 	for k in rig.chest.get_children():
@@ -294,6 +302,16 @@ func _fit_sash(s: float) -> void:
 ## nothing and the head is left exactly as it was built.
 func _expose_face() -> void:
 	face_report = {}
+	# ProcRig builds a sculpted head now: the face is already on -Z, the features
+	# already stand proud of the skull, and the hair is placed against the skull's own
+	# surface rather than at a hand-tuned size. Every correction below would take that
+	# head apart. The rig measures itself instead, and npc_test still asserts on the
+	# numbers — they just come from the file that owns the geometry.
+	if rig.has_method("face_metrics"):
+		face_report = rig.face_metrics()
+		if debug_face:
+			print("[npc] %s face: %s" % [id, face_report])
+		return
 	var hair_col: Color = rig.cfg.hair_color
 	var r: float = rig.cfg.head
 	var cap: MeshInstance3D = null
@@ -1100,11 +1118,7 @@ func _drive_rig(delta: float) -> void:
 		# A guard with nobody to watch sweeps the road.
 		_scan_yaw = sin(_t * 0.32) * 1.0
 		want_look = 0.55
-		look_at_p = (
-			global_position
-			+ Vector3(0, 1.5, 0)
-			+ (global_transform.basis * Vector3(sin(_scan_yaw), 0.0, -cos(_scan_yaw))) * 6.0
-		)
+		look_at_p = (global_position + Vector3(0, 1.5, 0) + (global_transform.basis * Vector3(sin(_scan_yaw), 0.0, -cos(_scan_yaw))) * 6.0)
 	_look_w = lerpf(_look_w, want_look, 1.0 - pow(0.002, delta))
 	rig.look_weight = _look_w
 	rig.look_target = look_at_p
@@ -1267,9 +1281,7 @@ func _on_footstep(_side: String, pos: Vector3, sp: float) -> void:
 			surf = "stone"
 		WorldMap.Biome.SAND, WorldMap.Biome.RIVERBED:
 			surf = "dirt"
-	AudioDirector.play_3d(
-		"footstep_%s_%d" % [surf, 1 + (_rng.randi() % 4)], pos, lerpf(-24.0, -15.0, clampf(sp / 4.0, 0.0, 1.0))
-	)
+	AudioDirector.play_3d("footstep_%s_%d" % [surf, 1 + (_rng.randi() % 4)], pos, lerpf(-24.0, -15.0, clampf(sp / 4.0, 0.0, 1.0)))
 
 
 # --- barks -----------------------------------------------------------------

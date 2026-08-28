@@ -167,16 +167,7 @@ func _init() -> void:
 		print(
 			(
 				"[frame] %-8s on %.2f ms (p95 %.2f, %.0f fps) | off %.2f ms | WATER %+.2f ms  [%d frames each, %d interleaved rounds]"
-				% [
-					s.n,
-					median(all[true]),
-					p95(all[true]),
-					1000.0 / median(all[true]),
-					median(all[false]),
-					d,
-					all[true].size(),
-					ROUNDS
-				]
+				% [s.n, median(all[true]), p95(all[true]), 1000.0 / median(all[true]), median(all[false]), d, all[true].size(), ROUNDS]
 			)
 		)
 		print(

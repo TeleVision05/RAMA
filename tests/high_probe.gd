@@ -14,12 +14,7 @@ func _init() -> void:
 	print("--- highest geometry in the settlement ---")
 	for i in range(mini(14, rows.size())):
 		var r: Dictionary = rows[i]
-		print(
-			(
-				"  top=%8.2f ground=%7.2f  above=%7.2f  %-22s at (%.0f, %.0f)  %s"
-				% [r.top, r.g, r.top - r.g, r.name, r.c.x, r.c.z, r.path]
-			)
-		)
+		print("  top=%8.2f ground=%7.2f  above=%7.2f  %-22s at (%.0f, %.0f)  %s" % [r.top, r.g, r.top - r.g, r.name, r.c.x, r.c.z, r.path])
 	quit()
 
 
@@ -27,15 +22,7 @@ func _walk(n: Node, rows: Array, map: WorldMap) -> void:
 	if n is MeshInstance3D and n.mesh:
 		var a: AABB = n.global_transform * n.mesh.get_aabb()
 		var c: Vector3 = a.get_center()
-		rows.append(
-			{
-				"top": a.position.y + a.size.y,
-				"g": map.height_at(c.x, c.z),
-				"name": n.name,
-				"c": c,
-				"path": String(n.get_path())
-			}
-		)
+		rows.append({"top": a.position.y + a.size.y, "g": map.height_at(c.x, c.z), "name": n.name, "c": c, "path": String(n.get_path())})
 	elif n is MultiMeshInstance3D and n.multimesh and n.multimesh.mesh:
 		var mb: AABB = n.multimesh.mesh.get_aabb()
 		for i in range(n.multimesh.instance_count):

@@ -259,9 +259,7 @@ func _apply_fov() -> void:
 	var extra: Variant = cam_rig.get("_fov_extra")
 	if blend == null or extra == null:
 		return
-	var base: float = (
-		lerpf(float(PlayerCamera.FREE["fov"]), float(PlayerCamera.AIMED["fov"]), float(blend)) + float(extra)
-	)
+	var base: float = lerpf(float(PlayerCamera.FREE["fov"]), float(PlayerCamera.AIMED["fov"]), float(blend)) + float(extra)
 	(cam as Camera3D).fov = clampf(base + (SettingsMenu.get_f("video/fov") - 64.0), 30.0, 120.0)
 
 
@@ -685,9 +683,7 @@ class StatBars:
 			var t: float = float(i) / float(segs)
 			pts.append(o + Vector2(t * w, -sin(t * PI) * CURVE))
 		draw_polyline(pts, Color(0.0, 0.0, 0.0, 0.55 * alpha), thick + 2.6, true)
-		draw_polyline(
-			pts, Color(UITheme.PARCHMENT.r, UITheme.PARCHMENT.g, UITheme.PARCHMENT.b, 0.14 * alpha), thick, true
-		)
+		draw_polyline(pts, Color(UITheme.PARCHMENT.r, UITheme.PARCHMENT.g, UITheme.PARCHMENT.b, 0.14 * alpha), thick, true)
 		draw_polyline(pts, track, thick, true)
 		var upto: float = clampf(frac, 0.0, 1.0) * float(segs)
 		var full: int = int(floor(upto))
@@ -844,20 +840,12 @@ class AmmoReadout:
 		var a: float = _a * (0.85 + _bump * 0.15)
 		# A small arrow glyph, then the number.
 		var g := c + Vector2(0, -5)
-		draw_line(
-			g + Vector2(0, 8),
-			g + Vector2(0, -6),
-			Color(UITheme.BRASS.r, UITheme.BRASS.g, UITheme.BRASS.b, a),
-			1.4,
-			true
-		)
+		draw_line(g + Vector2(0, 8), g + Vector2(0, -6), Color(UITheme.BRASS.r, UITheme.BRASS.g, UITheme.BRASS.b, a), 1.4, true)
 		draw_colored_polygon(
 			PackedVector2Array([g + Vector2(0, -10), g + Vector2(3.4, -4.4), g + Vector2(-3.4, -4.4)]),
 			Color(UITheme.BRASS.r, UITheme.BRASS.g, UITheme.BRASS.b, a)
 		)
-		UITheme.draw_text(
-			self, UITheme.label_font(), c + Vector2(12, 5), str(count), UITheme.FS_LABEL, Color(col.r, col.g, col.b, a)
-		)
+		UITheme.draw_text(self, UITheme.label_font(), c + Vector2(12, 5), str(count), UITheme.FS_LABEL, Color(col.r, col.g, col.b, a))
 
 
 ## The single line of "what am I doing", top left, with a carved tick when it changes.
@@ -896,12 +884,7 @@ class ObjectiveLine:
 		var o := Vector2(46.0, 84.0 + (1.0 - ease) * 8.0)
 		var a: float = _a * ease
 		UITheme.draw_text(
-			self,
-			UITheme.eyebrow_font(),
-			o,
-			"OBJECTIVE",
-			UITheme.FS_TINY,
-			Color(UITheme.BRASS.r, UITheme.BRASS.g, UITheme.BRASS.b, a * 0.9)
+			self, UITheme.eyebrow_font(), o, "OBJECTIVE", UITheme.FS_TINY, Color(UITheme.BRASS.r, UITheme.BRASS.g, UITheme.BRASS.b, a * 0.9)
 		)
 		var tx: float = o.x
 		if _tick > 0.0:
@@ -915,12 +898,7 @@ class ObjectiveLine:
 			if s > 0.0:
 				draw_colored_polygon(
 					PackedVector2Array(
-						[
-							Vector2(tx + 5, cy - s),
-							Vector2(tx + 5 + s, cy),
-							Vector2(tx + 5, cy + s),
-							Vector2(tx + 5 - s, cy)
-						]
+						[Vector2(tx + 5, cy - s), Vector2(tx + 5 + s, cy), Vector2(tx + 5, cy + s), Vector2(tx + 5 - s, cy)]
 					),
 					col
 				)
@@ -972,12 +950,7 @@ class InteractPrompt:
 
 		var kb := Rect2(o, Vector2(box, box))
 		var sb := UITheme.flat_style(
-			Color(0.062, 0.049, 0.040, 0.86 * _a),
-			3,
-			1.0,
-			Color(UITheme.BRASS.r, UITheme.BRASS.g, UITheme.BRASS.b, 0.85 * _a),
-			0,
-			0
+			Color(0.062, 0.049, 0.040, 0.86 * _a), 3, 1.0, Color(UITheme.BRASS.r, UITheme.BRASS.g, UITheme.BRASS.b, 0.85 * _a), 0, 0
 		)
 		draw_style_box(sb, kb)
 		UITheme.draw_text(
@@ -1051,14 +1024,7 @@ class DamageVignette:
 				var t: float = float(i) / 3.0
 				var span: float = lerpf(0.26, 0.05, t)
 				draw_arc(
-					c,
-					r + t * 3.0,
-					mid - span,
-					mid + span,
-					20,
-					Color(0.92, 0.32, 0.22, a * lerpf(0.35, 1.0, t)),
-					lerpf(7.0, 2.0, t),
-					true
+					c, r + t * 3.0, mid - span, mid + span, 20, Color(0.92, 0.32, 0.22, a * lerpf(0.35, 1.0, t)), lerpf(7.0, 2.0, t), true
 				)
 
 

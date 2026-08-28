@@ -38,12 +38,19 @@ static func bow(scale_f: float = 1.0) -> Node3D:
 		mi.material_override = m_wood
 		root.add_child(mi)
 
-	# Grip wrap and brass nocks.
+	# The grip: a swelled riser with leather WOUND round it. A smooth dowel is a dowel
+	# however it is textured, and the hand now closes on this, so the binding is what
+	# the fingers sit between.
 	var grip := MeshInstance3D.new()
-	grip.mesh = MeshKit.tube(0.16, [[0.0, 0.019], [0.15, 0.023], [0.85, 0.023], [1.0, 0.019]], 10, 0.7)
-	grip.material_override = Mats.pbr("cloth_indigo", 4.0, "cloth_indigo")
-	grip.position = Vector3(0, -0.08, 0.0)
+	grip.mesh = MeshKit.tube(0.17, [[0.0, 0.018], [0.14, 0.023], [0.86, 0.023], [1.0, 0.018]], 12, 0.72)
+	grip.material_override = Mats.pbr("wood_beam", 4.0)
+	grip.position = Vector3(0, -0.085, 0.0)
 	root.add_child(grip)
+	var bind := MeshInstance3D.new()
+	bind.mesh = MeshKit.wrap(0.128, 0.0246, 11.0, 0.0028, 4)
+	bind.material_override = Mats.pbr("cloth_indigo", 3.0, "cloth_indigo")
+	bind.position = Vector3(0, -0.063, 0.0)
+	root.add_child(bind)
 	for mirror in [1.0, -1.0]:
 		var nock := MeshInstance3D.new()
 		nock.mesh = MeshKit.sphere(0.013, 8, 6)
@@ -81,16 +88,24 @@ static func arrow() -> Node3D:
 	head.position = Vector3(0, 0, -0.42)
 	root.add_child(head)
 
-	var m_f := Mats.flat(Color(0.80, 0.36, 0.14), 0.85)
-	m_f.cull_mode = BaseMaterial3D.CULL_DISABLED
+	# Fletching with real geometry: three vanes with a spine, a swept leading edge and
+	# a curl, so an arrow in flight still has feathers when it rolls edge-on.
+	var m_f := Mats.flat(Color(0.80, 0.36, 0.14), 0.82)
+	var vane := MeshKit.fletch(0.105, 0.019, 0.0016, 0.30)
 	for i in range(3):
 		var f := MeshInstance3D.new()
-		f.mesh = MeshKit.quad(0.055, 0.10)
+		f.mesh = vane
 		f.material_override = m_f
-		f.position = Vector3(0, 0, 0.30)
+		f.position = Vector3(0, 0, 0.245)
 		f.rotation = Vector3(0, 0, TAU * float(i) / 3.0)
-		f.rotate_object_local(Vector3.UP, PI * 0.5)
 		root.add_child(f)
+	# Nock.
+	var nk := MeshInstance3D.new()
+	nk.mesh = MeshKit.tube(0.020, [[0.0, 0.0055], [0.6, 0.0060], [1.0, 0.0050]], 6)
+	nk.material_override = Mats.flat(Color(0.20, 0.16, 0.13), 0.6)
+	nk.rotation = Vector3(PI * 0.5, 0, 0)
+	nk.position = Vector3(0, 0, 0.355)
+	root.add_child(nk)
 	return root
 
 
@@ -119,8 +134,7 @@ static func quiver() -> Node3D:
 	band.position = Vector3(0, 0.34, 0)
 	root.add_child(band)
 	# Fletchings poking out of the top.
-	var m_f := Mats.flat(Color(0.80, 0.36, 0.14), 0.85)
-	m_f.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var m_f := Mats.flat(Color(0.80, 0.36, 0.14), 0.82)
 	for i in range(5):
 		var a: float = TAU * float(i) / 5.0
 		var s := MeshInstance3D.new()
@@ -130,10 +144,10 @@ static func quiver() -> Node3D:
 		s.rotation = Vector3(sin(a) * 0.16, 0, -cos(a) * 0.16)
 		root.add_child(s)
 		var f := MeshInstance3D.new()
-		f.mesh = MeshKit.quad(0.04, 0.075)
+		f.mesh = MeshKit.fletch(0.075, 0.016, 0.0015, 0.30)
 		f.material_override = m_f
-		f.position = Vector3(cos(a) * 0.026, 0.52, sin(a) * 0.026)
-		f.rotation = Vector3(0, a, 0)
+		f.position = Vector3(cos(a) * 0.026, 0.47, sin(a) * 0.026)
+		f.rotation = Vector3(-PI * 0.5, a, 0)
 		root.add_child(f)
 	return root
 
@@ -145,19 +159,23 @@ static func sword() -> Node3D:
 	var m_steel := Mats.flat(Color(0.72, 0.74, 0.78), 0.18, 0.95)
 	var m_brass := Mats.brass()
 
+	# A khanda blade: a fuller down each face and a bevel that runs out to an edge.
+	# Lofted as an ellipse this was a rounded bar and read as blunt from every angle.
 	var blade := MeshInstance3D.new()
 	blade.mesh = (
 		MeshKit
-		. profile_loft(
+		. blade(
 			0.74,
 			[
-				[0.00, 0.030, 0.0085],
-				[0.10, 0.033, 0.0090],
-				[0.62, 0.031, 0.0075],
-				[0.86, 0.026, 0.0058],
-				[1.00, 0.004, 0.0018],
+				[0.00, 0.030, 0.0075],
+				[0.08, 0.034, 0.0080],
+				[0.62, 0.032, 0.0068],
+				[0.86, 0.027, 0.0052],
+				[0.97, 0.014, 0.0030],
+				[1.00, 0.003, 0.0010],
 			],
-			10
+			0.34,
+			6
 		)
 	)
 	blade.material_override = m_steel
@@ -171,10 +189,15 @@ static func sword() -> Node3D:
 	root.add_child(guard)
 
 	var grip := MeshInstance3D.new()
-	grip.mesh = MeshKit.tube(0.14, [[0.0, 0.017], [0.5, 0.015], [1.0, 0.017]], 10, 0.72)
-	grip.material_override = Mats.pbr("cloth_indigo", 5.0, "cloth_indigo")
+	grip.mesh = MeshKit.tube(0.14, [[0.0, 0.016], [0.5, 0.0145], [1.0, 0.016]], 10, 0.72)
+	grip.material_override = Mats.pbr("wood_beam", 5.0)
 	grip.position = Vector3(0, -0.055, 0)
 	root.add_child(grip)
+	var wind := MeshInstance3D.new()
+	wind.mesh = MeshKit.wrap(0.118, 0.0172, 9.0, 0.0023, 4)
+	wind.material_override = Mats.pbr("cloth_indigo", 3.0, "cloth_indigo")
+	wind.position = Vector3(0, -0.045, 0)
+	root.add_child(wind)
 
 	var pommel := MeshInstance3D.new()
 	pommel.mesh = MeshKit.tube(0.020, [[0.0, 0.020], [0.5, 0.034], [1.0, 0.018]], 12, 1.0)
@@ -191,16 +214,17 @@ static func crude_blade() -> Node3D:
 	var blade := MeshInstance3D.new()
 	blade.mesh = (
 		MeshKit
-		. profile_loft(
+		. blade(
 			0.62,
 			[
-				[0.0, 0.028, 0.012],
-				[0.30, 0.052, 0.014],
-				[0.70, 0.046, 0.012],
-				[0.92, 0.030, 0.009],
-				[1.0, 0.006, 0.004],
+				[0.0, 0.028, 0.011],
+				[0.30, 0.052, 0.013],
+				[0.70, 0.046, 0.011],
+				[0.92, 0.030, 0.008],
+				[1.0, 0.006, 0.003],
 			],
-			8
+			0.16,
+			5
 		)
 	)
 	blade.material_override = m
@@ -218,9 +242,7 @@ static func crude_blade() -> Node3D:
 static func staff() -> Node3D:
 	var root := Node3D.new()
 	var s := MeshInstance3D.new()
-	s.mesh = MeshKit.tube(
-		1.62, [[0.0, 0.019], [0.4, 0.016], [0.8, 0.015], [1.0, 0.021]], 8, 1.0, Vector3(0.02, 0, 0.01)
-	)
+	s.mesh = MeshKit.tube(1.62, [[0.0, 0.019], [0.4, 0.016], [0.8, 0.015], [1.0, 0.021]], 8, 1.0, Vector3(0.02, 0, 0.01))
 	s.material_override = Mats.pbr("wood_beam", 4.0)
 	s.position = Vector3(0, -0.8, 0)
 	root.add_child(s)

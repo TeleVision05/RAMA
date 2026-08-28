@@ -64,11 +64,6 @@ func _run() -> void:
 		await RenderingServer.frame_post_draw
 		var nm: String = e.call("display_name") if e.has_method("display_name") else "kind%d" % i
 		get_viewport().get_texture().get_image().save_png("res://build/screenshots/enemy_%d.png" % i)
-		print(
-			(
-				"enemy_%d = %s  state=%s hp=%s"
-				% [i, nm, e.call("state_name") if e.has_method("state_name") else "?", e.get("health")]
-			)
-		)
+		print("enemy_%d = %s  state=%s hp=%s" % [i, nm, e.call("state_name") if e.has_method("state_name") else "?", e.get("health")])
 	print("done")
 	get_tree().quit()

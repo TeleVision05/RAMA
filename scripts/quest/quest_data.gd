@@ -81,12 +81,7 @@ const QUESTS := {
 				"description": "Cut Bindu loose and walk her home",
 				"where": Vector2(-120.0, 44.0),
 				"radius": 26.0,
-				"reward":
-				{
-					"items": {"healing_salve": 1},
-					"arrows": 6,
-					"note": "Bindu walks straight to the water trough and drinks."
-				}
+				"reward": {"items": {"healing_salve": 1}, "arrows": 6, "note": "Bindu walks straight to the water trough and drinks."}
 			},
 			{
 				"id": "report",

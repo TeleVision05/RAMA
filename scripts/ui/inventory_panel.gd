@@ -15,103 +15,38 @@ const ICON_PX := 64
 ## id -> {name, desc, icon, tint}. Anything not listed still shows up, with a
 ## prettified name and the lotus fallback icon.
 const CATALOGUE := {
-	"arrow":
-	{"name": "Arrow", "desc": "Cane shaft, iron head. Steady in a crosswind.", "icon": "arrow", "tint": "brass"},
+	"arrow": {"name": "Arrow", "desc": "Cane shaft, iron head. Steady in a crosswind.", "icon": "arrow", "tint": "brass"},
 	"arrows": {"name": "Arrows", "desc": "A bundle bound with waxed thread.", "icon": "arrow", "tint": "brass"},
 	"healing_herb":
-	{
-		"name": "Healing Herb",
-		"desc": "Bitter leaf from the riverbank. Closes small wounds.",
-		"icon": "leaf",
-		"tint": "jade"
-	},
+	{"name": "Healing Herb", "desc": "Bitter leaf from the riverbank. Closes small wounds.", "icon": "leaf", "tint": "jade"},
 	"herb": {"name": "Herb", "desc": "Gathered at the water's edge, still damp.", "icon": "leaf", "tint": "jade"},
-	"lotus":
-	{"name": "Lotus", "desc": "Offered at the shrine. It opens at first light.", "icon": "flower", "tint": "parchment"},
+	"lotus": {"name": "Lotus", "desc": "Offered at the shrine. It opens at first light.", "icon": "flower", "tint": "parchment"},
 	"blue_lotus":
-	{
-		"name": "Blue Lotus",
-		"desc": "Rare in still water. The priests ask for it by name.",
-		"icon": "flower",
-		"tint": "indigo"
-	},
-	"mango":
-	{"name": "Mango", "desc": "Sun-warm and heavy. Enough for the walk back.", "icon": "fruit", "tint": "saffron"},
+	{"name": "Blue Lotus", "desc": "Rare in still water. The priests ask for it by name.", "icon": "flower", "tint": "indigo"},
+	"mango": {"name": "Mango", "desc": "Sun-warm and heavy. Enough for the walk back.", "icon": "fruit", "tint": "saffron"},
 	"rice": {"name": "Rice", "desc": "A measure from the village store.", "icon": "bowl", "tint": "parchment"},
-	"ghee":
-	{
-		"name": "Ghee",
-		"desc": "Clarified butter in a stoppered pot. Lamp fuel, and food.",
-		"icon": "vial",
-		"tint": "saffron"
-	},
+	"ghee": {"name": "Ghee", "desc": "Clarified butter in a stoppered pot. Lamp fuel, and food.", "icon": "vial", "tint": "saffron"},
 	"honey": {"name": "Wild Honey", "desc": "Cut from a bough above the ford.", "icon": "vial", "tint": "brass"},
-	"water_skin":
-	{"name": "Water Skin", "desc": "Filled at the ford. Cool for about a mile.", "icon": "vial", "tint": "jade"},
-	"brass_bell":
-	{"name": "Brass Bell", "desc": "Its note carries further than a shout.", "icon": "bell", "tint": "brass"},
-	"oil_lamp":
-	{"name": "Oil Lamp", "desc": "A clay diya. Enough wick for one long night.", "icon": "lamp", "tint": "saffron"},
-	"amulet":
-	{"name": "Amulet", "desc": "Kaustubha glass on a knotted cord. Warm to hold.", "icon": "gem", "tint": "indigo"},
-	"ruby":
-	{"name": "Ruby", "desc": "Cut in the old style, from the ruins below the ridge.", "icon": "gem", "tint": "crimson"},
-	"gold_coin":
-	{"name": "Gold Coin", "desc": "Punch-marked, older than the village.", "icon": "coin", "tint": "brass"},
+	"water_skin": {"name": "Water Skin", "desc": "Filled at the ford. Cool for about a mile.", "icon": "vial", "tint": "jade"},
+	"brass_bell": {"name": "Brass Bell", "desc": "Its note carries further than a shout.", "icon": "bell", "tint": "brass"},
+	"oil_lamp": {"name": "Oil Lamp", "desc": "A clay diya. Enough wick for one long night.", "icon": "lamp", "tint": "saffron"},
+	"amulet": {"name": "Amulet", "desc": "Kaustubha glass on a knotted cord. Warm to hold.", "icon": "gem", "tint": "indigo"},
+	"ruby": {"name": "Ruby", "desc": "Cut in the old style, from the ruins below the ridge.", "icon": "gem", "tint": "crimson"},
+	"gold_coin": {"name": "Gold Coin", "desc": "Punch-marked, older than the village.", "icon": "coin", "tint": "brass"},
 	"coin": {"name": "Coin", "desc": "Small change from the market road.", "icon": "coin", "tint": "brass"},
-	"rope":
-	{
-		"name": "Coir Rope",
-		"desc": "Coconut fibre, three fathoms. It will hold a man.",
-		"icon": "ring",
-		"tint": "parchment"
-	},
-	"sacred_thread":
-	{
-		"name": "Sacred Thread",
-		"desc": "Three strands, worn over the left shoulder.",
-		"icon": "ring",
-		"tint": "parchment"
-	},
+	"rope": {"name": "Coir Rope", "desc": "Coconut fibre, three fathoms. It will hold a man.", "icon": "ring", "tint": "parchment"},
+	"sacred_thread": {"name": "Sacred Thread", "desc": "Three strands, worn over the left shoulder.", "icon": "ring", "tint": "parchment"},
 	"palm_leaf":
-	{
-		"name": "Palm Leaf",
-		"desc": "Scratched with a stylus. Half the words have worn away.",
-		"icon": "scroll",
-		"tint": "parchment"
-	},
-	"scroll":
-	{
-		"name": "Scroll",
-		"desc": "Rolled and tied. Someone meant this to be found.",
-		"icon": "scroll",
-		"tint": "parchment"
-	},
-	"key":
-	{
-		"name": "Iron Key",
-		"desc": "Pitted with rust. Something in the ruins still locks.",
-		"icon": "key",
-		"tint": "brass"
-	},
+	{"name": "Palm Leaf", "desc": "Scratched with a stylus. Half the words have worn away.", "icon": "scroll", "tint": "parchment"},
+	"scroll": {"name": "Scroll", "desc": "Rolled and tied. Someone meant this to be found.", "icon": "scroll", "tint": "parchment"},
+	"key": {"name": "Iron Key", "desc": "Pitted with rust. Something in the ruins still locks.", "icon": "key", "tint": "brass"},
 	"rakshasa_fang":
-	{
-		"name": "Rakshasa Fang",
-		"desc": "Proof, and a weight you would rather not carry.",
-		"icon": "fang",
-		"tint": "parchment"
-	},
-	"bow_string":
-	{"name": "Bowstring", "desc": "Twisted sinew, waxed against the damp.", "icon": "ring", "tint": "brass"},
+	{"name": "Rakshasa Fang", "desc": "Proof, and a weight you would rather not carry.", "icon": "fang", "tint": "parchment"},
+	"bow_string": {"name": "Bowstring", "desc": "Twisted sinew, waxed against the damp.", "icon": "ring", "tint": "brass"},
 	"torch": {"name": "Torch", "desc": "Resin-soaked cloth on a hardwood shaft.", "icon": "lamp", "tint": "crimson"},
 	"flint": {"name": "Flint", "desc": "A struck edge and a scrap of char cloth.", "icon": "gem", "tint": "parchment"},
 	"sandalwood":
-	{
-		"name": "Sandalwood",
-		"desc": "Cut from the hill grove. It scents everything it touches.",
-		"icon": "blade",
-		"tint": "brass"
-	},
+	{"name": "Sandalwood", "desc": "Cut from the hill grove. It scents everything it touches.", "icon": "blade", "tint": "brass"},
 }
 
 const TINTS := {
@@ -142,20 +77,10 @@ func _ready() -> void:
 	theme = UITheme.get_theme()
 	_panel = UITheme.panel_style(Color(0.066, 0.052, 0.043, 0.95), 26)
 	_slot_style = UITheme.flat_style(
-		Color(0.043, 0.035, 0.031, 0.72),
-		3,
-		1.0,
-		Color(UITheme.BRASS_DIM.r, UITheme.BRASS_DIM.g, UITheme.BRASS_DIM.b, 0.42),
-		0,
-		0
+		Color(0.043, 0.035, 0.031, 0.72), 3, 1.0, Color(UITheme.BRASS_DIM.r, UITheme.BRASS_DIM.g, UITheme.BRASS_DIM.b, 0.42), 0, 0
 	)
 	_slot_sel = UITheme.flat_style(
-		Color(0.192, 0.133, 0.062, 0.86),
-		3,
-		1.0,
-		Color(UITheme.SAFFRON.r, UITheme.SAFFRON.g, UITheme.SAFFRON.b, 0.95),
-		0,
-		0
+		Color(0.192, 0.133, 0.062, 0.86), 3, 1.0, Color(UITheme.SAFFRON.r, UITheme.SAFFRON.g, UITheme.SAFFRON.b, 0.95), 0, 0
 	)
 	set_process(true)
 	refresh()
@@ -305,10 +230,7 @@ static func _shade(kind: String, p: Vector2, tint: Color) -> Color:
 			out = _blend(out, _fill(_sd_seg(p, Vector2(0, 0.78), Vector2(0, -0.44), 0.055), wood))
 			out = _blend(out, _fill(_sd_tri(p, Vector2(0, -0.86), Vector2(0.20, -0.40), Vector2(-0.20, -0.40)), steel))
 			out = _blend(out, _fill(_sd_tri(p, Vector2(0.05, 0.36), Vector2(0.34, 0.74), Vector2(0.05, 0.76)), tint))
-			out = _blend(
-				out,
-				_fill(_sd_tri(p, Vector2(-0.05, 0.36), Vector2(-0.34, 0.74), Vector2(-0.05, 0.76)), tint.darkened(0.15))
-			)
+			out = _blend(out, _fill(_sd_tri(p, Vector2(-0.05, 0.36), Vector2(-0.34, 0.74), Vector2(-0.05, 0.76)), tint.darkened(0.15)))
 		"leaf":
 			var q := _rot(p, -0.5)
 			var d: float = Vector2(q.x / 0.42, q.y / 0.82).length() - 1.0
@@ -327,9 +249,7 @@ static func _shade(kind: String, p: Vector2, tint: Color) -> Color:
 			out = _blend(out, _fill(_sd_circle(p, 0.18), Color(0.909, 0.568, 0.184)))
 			out = _blend(out, _fill(_sd_circle(p, 0.07), Color(0.960, 0.850, 0.560)))
 		"vial":
-			out = _blend(
-				out, _fill(_sd_box(p + Vector2(0, -0.18), Vector2(0.34, 0.46), 0.24), Color(0.30, 0.27, 0.24, 0.92))
-			)
+			out = _blend(out, _fill(_sd_box(p + Vector2(0, -0.18), Vector2(0.34, 0.46), 0.24), Color(0.30, 0.27, 0.24, 0.92)))
 			out = _blend(out, _fill(_sd_box(p + Vector2(0, -0.24), Vector2(0.26, 0.30), 0.18), tint))
 			out = _blend(out, _fill(_sd_box(p + Vector2(0, 0.52), Vector2(0.13, 0.22), 0.05), Color(0.30, 0.27, 0.24)))
 			out = _blend(out, _fill(_sd_box(p + Vector2(0, 0.74), Vector2(0.19, 0.09), 0.04), wood))
@@ -358,31 +278,18 @@ static func _shade(kind: String, p: Vector2, tint: Color) -> Color:
 			out = _blend(out, _fill(_sd_circle(p + Vector2(0, -0.66), 0.11), dark))
 			out = _blend(out, _fill(_sd_seg(p, Vector2(0, -0.66), Vector2(0, -0.86), 0.045), tint.darkened(0.30)))
 		"lamp":
-			out = _blend(
-				out,
-				_fill(maxf(_sd_circle(p + Vector2(0, -0.30), 0.58), -(p.y - 0.10)) * 0.9, Color(0.427, 0.278, 0.196))
-			)
-			out = _blend(
-				out, _fill(_sd_box(p + Vector2(0, -0.12), Vector2(0.62, 0.07), 0.05), Color(0.494, 0.333, 0.235))
-			)
+			out = _blend(out, _fill(maxf(_sd_circle(p + Vector2(0, -0.30), 0.58), -(p.y - 0.10)) * 0.9, Color(0.427, 0.278, 0.196)))
+			out = _blend(out, _fill(_sd_box(p + Vector2(0, -0.12), Vector2(0.62, 0.07), 0.05), Color(0.494, 0.333, 0.235)))
 			var fq := Vector2(p.x / 0.24, (p.y + 0.44) / 0.40)
 			out = _blend(out, _fill((fq.length() - 1.0 + fq.y * 0.35) * 0.35, Color(0.980, 0.741, 0.317)))
-			out = _blend(
-				out, _fill((Vector2(p.x / 0.11, (p.y + 0.40) / 0.22).length() - 1.0) * 0.3, Color(1.0, 0.941, 0.760))
-			)
+			out = _blend(out, _fill((Vector2(p.x / 0.11, (p.y + 0.40) / 0.22).length() - 1.0) * 0.3, Color(1.0, 0.941, 0.760)))
 		"key":
 			out = _blend(out, _fill(absf(_sd_circle(p + Vector2(0, 0.46), 0.28)) - 0.075, tint))
 			out = _blend(out, _fill(_sd_seg(p, Vector2(0, -0.18), Vector2(0, -0.86), 0.070), tint))
 			out = _blend(out, _fill(_sd_box(p + Vector2(-0.17, 0.62), Vector2(0.17, 0.065), 0.02), tint))
 			out = _blend(out, _fill(_sd_box(p + Vector2(-0.17, 0.44), Vector2(0.12, 0.060), 0.02), tint))
 		"fang":
-			out = _blend(
-				out,
-				_fill(
-					_sd_tri(p, Vector2(0, 0.88), Vector2(0.30, -0.72), Vector2(-0.24, -0.72)),
-					Color(0.870, 0.847, 0.784)
-				)
-			)
+			out = _blend(out, _fill(_sd_tri(p, Vector2(0, 0.88), Vector2(0.30, -0.72), Vector2(-0.24, -0.72)), Color(0.870, 0.847, 0.784)))
 			out = _blend(
 				out,
 				_fill(
@@ -395,13 +302,8 @@ static func _shade(kind: String, p: Vector2, tint: Color) -> Color:
 			out = _blend(out, _fill(_sd_box(p + Vector2(0, -0.30), Vector2(0.42, 0.055), 0.03), tint))
 			out = _blend(out, _fill(_sd_box(p + Vector2(0, -0.62), Vector2(0.085, 0.26), 0.05), wood))
 		"bowl":
-			out = _blend(
-				out,
-				_fill(maxf(_sd_circle(p + Vector2(0, -0.16), 0.66), -(p.y - 0.02)) * 0.9, Color(0.435, 0.313, 0.239))
-			)
-			out = _blend(
-				out, _fill(_sd_box(p + Vector2(0, -0.02), Vector2(0.70, 0.075), 0.05), Color(0.529, 0.396, 0.290))
-			)
+			out = _blend(out, _fill(maxf(_sd_circle(p + Vector2(0, -0.16), 0.66), -(p.y - 0.02)) * 0.9, Color(0.435, 0.313, 0.239)))
+			out = _blend(out, _fill(_sd_box(p + Vector2(0, -0.02), Vector2(0.70, 0.075), 0.05), Color(0.529, 0.396, 0.290)))
 			out = _blend(out, _fill(maxf(_sd_circle(p + Vector2(0, -0.02), 0.56), p.y + 0.02) * 0.9, tint))
 		"fruit":
 			var fp := _rot(p, 0.35)
@@ -413,9 +315,7 @@ static func _shade(kind: String, p: Vector2, tint: Color) -> Color:
 					Color(tint.r, tint.g, tint.b, 0.45).lightened(0.4)
 				)
 			)
-			out = _blend(
-				out, _fill(_sd_seg(p, Vector2(0.10, -0.66), Vector2(0.24, -0.90), 0.030), Color(0.352, 0.313, 0.196))
-			)
+			out = _blend(out, _fill(_sd_seg(p, Vector2(0.10, -0.66), Vector2(0.24, -0.90), 0.030), Color(0.352, 0.313, 0.196)))
 		"ring":
 			out = _blend(out, _fill(absf(_sd_circle(p, 0.62)) - 0.10, tint))
 			out = _blend(out, _fill(absf(_sd_circle(p, 0.62)) - 0.035, light))
@@ -520,25 +420,11 @@ func _draw() -> void:
 		carried += int(e.count)
 	var right := "%d ITEMS" % carried
 	var rw := UITheme.text_width(f_eyebrow, right, UITheme.FS_TINY)
-	UITheme.draw_text(
-		self,
-		f_eyebrow,
-		Vector2(pr.end.x - 32 - rw, pr.position.y + 44),
-		right,
-		UITheme.FS_TINY,
-		UITheme.PARCHMENT_FAINT
-	)
+	UITheme.draw_text(self, f_eyebrow, Vector2(pr.end.x - 32 - rw, pr.position.y + 44), right, UITheme.FS_TINY, UITheme.PARCHMENT_FAINT)
 	UITheme.carved_rule(self, pr.position + Vector2(32, 62), pr.size.x - 64)
 
 	if _entries.is_empty():
-		UITheme.draw_text(
-			self,
-			f_body,
-			pr.position + Vector2(32, 132),
-			"Your satchel is empty.",
-			UITheme.FS_BODY,
-			UITheme.PARCHMENT_FAINT
-		)
+		UITheme.draw_text(self, f_body, pr.position + Vector2(32, 132), "Your satchel is empty.", UITheme.FS_BODY, UITheme.PARCHMENT_FAINT)
 		return
 
 	# --- slots ------------------------------------------------------------
@@ -578,9 +464,7 @@ func _draw() -> void:
 	var dy: float = _grid_origin(pr).y + rows * (SLOT + SLOT_GAP) + 16.0
 	UITheme.carved_rule(self, Vector2(pr.position.x + 32, dy), pr.size.x - 64)
 	var sel_e: Dictionary = _entries[_selected]
-	UITheme.draw_text(
-		self, f_head, Vector2(pr.position.x + 32, dy + 40.0), String(sel_e.name), UITheme.FS_HEAD, UITheme.PARCHMENT
-	)
+	UITheme.draw_text(self, f_head, Vector2(pr.position.x + 32, dy + 40.0), String(sel_e.name), UITheme.FS_HEAD, UITheme.PARCHMENT)
 	if int(sel_e.count) > 1:
 		var cw2 := UITheme.text_width(f_head, String(sel_e.name), UITheme.FS_HEAD)
 		UITheme.draw_text(
@@ -603,6 +487,4 @@ func _draw() -> void:
 	)
 	var hint := "ARROWS  SELECT      I  CLOSE"
 	var hw := UITheme.text_width(f_eyebrow, hint, UITheme.FS_TINY)
-	UITheme.draw_text(
-		self, f_eyebrow, Vector2(pr.end.x - 32 - hw, pr.end.y - 22), hint, UITheme.FS_TINY, UITheme.PARCHMENT_FAINT
-	)
+	UITheme.draw_text(self, f_eyebrow, Vector2(pr.end.x - 32 - hw, pr.end.y - 22), hint, UITheme.FS_TINY, UITheme.PARCHMENT_FAINT)

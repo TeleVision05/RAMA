@@ -135,9 +135,7 @@ static func _card(st: SurfaceTool, x0: float, x1: float, z0: float, z1: float, y
 ## a rectangle. `c` is the chord centre and `r` the chord half-width at each end.
 ## Rendered at 15 cm a rectangular wing card reads as a slab of orange cardboard, which
 ## is exactly what the butterflies looked like before this existed.
-static func _taper_card(
-	st: SurfaceTool, x0: float, x1: float, c0: float, r0: float, c1: float, r1: float, y: float
-) -> void:
+static func _taper_card(st: SurfaceTool, x0: float, x1: float, c0: float, r0: float, c1: float, r1: float, y: float) -> void:
 	_quad_cw(st, Vector3(x0, y, c0 + r0), Vector3(x1, y, c1 + r1), Vector3(x1, y, c1 - r1), Vector3(x0, y, c0 - r0))
 
 
@@ -226,11 +224,7 @@ func _hide_texture() -> ImageTexture:
 			img.set_pixel(
 				x,
 				y,
-				Color(
-					clampf(base.r * (1.0 + n), 0.0, 1.0),
-					clampf(base.g * (1.0 + n), 0.0, 1.0),
-					clampf(base.b * (1.0 + n), 0.0, 1.0)
-				)
+				Color(clampf(base.r * (1.0 + n), 0.0, 1.0), clampf(base.g * (1.0 + n), 0.0, 1.0), clampf(base.b * (1.0 + n), 0.0, 1.0))
 			)
 	# Chital spots: rows of pale flecks, jittered so they do not read as a grid.
 	var spot := Color(0.93, 0.89, 0.79)
@@ -294,13 +288,7 @@ func _deer_head(antlers: bool, mat: Material) -> ArrayMesh:
 	_limb(st, Vector3(0.0, 0.275, -0.44), Vector3(0.0, 0.245, -0.565), Vector2(0.050, 0.055), Vector2(0.036, 0.040))
 	# ears
 	for s in [-1.0, 1.0]:
-		_limb(
-			st,
-			Vector3(0.062 * s, 0.345, -0.31),
-			Vector3(0.145 * s, 0.435, -0.29),
-			Vector2(0.012, 0.030),
-			Vector2(0.008, 0.048)
-		)
+		_limb(st, Vector3(0.062 * s, 0.345, -0.31), Vector3(0.145 * s, 0.435, -0.29), Vector2(0.012, 0.030), Vector2(0.008, 0.048))
 	if antlers:
 		for s in [-1.0, 1.0]:
 			var base := Vector3(0.048 * s, 0.355, -0.325)
@@ -310,11 +298,7 @@ func _deer_head(antlers: bool, mat: Material) -> ArrayMesh:
 			_limb(st, mid, top, Vector2(0.012, 0.012), Vector2(0.007, 0.007))
 			_limb(st, mid, mid + Vector3(0.02 * s, 0.10, -0.20), Vector2(0.011, 0.011), Vector2(0.006, 0.006))
 			_limb(
-				st,
-				base + Vector3(0.02 * s, 0.09, 0.0),
-				base + Vector3(0.03 * s, 0.16, -0.15),
-				Vector2(0.010, 0.010),
-				Vector2(0.006, 0.006)
+				st, base + Vector3(0.02 * s, 0.09, 0.0), base + Vector3(0.03 * s, 0.16, -0.15), Vector2(0.010, 0.010), Vector2(0.006, 0.006)
 			)
 	return _finish(st, mat)
 
@@ -417,9 +401,7 @@ func _update_herd(h: Herd, dt: float, sdt: float, slow: bool) -> void:
 	h.spot_timer -= dt
 	if h.spot_timer <= 0.0:
 		h.spot_timer = _rng.randf_range(14.0, 30.0)
-		h.spot = _good_ground(
-			h.home + Vector2(_rng.randf_range(-26.0, 26.0), _rng.randf_range(-26.0, 26.0)), 12.0, false
-		)
+		h.spot = _good_ground(h.home + Vector2(_rng.randf_range(-26.0, 26.0), _rng.randf_range(-26.0, 26.0)), 12.0, false)
 		for d in h.deer:
 			if d.state != FLEE:
 				d.state = WALK
@@ -452,9 +434,7 @@ func _deer_step(d: Deer, dt: float, dist: float, near: bool) -> void:
 		var away := (d.pos - Vector2(_focus.x, _focus.z)).normalized()
 		if away.length() < 0.01:
 			away = Vector2(1.0, 0.0)
-		d.target = _good_ground(
-			d.pos + away * 34.0 + Vector2(_rng.randf_range(-8.0, 8.0), _rng.randf_range(-8.0, 8.0)), 10.0, false
-		)
+		d.target = _good_ground(d.pos + away * 34.0 + Vector2(_rng.randf_range(-8.0, 8.0), _rng.randf_range(-8.0, 8.0)), 10.0, false)
 
 	var want_speed := 0.0
 	var want_pitch := 0.0
@@ -468,9 +448,7 @@ func _deer_step(d: Deer, dt: float, dist: float, near: bool) -> void:
 				else:
 					d.state = WALK
 					d.timer = _rng.randf_range(3.0, 7.0)
-					d.target = _good_ground(
-						d.pos + Vector2(_rng.randf_range(-11.0, 11.0), _rng.randf_range(-11.0, 11.0)), 6.0, false
-					)
+					d.target = _good_ground(d.pos + Vector2(_rng.randf_range(-11.0, 11.0), _rng.randf_range(-11.0, 11.0)), 6.0, false)
 		ALERT:
 			want_pitch = 0.06
 			if d.timer <= 0.0:
@@ -506,11 +484,7 @@ func _deer_step(d: Deer, dt: float, dist: float, near: bool) -> void:
 		var step := fwd * d.speed * dt
 		var np := d.pos + step
 		# Never wade into the river and never climb a cliff.
-		if (
-			map.in_bounds(np.x, np.y)
-			and map.water_depth_at(np.x, np.y) < 0.45
-			and map.slope_at(np.x, np.y) < DEER_MAX_SLOPE
-		):
+		if map.in_bounds(np.x, np.y) and map.water_depth_at(np.x, np.y) < 0.45 and map.slope_at(np.x, np.y) < DEER_MAX_SLOPE:
 			d.pos = np
 		else:
 			d.yaw += 1.1 * dt * 3.0
@@ -560,35 +534,11 @@ func _build_monkey_meshes() -> void:
 	_limb(st, Vector3(0.0, 0.10, 0.10), Vector3(0.0, 0.30, -0.02), Vector2(0.105, 0.095), Vector2(0.088, 0.082))
 	# thighs folded forward
 	for s in [-1.0, 1.0]:
-		_limb(
-			st,
-			Vector3(0.070 * s, 0.11, 0.055),
-			Vector3(0.078 * s, 0.075, -0.10),
-			Vector2(0.035, 0.040),
-			Vector2(0.026, 0.028)
-		)
-		_limb(
-			st,
-			Vector3(0.078 * s, 0.075, -0.10),
-			Vector3(0.070 * s, 0.030, -0.145),
-			Vector2(0.024, 0.026),
-			Vector2(0.020, 0.018)
-		)
+		_limb(st, Vector3(0.070 * s, 0.11, 0.055), Vector3(0.078 * s, 0.075, -0.10), Vector2(0.035, 0.040), Vector2(0.026, 0.028))
+		_limb(st, Vector3(0.078 * s, 0.075, -0.10), Vector3(0.070 * s, 0.030, -0.145), Vector2(0.024, 0.026), Vector2(0.020, 0.018))
 		# arms hanging to the ground
-		_limb(
-			st,
-			Vector3(0.082 * s, 0.275, -0.03),
-			Vector3(0.092 * s, 0.13, -0.075),
-			Vector2(0.028, 0.030),
-			Vector2(0.021, 0.022)
-		)
-		_limb(
-			st,
-			Vector3(0.092 * s, 0.13, -0.075),
-			Vector3(0.085 * s, 0.028, -0.095),
-			Vector2(0.020, 0.021),
-			Vector2(0.017, 0.018)
-		)
+		_limb(st, Vector3(0.082 * s, 0.275, -0.03), Vector3(0.092 * s, 0.13, -0.075), Vector2(0.028, 0.030), Vector2(0.021, 0.022))
+		_limb(st, Vector3(0.092 * s, 0.13, -0.075), Vector3(0.085 * s, 0.028, -0.095), Vector2(0.020, 0.021), Vector2(0.017, 0.018))
 	# tail, three segments arcing up behind
 	_limb(st, Vector3(0.0, 0.10, 0.12), Vector3(0.0, 0.075, 0.30), Vector2(0.028, 0.028), Vector2(0.021, 0.021))
 	_limb(st, Vector3(0.0, 0.075, 0.30), Vector3(0.0, 0.17, 0.42), Vector2(0.021, 0.021), Vector2(0.016, 0.016))
@@ -598,13 +548,7 @@ func _build_monkey_meshes() -> void:
 	var hst := _new_st()
 	_limb(hst, Vector3(0.0, 0.0, 0.02), Vector3(0.0, 0.075, -0.055), Vector2(0.068, 0.070), Vector2(0.055, 0.052))
 	for s in [-1.0, 1.0]:
-		_limb(
-			hst,
-			Vector3(0.058 * s, 0.030, -0.01),
-			Vector3(0.092 * s, 0.045, -0.005),
-			Vector2(0.010, 0.030),
-			Vector2(0.007, 0.034)
-		)
+		_limb(hst, Vector3(0.058 * s, 0.030, -0.01), Vector3(0.092 * s, 0.045, -0.005), Vector2(0.010, 0.030), Vector2(0.007, 0.034))
 	_m_monkey_head = _finish(hst, fur)
 	# Second surface: the black face. That grey-body / black-face contrast is the whole
 	# read on a langur, and a single dark head mesh just looked like a lump.
@@ -706,10 +650,7 @@ func _update_monkey(m: Monkey, dt: float, sdt: float, slow: bool, _lit: float) -
 			if startled:
 				dir = (m.pos - Vector2(_focus.x, _focus.z)).normalized() * _rng.randf_range(2.0, 3.4)
 			else:
-				dir = (
-					Vector2(_rng.randf_range(-1.0, 1.0), _rng.randf_range(-1.0, 1.0)).normalized()
-					* _rng.randf_range(0.8, 2.2)
-				)
+				dir = (Vector2(_rng.randf_range(-1.0, 1.0), _rng.randf_range(-1.0, 1.0)).normalized() * _rng.randf_range(0.8, 2.2))
 			var to := m.pos + dir
 			if to.distance_to(m.home) > 11.0:
 				to = m.home + (to - m.home).normalized() * 11.0
@@ -924,15 +865,7 @@ func _make_flock(nm: String, count: int, mesh: ArrayMesh, kind: int) -> Flock:
 
 func _spawn_flocks() -> void:
 	var bird_mat := _flap_material(
-		Color(0.085, 0.075, 0.075),
-		Color(0.16, 0.14, 0.13),
-		1.25,
-		0.03,
-		0.12,
-		0.0,
-		0.6,
-		Vector2(0.16, 0.30),
-		Color(0.05, 0.045, 0.045)
+		Color(0.085, 0.075, 0.075), Color(0.16, 0.14, 0.13), 1.25, 0.03, 0.12, 0.0, 0.6, Vector2(0.16, 0.30), Color(0.05, 0.045, 0.045)
 	)
 	var bird := _bird_mesh(bird_mat)
 	var homes := [
@@ -958,15 +891,7 @@ func _spawn_flocks() -> void:
 	# Butterflies live wherever the player is, in daylight, over open ground.
 	# Plain tiger: burnt orange panel, dark body, black wingtip.
 	var bfly_mat := _flap_material(
-		Color(0.13, 0.08, 0.04),
-		Color(0.88, 0.45, 0.11),
-		1.55,
-		0.005,
-		0.018,
-		0.08,
-		0.80,
-		Vector2(0.026, 0.040),
-		Color(0.09, 0.055, 0.03)
+		Color(0.13, 0.08, 0.04), Color(0.88, 0.45, 0.11), 1.55, 0.005, 0.018, 0.08, 0.80, Vector2(0.026, 0.040), Color(0.09, 0.055, 0.03)
 	)
 	var bfly := _butterfly_mesh(bfly_mat)
 	for i in range(2):
@@ -1016,11 +941,7 @@ func _seed_flock(f: Flock, spread: float) -> void:
 	for i in range(f.n):
 		f.pos[i] = (
 			f.centre
-			+ Vector3(
-				_rng.randf_range(-spread, spread),
-				_rng.randf_range(-spread * 0.35, spread * 0.35),
-				_rng.randf_range(-spread, spread)
-			)
+			+ Vector3(_rng.randf_range(-spread, spread), _rng.randf_range(-spread * 0.35, spread * 0.35), _rng.randf_range(-spread, spread))
 		)
 		f.vel[i] = Vector3(_rng.randf_range(-1.0, 1.0), 0.0, _rng.randf_range(-1.0, 1.0)).normalized() * f.cruise
 		f.phase[i] = _rng.randf()
@@ -1037,10 +958,7 @@ func _update_flock(f: Flock, dt: float, slow: bool, night: bool, lit: float) -> 
 			var wet: bool = sky != null and sky.overcast > 0.45
 			var b: int = map.biome_at(_focus.x, _focus.z)
 			var flowery: bool = (
-				b == WorldMap.Biome.MEADOW
-				or b == WorldMap.Biome.FIELD
-				or b == WorldMap.Biome.VILLAGE
-				or b == WorldMap.Biome.PATH
+				b == WorldMap.Biome.MEADOW or b == WorldMap.Biome.FIELD or b == WorldMap.Biome.VILLAGE or b == WorldMap.Biome.PATH
 			)
 			allowed = lit > 0.35 and not wet and flowery and map.forest_density(Vector2(_focus.x, _focus.z)) < 0.55
 		K_BAT:
@@ -1104,9 +1022,7 @@ func _flock_state(f: Flock, dt: float, _night: bool) -> void:
 				f.centre = map.ground(f.home.x, f.home.y) + Vector3(0.0, f.alt, 0.0)
 				if f.timer <= 0.0:
 					# Pick a patch of ground and come down on it.
-					var land := _good_ground(
-						f.home + Vector2(_rng.randf_range(-16.0, 16.0), _rng.randf_range(-16.0, 16.0)), 12.0, false
-					)
+					var land := _good_ground(f.home + Vector2(_rng.randf_range(-16.0, 16.0), _rng.randf_range(-16.0, 16.0)), 12.0, false)
 					for i in range(f.n):
 						var p := land + Vector2(_rng.randf_range(-5.0, 5.0), _rng.randf_range(-5.0, 5.0))
 						f.spot[i] = map.ground(p.x, p.y) + Vector3(0.0, 0.09, 0.0)
@@ -1204,9 +1120,7 @@ func _flock_steer(f: Flock, dt: float) -> void:
 			g.y = map.height_at(g.x, g.z) + 0.85 + sin(ph * 2.3) * 0.45
 		steer += (g - p).normalized() * (max_speed * 1.7)
 		steer += (
-			Vector3(
-				sin(_t * 1.9 + f.rnd[i] * 21.0), sin(_t * 2.7 + f.rnd[i] * 13.0) * 0.4, cos(_t * 1.6 + f.rnd[i] * 17.0)
-			)
+			Vector3(sin(_t * 1.9 + f.rnd[i] * 21.0), sin(_t * 2.7 + f.rnd[i] * 13.0) * 0.4, cos(_t * 1.6 + f.rnd[i] * 17.0))
 			* (2.4 if f.kind == K_BAT else 0.9)
 		)
 

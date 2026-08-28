@@ -265,12 +265,7 @@ func _relayout() -> void:
 	# The name plate is a tab sitting on the panel's top rail.
 	var nw: float = font.get_string_size(_speaker, HORIZONTAL_ALIGNMENT_LEFT, -1, _fs_name).x
 	var plate_h: float = round(float(_fs_name) * 2.20)
-	_name_rect = Rect2(
-		_rect.position.x + round(34.0 * _ui),
-		_rect.position.y - plate_h + round(6.0 * _ui),
-		nw + round(56.0 * _ui),
-		plate_h
-	)
+	_name_rect = Rect2(_rect.position.x + round(34.0 * _ui), _rect.position.y - plate_h + round(6.0 * _ui), nw + round(56.0 * _ui), plate_h)
 
 	# Total revealable characters, counted along the wrapped lines.
 	_total = 0
@@ -337,9 +332,7 @@ func _draw_stone() -> void:
 	while x + d < _rect.end.x - _frame_w - gap:
 		draw_rect(Rect2(x, _rect.position.y + inset, d, _frame_w - inset * 1.7), STONE_LO.lerp(STONE, 0.62), true)
 		draw_rect(Rect2(x, _rect.position.y + inset, d, maxf(1.0, t * 0.7)), STONE_HI.lerp(STONE, 0.30), true)
-		draw_rect(
-			Rect2(x, _rect.end.y - _frame_w + inset * 0.5, d, _frame_w - inset * 1.7), STONE_LO.lerp(STONE, 0.72), true
-		)
+		draw_rect(Rect2(x, _rect.end.y - _frame_w + inset * 0.5, d, _frame_w - inset * 1.7), STONE_LO.lerp(STONE, 0.72), true)
 		x += gap + d
 
 	# Cornerstones.
@@ -368,11 +361,7 @@ func _draw_parchment(inner: Rect2) -> void:
 		var t0: float = float(i) / float(bands)
 		var t1: float = float(i + 1) / float(bands)
 		var c := PARCH_TOP.lerp(PARCH_BOT, t0 * t0 * 0.75 + t0 * 0.25)
-		draw_rect(
-			Rect2(inner.position.x, inner.position.y + inner.size.y * t0, inner.size.x, inner.size.y * (t1 - t0) + 1.0),
-			c,
-			true
-		)
+		draw_rect(Rect2(inner.position.x, inner.position.y + inner.size.y * t0, inner.size.x, inner.size.y * (t1 - t0) + 1.0), c, true)
 
 	# Laid-paper fibre: a few very faint horizontal lines. Almost invisible, which is
 	# the point — it stops the fill reading as a flat swatch.
@@ -383,9 +372,7 @@ func _draw_parchment(inner: Rect2) -> void:
 		k += 1
 		if k % 3 != 0:
 			draw_rect(
-				Rect2(inner.position.x + round(6.0 * _ui), yy, inner.size.x - round(12.0 * _ui), 1.0),
-				Color(0.45, 0.36, 0.24, 0.05),
-				true
+				Rect2(inner.position.x + round(6.0 * _ui), yy, inner.size.x - round(12.0 * _ui), 1.0), Color(0.45, 0.36, 0.24, 0.05), true
 			)
 		yy += step
 
@@ -393,12 +380,8 @@ func _draw_parchment(inner: Rect2) -> void:
 	var vg: float = round(30.0 * _ui)
 	for i in range(int(vg)):
 		var a: float = 0.055 * (1.0 - float(i) / vg)
-		draw_rect(
-			Rect2(inner.position.x + float(i), inner.position.y, 1.0, inner.size.y), Color(0.36, 0.27, 0.16, a), true
-		)
-		draw_rect(
-			Rect2(inner.end.x - float(i) - 1.0, inner.position.y, 1.0, inner.size.y), Color(0.36, 0.27, 0.16, a), true
-		)
+		draw_rect(Rect2(inner.position.x + float(i), inner.position.y, 1.0, inner.size.y), Color(0.36, 0.27, 0.16, a), true)
+		draw_rect(Rect2(inner.end.x - float(i) - 1.0, inner.position.y, 1.0, inner.size.y), Color(0.36, 0.27, 0.16, a), true)
 
 	# Chamfer the corners so the leaf reads as cut, not as a rectangle.
 	var ch: float = round(10.0 * _ui)
@@ -416,9 +399,7 @@ func _draw_parchment(inner: Rect2) -> void:
 	draw_rect(inner.grow(-round(3.0 * _ui)), Color(BRASS.r, BRASS.g, BRASS.b, 0.62), false, maxf(1.0, round(1.5 * _ui)))
 	for i in range(6):
 		draw_rect(
-			Rect2(inner.position.x, inner.position.y + float(i), inner.size.x, 1.0),
-			Color(0.35, 0.26, 0.16, 0.13 - float(i) * 0.021),
-			true
+			Rect2(inner.position.x, inner.position.y + float(i), inner.size.x, 1.0), Color(0.35, 0.26, 0.16, 0.13 - float(i) * 0.021), true
 		)
 
 
@@ -435,16 +416,8 @@ func _draw_name_plate() -> void:
 	for i in range(bands):
 		var t0: float = float(i) / float(bands)
 		var c := SAFFRON.lerp(Color(0.478, 0.196, 0.063), t0 * t0)
-		draw_rect(
-			Rect2(
-				inner.position.x, inner.position.y + inner.size.y * t0, inner.size.x, inner.size.y / float(bands) + 1.0
-			),
-			c,
-			true
-		)
-	draw_rect(
-		Rect2(inner.position.x, inner.position.y, inner.size.x, maxf(1.0, t * 0.7)), Color(1.0, 0.78, 0.45, 0.55), true
-	)
+		draw_rect(Rect2(inner.position.x, inner.position.y + inner.size.y * t0, inner.size.x, inner.size.y / float(bands) + 1.0), c, true)
+	draw_rect(Rect2(inner.position.x, inner.position.y, inner.size.x, maxf(1.0, t * 0.7)), Color(1.0, 0.78, 0.45, 0.55), true)
 	draw_rect(Rect2(inner.position.x, inner.end.y - t, inner.size.x, t), BRASS, true)
 
 	# A small brass petal at the head of the plate.
@@ -452,25 +425,14 @@ func _draw_name_plate() -> void:
 	var py: float = inner.position.y + inner.size.y * 0.5
 	var ps: float = round(4.5 * _ui)
 	draw_colored_polygon(
-		PackedVector2Array(
-			[Vector2(px, py - ps), Vector2(px + ps * 0.7, py), Vector2(px, py + ps), Vector2(px - ps * 0.7, py)]
-		),
-		BRASS
+		PackedVector2Array([Vector2(px, py - ps), Vector2(px + ps * 0.7, py), Vector2(px, py + ps), Vector2(px - ps * 0.7, py)]), BRASS
 	)
 
 	var font := _font()
 	var asc: float = font.get_ascent(_fs_name)
 	var tx: float = px + ps + round(9.0 * _ui)
 	var ty: float = inner.position.y + (inner.size.y - float(_fs_name)) * 0.5 + asc * 0.94
-	draw_string(
-		font,
-		Vector2(tx + 1.0, ty + 1.0),
-		_speaker,
-		HORIZONTAL_ALIGNMENT_LEFT,
-		-1,
-		_fs_name,
-		Color(0.25, 0.09, 0.02, 0.55)
-	)
+	draw_string(font, Vector2(tx + 1.0, ty + 1.0), _speaker, HORIZONTAL_ALIGNMENT_LEFT, -1, _fs_name, Color(0.25, 0.09, 0.02, 0.55))
 	draw_string(font, Vector2(tx, ty), _speaker, HORIZONTAL_ALIGNMENT_LEFT, -1, _fs_name, NAME_INK)
 
 
@@ -484,15 +446,7 @@ func _draw_text(_inner: Rect2) -> void:
 		var n: int = line.length()
 		var shown: String = line if left >= n else line.substr(0, maxi(0, left))
 		if shown != "":
-			draw_string(
-				font,
-				Vector2(x + 1.0, y + 1.0),
-				shown,
-				HORIZONTAL_ALIGNMENT_LEFT,
-				-1,
-				_fs_body,
-				Color(0.42, 0.33, 0.21, 0.30)
-			)
+			draw_string(font, Vector2(x + 1.0, y + 1.0), shown, HORIZONTAL_ALIGNMENT_LEFT, -1, _fs_body, Color(0.42, 0.33, 0.21, 0.30))
 			draw_string(font, Vector2(x, y), shown, HORIZONTAL_ALIGNMENT_LEFT, -1, _fs_body, INK)
 		left -= n
 		y += _line_h
@@ -522,18 +476,11 @@ func _draw_choices(_inner: Rect2) -> void:
 			var cy: float = y + row.size.y * 0.5
 			var s: float = round(5.0 * _ui) * (0.85 + 0.15 * pulse)
 			draw_colored_polygon(
-				PackedVector2Array(
-					[Vector2(cx, cy - s), Vector2(cx + s * 0.78, cy), Vector2(cx, cy + s), Vector2(cx - s * 0.78, cy)]
-				),
+				PackedVector2Array([Vector2(cx, cy - s), Vector2(cx + s * 0.78, cy), Vector2(cx, cy + s), Vector2(cx - s * 0.78, cy)]),
 				BRASS
 			)
 			draw_rect(
-				Rect2(
-					row.position.x + round(3.0 * _ui),
-					row.end.y - 1.0,
-					row.size.x - round(6.0 * _ui),
-					maxf(1.0, round(1.2 * _ui))
-				),
+				Rect2(row.position.x + round(3.0 * _ui), row.end.y - 1.0, row.size.x - round(6.0 * _ui), maxf(1.0, round(1.2 * _ui))),
 				Color(BRASS.r, BRASS.g, BRASS.b, 0.55),
 				true
 			)

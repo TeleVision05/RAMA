@@ -70,12 +70,7 @@ func _check(nm: String, path: NodePath, a: AABB, out: Array, map: WorldMap) -> v
 	if String(path).contains("/Shrine/"):
 		return
 	if gap > 1.2:
-		out.append(
-			(
-				"%-42s FLOATS %.2f m  bottom=%.1f ground=%.1f at (%.0f,%.0f) %s"
-				% [nm, gap, a.position.y, lo, c.x, c.z, path]
-			)
-		)
+		out.append("%-42s FLOATS %.2f m  bottom=%.1f ground=%.1f at (%.0f,%.0f) %s" % [nm, gap, a.position.y, lo, c.x, c.z, path])
 
 
 func _init() -> void:

@@ -167,16 +167,7 @@ class Kit:
 	## a, b, c counter-clockwise as seen from OUTSIDE. Emitted reversed because Godot
 	## front faces are clockwise.
 	func trin(
-		key: String,
-		a: Vector3,
-		b: Vector3,
-		c: Vector3,
-		na: Vector3,
-		nb: Vector3,
-		nc: Vector3,
-		ua: Vector2,
-		ub: Vector2,
-		uc: Vector2
+		key: String, a: Vector3, b: Vector3, c: Vector3, na: Vector3, nb: Vector3, nc: Vector3, ua: Vector2, ub: Vector2, uc: Vector2
 	) -> void:
 		var st := s(key)
 		st.set_normal(na)
@@ -196,9 +187,7 @@ class Kit:
 		n = n.normalized()
 		trin(key, a, b, c, n, n, n, ua, ub, uc)
 
-	func quad(
-		key: String, a: Vector3, b: Vector3, c: Vector3, d: Vector3, ua: Vector2, ub: Vector2, uc: Vector2, ud: Vector2
-	) -> void:
+	func quad(key: String, a: Vector3, b: Vector3, c: Vector3, d: Vector3, ua: Vector2, ub: Vector2, uc: Vector2, ud: Vector2) -> void:
 		tri(key, a, b, c, ua, ub, uc)
 		tri(key, a, c, d, ua, uc, ud)
 
@@ -676,13 +665,7 @@ static func segs_facing(poly: Array, dir: float, half_angle: float) -> Array:
 # ===========================================================================
 ## Conical thatch with a belled profile, a thick ragged eave and binding ropes.
 static func thatch_cone(
-	k: Kit,
-	r_eave: float,
-	eave_y: float,
-	h: float,
-	sides: int,
-	rg: RandomNumberGenerator,
-	xf: Transform3D = Transform3D.IDENTITY
+	k: Kit, r_eave: float, eave_y: float, h: float, sides: int, rg: RandomNumberGenerator, xf: Transform3D = Transform3D.IDENTITY
 ) -> void:
 	var steps := 5
 	var rings: Array = []
@@ -747,13 +730,7 @@ static func thatch_cone(
 
 ## Hipped thatch roof with a real ridge and a rolled ridge cap.
 static func thatch_hip(
-	k: Kit,
-	hx: float,
-	hz: float,
-	eave_y: float,
-	h: float,
-	rg: RandomNumberGenerator,
-	xf: Transform3D = Transform3D.IDENTITY
+	k: Kit, hx: float, hz: float, eave_y: float, h: float, rg: RandomNumberGenerator, xf: Transform3D = Transform3D.IDENTITY
 ) -> void:
 	var rz: float = hz * 0.44
 	var top: float = eave_y + h
@@ -803,12 +780,7 @@ static func thatch_hip(
 		var t2: float = 0.14 + float(i) * 0.24
 		var pp: Vector3 = ra.lerp(rb, t2) + Vector3(0, 0.07, 0)
 		var side: Vector3 = ax.cross(Vector3.UP).normalized()
-		k.tube(
-			"rope",
-			[pp + side * 0.30 - Vector3(0, 0.18, 0), pp + Vector3(0, 0.26, 0), pp - side * 0.30 - Vector3(0, 0.18, 0)],
-			0.032,
-			4
-		)
+		k.tube("rope", [pp + side * 0.30 - Vector3(0, 0.18, 0), pp + Vector3(0, 0.26, 0), pp - side * 0.30 - Vector3(0, 0.18, 0)], 0.032, 4)
 
 
 # ===========================================================================
@@ -877,29 +849,19 @@ static func hut(seed_i: int) -> Node3D:
 	var dn := Vector3(cos(dyaw), 0.0, -sin(dyaw))
 	var dxf := Transform3D(Basis(Vector3.UP, dyaw), Vector3(dmid.x, 0.0, dmid.y) + dn * 0.42)
 	k.box("stone", Transform3D(dxf.basis, dxf.origin + Vector3(0, 0.11, 0)), Vector3(0.80, 0.44, dw + 0.30))
-	k.box(
-		"stone", Transform3D(dxf.basis, dxf.origin + dn * 0.62 + Vector3(0, -0.06, 0)), Vector3(0.55, 0.30, dw + 0.60)
-	)
+	k.box("stone", Transform3D(dxf.basis, dxf.origin + dn * 0.62 + Vector3(0, -0.06, 0)), Vector3(0.55, 0.30, dw + 0.60))
 	# window frame
 	if not win_segs.is_empty():
 		var wmid: Vector2 = (outer[win_segs[0]] + outer[(win_segs[0] + 1) % sides]) * 0.5
 		var wyaw: float = atan2(-wmid.y, wmid.x)
 		var wxf := Transform3D(Basis(Vector3.UP, wyaw), Vector3(wmid.x, (w0 + w1) * 0.5, wmid.y))
 		var ww: float = outer[win_segs[0]].distance_to(outer[(win_segs[0] + 1) % sides])
-		k.box(
-			"wood", Transform3D(wxf.basis, wxf.origin + Vector3(0, (w1 - w0) * 0.5, 0)), Vector3(0.30, 0.10, ww + 0.16)
-		)
-		k.box(
-			"wood", Transform3D(wxf.basis, wxf.origin - Vector3(0, (w1 - w0) * 0.5, 0)), Vector3(0.30, 0.10, ww + 0.16)
-		)
+		k.box("wood", Transform3D(wxf.basis, wxf.origin + Vector3(0, (w1 - w0) * 0.5, 0)), Vector3(0.30, 0.10, ww + 0.16))
+		k.box("wood", Transform3D(wxf.basis, wxf.origin - Vector3(0, (w1 - w0) * 0.5, 0)), Vector3(0.30, 0.10, ww + 0.16))
 		var bxf := Transform3D(wxf.basis, wxf.origin - Vector3(0, 0.0, 0))
 		for bi in range(2):
 			var off: float = -0.16 + 0.32 * float(bi)
-			k.box(
-				"wood",
-				Transform3D(bxf.basis, bxf.origin + bxf.basis * Vector3(0, 0, off)),
-				Vector3(0.22, w1 - w0, 0.06)
-			)
+			k.box("wood", Transform3D(bxf.basis, bxf.origin + bxf.basis * Vector3(0, 0, off)), Vector3(0.22, w1 - w0, 0.06))
 	# roof
 	var eave_y: float = wall_h - 0.14
 	var overhang: float = rg.randf_range(0.42, 0.62)
@@ -1044,14 +1006,7 @@ static func well() -> Node3D:
 	k.lathe(
 		"wood",
 		PackedVector2Array(
-			[
-				Vector2(0.0, 0.60),
-				Vector2(0.19, 0.62),
-				Vector2(0.21, 0.75),
-				Vector2(0.25, 1.02),
-				Vector2(0.245, 1.05),
-				Vector2(0.20, 1.05)
-			]
+			[Vector2(0.0, 0.60), Vector2(0.19, 0.62), Vector2(0.21, 0.75), Vector2(0.25, 1.02), Vector2(0.245, 1.05), Vector2(0.20, 1.05)]
 		),
 		12,
 		Transform3D(Basis.IDENTITY, Vector3(0.20, 0.0, -0.10)),
@@ -1134,9 +1089,7 @@ static func pillar(k: Kit, xf: Transform3D, h: float, cut: float = 1.0e9, suffix
 	var s1: float = s0 + (h - s0 - 0.86) * 0.46
 	var s2: float = h - 0.86
 	if s0 < cut:
-		k.lathe(
-			k_st, PackedVector2Array([Vector2(0.205, s0), Vector2(0.195, minf(s1, cut))]), 8, xf, false, false, false
-		)
+		k.lathe(k_st, PackedVector2Array([Vector2(0.205, s0), Vector2(0.195, minf(s1, cut))]), 8, xf, false, false, false)
 	if s1 < cut:
 		k.lathe(
 			k_cv,
@@ -1155,15 +1108,7 @@ static func pillar(k: Kit, xf: Transform3D, h: float, cut: float = 1.0e9, suffix
 			false
 		)
 	if s1 + 0.27 < cut:
-		k.lathe(
-			k_st,
-			PackedVector2Array([Vector2(0.185, s1 + 0.27), Vector2(0.168, minf(s2, cut))]),
-			16,
-			xf,
-			true,
-			false,
-			false
-		)
+		k.lathe(k_st, PackedVector2Array([Vector2(0.185, s1 + 0.27), Vector2(0.168, minf(s2, cut))]), 16, xf, true, false, false)
 	if s2 < cut:
 		k.lathe(
 			k_cv,
@@ -1234,26 +1179,17 @@ static func shrine(foundation: float = 2.6) -> Node3D:
 	k.band("carved", loop3(scale_poly(plan, w0 * 1.035), 0.0, cxf), loop3(scale_poly(plan, w0 * 1.035), 0.55, cxf), 0.0)
 	k.annulus("carved", loop3(scale_poly(plan, w0 * 1.035), 0.55, cxf), loop3(outer, 0.55, cxf), true)
 	k.band(
-		"carved",
-		loop3(scale_poly(plan, w0 * 1.045), wall_top - 0.52, cxf),
-		loop3(scale_poly(plan, w0 * 1.045), wall_top - 0.14, cxf),
-		0.0
+		"carved", loop3(scale_poly(plan, w0 * 1.045), wall_top - 0.52, cxf), loop3(scale_poly(plan, w0 * 1.045), wall_top - 0.14, cxf), 0.0
 	)
-	k.annulus(
-		"carved", loop3(scale_poly(plan, w0 * 1.045), wall_top - 0.14, cxf), loop3(outer, wall_top - 0.14, cxf), true
-	)
-	k.annulus(
-		"carved", loop3(scale_poly(plan, w0 * 1.045), wall_top - 0.52, cxf), loop3(outer, wall_top - 0.52, cxf), false
-	)
+	k.annulus("carved", loop3(scale_poly(plan, w0 * 1.045), wall_top - 0.14, cxf), loop3(outer, wall_top - 0.14, cxf), true)
+	k.annulus("carved", loop3(scale_poly(plan, w0 * 1.045), wall_top - 0.52, cxf), loop3(outer, wall_top - 0.52, cxf), false)
 	# sanctum floor, ceiling and the idol pedestal
 	k.cap("dark", loop3(inner, 0.04, cxf), true)
 	k.cap("dark", loop3(inner, wall_top, cxf), false)
 	k.box("stone", Transform3D(Basis.IDENTITY, cell + Vector3(-0.5, 0.30, 0.0)), Vector3(1.5, 0.60, 1.5))
 	k.lathe(
 		"stone_fine",
-		PackedVector2Array(
-			[Vector2(0.42, 0.60), Vector2(0.40, 1.05), Vector2(0.34, 1.25), Vector2(0.20, 1.38), Vector2(0.0, 1.42)]
-		),
+		PackedVector2Array([Vector2(0.42, 0.60), Vector2(0.40, 1.05), Vector2(0.34, 1.25), Vector2(0.20, 1.38), Vector2(0.0, 1.42)]),
 		12,
 		Transform3D(Basis.IDENTITY, cell + Vector3(-0.5, 0.0, 0.0)),
 		true,
@@ -1263,16 +1199,8 @@ static func shrine(foundation: float = 2.6) -> Node3D:
 	# carved door frame
 	var dx: float = cell.x + w0 + 0.06
 	for sgn in [-1.0, 1.0]:
-		k.box(
-			"carved",
-			Transform3D(Basis.IDENTITY, Vector3(dx, door_top * 0.5, sgn * 0.80)),
-			Vector3(0.42, door_top + 0.10, 0.36)
-		)
-		k.box(
-			"carved",
-			Transform3D(Basis.IDENTITY, Vector3(dx + 0.12, door_top * 0.5, sgn * 1.04)),
-			Vector3(0.22, door_top - 0.20, 0.22)
-		)
+		k.box("carved", Transform3D(Basis.IDENTITY, Vector3(dx, door_top * 0.5, sgn * 0.80)), Vector3(0.42, door_top + 0.10, 0.36))
+		k.box("carved", Transform3D(Basis.IDENTITY, Vector3(dx + 0.12, door_top * 0.5, sgn * 1.04)), Vector3(0.22, door_top - 0.20, 0.22))
 	k.box("carved", Transform3D(Basis.IDENTITY, Vector3(dx, door_top + 0.20, 0.0)), Vector3(0.46, 0.40, 2.30))
 	k.box("carved", Transform3D(Basis.IDENTITY, Vector3(dx + 0.10, door_top + 0.62, 0.0)), Vector3(0.30, 0.44, 1.90))
 	k.box("stone", Transform3D(Basis.IDENTITY, Vector3(dx + 0.10, 0.06, 0.0)), Vector3(0.70, 0.16, 1.60))
@@ -1309,15 +1237,8 @@ static func shrine(foundation: float = 2.6) -> Node3D:
 			amalaka(k, "stone", Transform3D(Basis.IDENTITY, cell + Vector3(px, yy, pz)), rr, rr * 0.78, 12)
 	# griva, amalaka, kalasa
 	var gy: float = s_base + s_h
-	k.band(
-		"carved", loop3(scale_poly(plan, w0 * 0.30), gy, cxf), loop3(scale_poly(plan, w0 * 0.30), gy + 0.46, cxf), 0.0
-	)
-	k.annulus(
-		"carved",
-		loop3(scale_poly(plan, w0 * 0.30), gy + 0.46, cxf),
-		loop3(scale_poly(plan, w0 * 0.10), gy + 0.46, cxf),
-		true
-	)
+	k.band("carved", loop3(scale_poly(plan, w0 * 0.30), gy, cxf), loop3(scale_poly(plan, w0 * 0.30), gy + 0.46, cxf), 0.0)
+	k.annulus("carved", loop3(scale_poly(plan, w0 * 0.30), gy + 0.46, cxf), loop3(scale_poly(plan, w0 * 0.10), gy + 0.46, cxf), true)
 	amalaka(k, "stone", Transform3D(Basis.IDENTITY, cell + Vector3(0, gy + 0.42, 0)), 1.30, 0.92, 16)
 	k.box("stone", Transform3D(Basis.IDENTITY, cell + Vector3(0, gy + 1.44, 0)), Vector3(1.05, 0.22, 1.05))
 	k.lathe(
@@ -1368,9 +1289,7 @@ static func shrine(foundation: float = 2.6) -> Node3D:
 	amalaka(k, "stone", Transform3D(Basis.IDENTITY, Vector3(3.40, sy + 1.16, 0.0)), 0.82, 0.60, 12)
 	k.lathe(
 		"brass",
-		PackedVector2Array(
-			[Vector2(0.20, sy + 1.74), Vector2(0.26, sy + 1.92), Vector2(0.16, sy + 2.08), Vector2(0.05, sy + 2.24)]
-		),
+		PackedVector2Array([Vector2(0.20, sy + 1.74), Vector2(0.26, sy + 1.92), Vector2(0.16, sy + 2.08), Vector2(0.05, sy + 2.24)]),
 		10,
 		Transform3D.IDENTITY,
 		true,
@@ -1385,9 +1304,7 @@ static func shrine(foundation: float = 2.6) -> Node3D:
 	root.add_child(k.node("ShrineMesh"))
 
 	# ---- lamps on the plinth ---------------------------------------------
-	for lp in [
-		Vector3(PX - 1.4, 0.0, -4.6), Vector3(PX - 1.4, 0.0, 4.6), Vector3(0.6, 0.0, -5.2), Vector3(0.6, 0.0, 5.2)
-	]:
+	for lp in [Vector3(PX - 1.4, 0.0, -4.6), Vector3(PX - 1.4, 0.0, 4.6), Vector3(0.6, 0.0, -5.2), Vector3(0.6, 0.0, 5.2)]:
 		var l := oil_lamp(true)
 		l.position = lp
 		root.add_child(l)
@@ -1464,9 +1381,7 @@ static func gate(seed_i: int = 0) -> Node3D:
 	for sgn2 in [-1.0, 1.0]:
 		k.lathe(
 			"carved",
-			PackedVector2Array(
-				[Vector2(0.05, h + 0.10), Vector2(0.22, h + 0.16), Vector2(0.24, h + 0.40), Vector2(0.05, h + 0.46)]
-			),
+			PackedVector2Array([Vector2(0.05, h + 0.10), Vector2(0.22, h + 0.16), Vector2(0.24, h + 0.40), Vector2(0.05, h + 0.46)]),
 			10,
 			Transform3D(Basis(Vector3.FORWARD, PI * 0.5), Vector3(0, 0, sgn2 * (span * 0.5 - 0.02))),
 			false,
@@ -1526,12 +1441,7 @@ static func steps_geom(k: Kit, a: Vector3, b: Vector3, width: float, base_drop: 
 		var a0: Vector3 = lo + off - fwd * 0.10
 		var b0: Vector3 = hi + off + fwd * 0.10
 		# top edge follows the ramp; bottom edge is the flight's own base
-		var pts := [
-			a0 + Vector3(0, rail, 0),
-			b0 + Vector3(0, rail + riser, 0),
-			Vector3(b0.x, bottom, b0.z),
-			Vector3(a0.x, bottom, a0.z)
-		]
+		var pts := [a0 + Vector3(0, rail, 0), b0 + Vector3(0, rail + riser, 0), Vector3(b0.x, bottom, b0.z), Vector3(a0.x, bottom, a0.z)]
 		var half: Vector3 = side * (thick * 0.5)
 		var inn: Array = []
 		var outn: Array = []
@@ -1546,11 +1456,7 @@ static func steps_geom(k: Kit, a: Vector3, b: Vector3, width: float, base_drop: 
 		k.quadp("carved", inn[1], inn[2], outn[2], outn[1])
 		# newel at the foot, sunk to the flight's own base so it can never float
 		var ntop: float = a0.y + rail + 0.30
-		k.box(
-			"stone",
-			Transform3D(Basis.IDENTITY, Vector3(a0.x, (bottom + ntop) * 0.5, a0.z)),
-			Vector3(0.56, ntop - bottom, 0.56)
-		)
+		k.box("stone", Transform3D(Basis.IDENTITY, Vector3(a0.x, (bottom + ntop) * 0.5, a0.z)), Vector3(0.56, ntop - bottom, 0.56))
 		k.box("carved", Transform3D(Basis.IDENTITY, Vector3(a0.x, ntop + 0.16, a0.z)), Vector3(0.46, 0.32, 0.46))
 
 
@@ -1627,9 +1533,7 @@ static func bridge(length: float, camber: float = 1.25, pier_depth: float = 7.0)
 			var y4: float = deck.call(x4)
 			var pz: float = sgn3 * (w * 0.5 - 0.10)
 			k.box(
-				"wood",
-				Transform3D(Basis(Vector3.UP, rg.randf_range(-0.05, 0.05)), Vector3(x4, y4 + 0.47, pz)),
-				Vector3(0.13, 1.02, 0.13)
+				"wood", Transform3D(Basis(Vector3.UP, rg.randf_range(-0.05, 0.05)), Vector3(x4, y4 + 0.47, pz)), Vector3(0.13, 1.02, 0.13)
 			)
 			tops.append(Vector3(x4, y4 + 0.92, pz))
 		for level in [0.0, -0.34]:
@@ -1644,9 +1548,7 @@ static func bridge(length: float, camber: float = 1.25, pier_depth: float = 7.0)
 			k.tube("rope", rope, 0.035, 4)
 	# abutments
 	for sgn4 in [-1.0, 1.0]:
-		k.box(
-			"stone", Transform3D(Basis.IDENTITY, Vector3(sgn4 * (half + 0.45), -2.6, 0.0)), Vector3(1.4, 6.0, w + 0.9)
-		)
+		k.box("stone", Transform3D(Basis.IDENTITY, Vector3(sgn4 * (half + 0.45), -2.6, 0.0)), Vector3(1.4, 6.0, w + 0.9))
 	return k.node("Bridge")
 
 
@@ -1776,10 +1678,7 @@ static func ruin_wall(seed_i: int) -> Node3D:
 		k.box(
 			"brick",
 			Transform3D(
-				Basis(
-					Vector3(rg.randf_range(-1, 1), rg.randf_range(-1, 1), rg.randf_range(-1, 1)).normalized(),
-					rg.randf_range(0.0, 1.4)
-				),
+				Basis(Vector3(rg.randf_range(-1, 1), rg.randf_range(-1, 1), rg.randf_range(-1, 1)).normalized(), rg.randf_range(0.0, 1.4)),
 				Vector3(bx, rg.randf_range(-0.04, 0.09), bz)
 			),
 			Vector3(0.60, 0.28, 0.38),
@@ -1822,9 +1721,7 @@ static func broken_pillar(seed_i: int) -> Node3D:
 			"stone_ruin",
 			PackedVector2Array([Vector2(0.20, -seg * 0.5), Vector2(0.185, seg * 0.5)]),
 			8,
-			Transform3D(
-				Basis(Vector3.UP, ang) * Basis(Vector3.BACK, PI * 0.5), Vector3(cos(ang) * d, 0.20, -sin(ang) * d)
-			),
+			Transform3D(Basis(Vector3.UP, ang) * Basis(Vector3.BACK, PI * 0.5), Vector3(cos(ang) * d, 0.20, -sin(ang) * d)),
 			false,
 			true,
 			true
@@ -1858,10 +1755,7 @@ static func fallen_lintel(seed_i: int) -> Node3D:
 	)
 	k.box(
 		"stone_ruin",
-		Transform3D(
-			Basis(Vector3.UP, rg.randf_range(0, TAU)),
-			Vector3(rg.randf_range(-0.6, 0.6), sec * 0.2, rg.randf_range(0.5, 1.1))
-		),
+		Transform3D(Basis(Vector3.UP, rg.randf_range(0, TAU)), Vector3(rg.randf_range(-0.6, 0.6), sec * 0.2, rg.randf_range(0.5, 1.1))),
 		Vector3(0.44, 0.22, 0.36)
 	)
 	return k.node("FallenLintel")
@@ -1982,30 +1876,18 @@ static func cart(seed_i: int = 0) -> Node3D:
 		# rim
 		k.lathe(
 			"wood",
-			PackedVector2Array(
-				[Vector2(wr - 0.09, -0.055), Vector2(wr, -0.055), Vector2(wr, 0.055), Vector2(wr - 0.09, 0.055)]
-			),
+			PackedVector2Array([Vector2(wr - 0.09, -0.055), Vector2(wr, -0.055), Vector2(wr, 0.055), Vector2(wr - 0.09, 0.055)]),
 			16,
 			wxf,
 			false,
 			false,
 			false
 		)
-		k.lathe(
-			"wood",
-			PackedVector2Array([Vector2(wr - 0.09, -0.055), Vector2(wr - 0.09, 0.055)]),
-			16,
-			wxf,
-			false,
-			false,
-			false
-		)
+		k.lathe("wood", PackedVector2Array([Vector2(wr - 0.09, -0.055), Vector2(wr - 0.09, 0.055)]), 16, wxf, false, false, false)
 		# hub
 		k.lathe(
 			"wood",
-			PackedVector2Array(
-				[Vector2(0.0, -0.12), Vector2(0.12, -0.12), Vector2(0.14, 0.0), Vector2(0.12, 0.12), Vector2(0.0, 0.12)]
-			),
+			PackedVector2Array([Vector2(0.0, -0.12), Vector2(0.12, -0.12), Vector2(0.14, 0.0), Vector2(0.12, 0.12), Vector2(0.0, 0.12)]),
 			10,
 			wxf,
 			true,
@@ -2017,14 +1899,7 @@ static func cart(seed_i: int = 0) -> Node3D:
 			var a: Vector3 = wxf * Vector3(0.11 * cos(th), 0.0, -0.11 * sin(th))
 			var b: Vector3 = wxf * Vector3((wr - 0.08) * cos(th), 0.0, -(wr - 0.08) * sin(th))
 			k.tube("wood", [a, b], 0.035, 5)
-	k.cyl(
-		"wood",
-		Transform3D(Basis(Vector3.RIGHT, PI * 0.5), Vector3(0, wr, -track - 0.06)),
-		0.065,
-		0.065,
-		track * 2.0 + 0.12,
-		8
-	)
+	k.cyl("wood", Transform3D(Basis(Vector3.RIGHT, PI * 0.5), Vector3(0, wr, -track - 0.06)), 0.065, 0.065, track * 2.0 + 0.12, 8)
 	# Bed. Every plank needs its OWN uv offset: Kit UVs are in metres, so a 2.5 x 0.165 m
 	# plank samples a 16 cm band of wood_beam, and with all nine planks at offset zero
 	# they sampled the SAME band - the cart bed rendered as one two-metre slab of a single
@@ -2099,12 +1974,7 @@ static func washing_line(seed_i: int = 0, span: float = 4.5) -> Node3D:
 	var rg := rng(seed_i + 9090)
 	var h: float = rg.randf_range(1.75, 2.05)
 	for sgn in [-1.0, 1.0]:
-		k.tube(
-			"wood",
-			[Vector3(sgn * span * 0.5, -0.35, 0), Vector3(sgn * span * 0.5 + rg.randf_range(-0.08, 0.08), h, 0)],
-			0.065,
-			6
-		)
+		k.tube("wood", [Vector3(sgn * span * 0.5, -0.35, 0), Vector3(sgn * span * 0.5 + rg.randf_range(-0.08, 0.08), h, 0)], 0.065, 6)
 		k.tube("wood", [Vector3(sgn * span * 0.5, h - 0.5, 0), Vector3(sgn * (span * 0.5 + 0.55), -0.25, 0)], 0.04, 5)
 	var line: Array = []
 	for i in range(13):
@@ -2167,9 +2037,7 @@ static func firepit(seed_i: int = 0, tripod: bool = true) -> Node3D:
 	# a dished bed of ash sitting proud of the ground, ringed with charcoal
 	k.lathe(
 		"ash",
-		PackedVector2Array(
-			[Vector2(0.0, 0.015), Vector2(R * 0.45, 0.005), Vector2(R * 0.78, 0.045), Vector2(R * 0.90, 0.09)]
-		),
+		PackedVector2Array([Vector2(0.0, 0.015), Vector2(R * 0.45, 0.005), Vector2(R * 0.78, 0.045), Vector2(R * 0.90, 0.09)]),
 		14,
 		Transform3D.IDENTITY,
 		true,
@@ -2224,14 +2092,7 @@ static func oil_lamp(lit: bool = false) -> Node3D:
 	k.lathe(
 		"pot",
 		PackedVector2Array(
-			[
-				Vector2(0.0, 0.0),
-				Vector2(0.09, 0.0),
-				Vector2(0.13, 0.035),
-				Vector2(0.15, 0.10),
-				Vector2(0.135, 0.115),
-				Vector2(0.10, 0.05)
-			]
+			[Vector2(0.0, 0.0), Vector2(0.09, 0.0), Vector2(0.13, 0.035), Vector2(0.15, 0.10), Vector2(0.135, 0.115), Vector2(0.10, 0.05)]
 		),
 		12,
 		Transform3D.IDENTITY,
@@ -2322,9 +2183,7 @@ static func stake_mesh(seed_i: int) -> ArrayMesh:
 	var r: float = rg.randf_range(0.055, 0.085)
 	k.lathe(
 		"wood",
-		PackedVector2Array(
-			[Vector2(r, -0.5), Vector2(r * 1.05, h * 0.6), Vector2(r * 0.8, h * 0.86), Vector2(0.008, h)]
-		),
+		PackedVector2Array([Vector2(r, -0.5), Vector2(r * 1.05, h * 0.6), Vector2(r * 0.8, h * 0.86), Vector2(0.008, h)]),
 		7,
 		Transform3D.IDENTITY,
 		false,
@@ -2373,12 +2232,7 @@ static func milestone_mesh(seed_i: int) -> ArrayMesh:
 	var yaw: float = rg.randf_range(0.0, 0.7)
 	var lo := ensure_cw([Vector2(w, d), Vector2(-w, d), Vector2(-w, -d), Vector2(w, -d)])
 	var hi := ensure_cw(
-		[
-			Vector2(w * 0.86, d * 0.86),
-			Vector2(-w * 0.86, d * 0.86),
-			Vector2(-w * 0.86, -d * 0.86),
-			Vector2(w * 0.86, -d * 0.86)
-		]
+		[Vector2(w * 0.86, d * 0.86), Vector2(-w * 0.86, d * 0.86), Vector2(-w * 0.86, -d * 0.86), Vector2(w * 0.86, -d * 0.86)]
 	)
 	var xf := Transform3D(Basis(Vector3.UP, yaw), Vector3.ZERO)
 	k.band("stone", loop3(lo, -0.45, xf), loop3(hi, h - 0.09, xf), 0.0)

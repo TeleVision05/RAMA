@@ -23,49 +23,15 @@ const SHOTS := [
 	# the falls from the side, at the height of the lip
 	{"n": "falls_side", "p": Vector2(58, -178), "eye": 5.0, "t": Vector2(34, -191), "tgt": 6.0, "h": 12.0, "w": 44},
 	# the plunge pool and its mist
-	{
-		"n": "plunge",
-		"p": Vector2(52, -160),
-		"eye": 5.0,
-		"t": Vector2(34, -184),
-		"tgt": 1.0,
-		"h": 12.0,
-		"w": 44,
-		"bank": true
-	},
+	{"n": "plunge", "p": Vector2(52, -160), "eye": 5.0, "t": Vector2(34, -184), "tgt": 1.0, "h": 12.0, "w": 44, "bank": true},
 	# the wide lower river
-	{
-		"n": "lower_noon",
-		"p": Vector2(-136, 128),
-		"eye": 4.0,
-		"t": Vector2(-176, 162),
-		"tgt": 0.6,
-		"h": 12.0,
-		"bank": true
-	},
-	{
-		"n": "lower_dusk",
-		"p": Vector2(-136, 128),
-		"eye": 4.0,
-		"t": Vector2(-176, 162),
-		"tgt": 0.6,
-		"h": 17.6,
-		"bank": true
-	},
+	{"n": "lower_noon", "p": Vector2(-136, 128), "eye": 4.0, "t": Vector2(-176, 162), "tgt": 0.6, "h": 12.0, "bank": true},
+	{"n": "lower_dusk", "p": Vector2(-136, 128), "eye": 4.0, "t": Vector2(-176, 162), "tgt": 0.6, "h": 17.6, "bank": true},
 	# from the lookout, down the valley
 	{"n": "lookout_noon", "p": Vector2(96, -150), "eye": 6.0, "t": Vector2(-2, -84), "tgt": 2.0, "h": 12.0},
 	{"n": "lookout_dusk", "p": Vector2(96, -150), "eye": 6.0, "t": Vector2(-2, -84), "tgt": 2.0, "h": 17.5},
 	# standing water. "pool": aim at the pond RiverWater actually found.
-	{
-		"n": "grove_pond",
-		"p": Vector2(0, 0),
-		"eye": 2.6,
-		"t": Vector2(0, 0),
-		"tgt": 0.1,
-		"h": 12.0,
-		"pool": 0,
-		"off": Vector2(13, -11)
-	},
+	{"n": "grove_pond", "p": Vector2(0, 0), "eye": 2.6, "t": Vector2(0, 0), "tgt": 0.1, "h": 12.0, "pool": 0, "off": Vector2(13, -11)},
 	{"n": "well_pool", "p": Vector2(-106, 45), "eye": 2.0, "t": Vector2(-113, 51), "tgt": 0.3, "h": 12.0},
 	# The south-west exit, where the ribbon is clipped at the world edge. The grounding
 	# audit still counts ~55 rim cells hanging over open channel out here; this is the
@@ -145,21 +111,13 @@ func audit(water: RiverWater) -> void:
 					floaters += 1
 					worst = maxf(worst, d)
 	print(
-		(
-			"[audit] %d tris, %d verts, downward-facing=%d, floating river verts=%d (worst %.2f m)"
-			% [tris, verts, bad_wind, floaters, worst]
-		)
+		"[audit] %d tris, %d verts, downward-facing=%d, floating river verts=%d (worst %.2f m)" % [tris, verts, bad_wind, floaters, worst]
 	)
 	for q in [Vector2(-34, 8), Vector2(34, -184), Vector2(-150, 140), Vector2(-120, 44)]:
 		print(
 			(
 				"[audit] water_height_at%s = %.2f  depth=%.2f  in_water(y=0)=%s"
-				% [
-					q,
-					water.water_height_at(q.x, q.y),
-					water.water_depth_at(q.x, q.y),
-					water.is_in_water(Vector3(q.x, 0.0, q.y))
-				]
+				% [q, water.water_height_at(q.x, q.y), water.water_depth_at(q.x, q.y), water.is_in_water(Vector3(q.x, 0.0, q.y))]
 			)
 		)
 	for p in water.pools():
@@ -219,19 +177,7 @@ func _init() -> void:
 		print(
 			(
 				"%-13s eye=%.1f,%.1f,%.1f -> %.1f,%.1f,%.1f | centre rgb %.3f %.3f %.3f  luma %.3f"
-				% [
-					s.n,
-					eye.x,
-					eye.y,
-					eye.z,
-					tgt.x,
-					tgt.y,
-					tgt.z,
-					c.r,
-					c.g,
-					c.b,
-					c.r * 0.2126 + c.g * 0.7152 + c.b * 0.0722
-				]
+				% [s.n, eye.x, eye.y, eye.z, tgt.x, tgt.y, tgt.z, c.r, c.g, c.b, c.r * 0.2126 + c.g * 0.7152 + c.b * 0.0722]
 			)
 		)
 	print("done")

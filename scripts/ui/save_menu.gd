@@ -35,20 +35,10 @@ func _ready() -> void:
 	theme = UITheme.get_theme()
 	_panel = UITheme.panel_style(Color(0.066, 0.052, 0.043, 0.96), 26)
 	_card = UITheme.flat_style(
-		Color(0.043, 0.035, 0.031, 0.75),
-		3,
-		1.0,
-		Color(UITheme.BRASS_DIM.r, UITheme.BRASS_DIM.g, UITheme.BRASS_DIM.b, 0.45),
-		0,
-		0
+		Color(0.043, 0.035, 0.031, 0.75), 3, 1.0, Color(UITheme.BRASS_DIM.r, UITheme.BRASS_DIM.g, UITheme.BRASS_DIM.b, 0.45), 0, 0
 	)
 	_card_hi = UITheme.flat_style(
-		Color(0.176, 0.121, 0.055, 0.88),
-		3,
-		1.0,
-		Color(UITheme.SAFFRON.r, UITheme.SAFFRON.g, UITheme.SAFFRON.b, 0.95),
-		0,
-		0
+		Color(0.176, 0.121, 0.055, 0.88), 3, 1.0, Color(UITheme.SAFFRON.r, UITheme.SAFFRON.g, UITheme.SAFFRON.b, 0.95), 0, 0
 	)
 	set_process(true)
 	refresh()
@@ -194,14 +184,7 @@ func _draw() -> void:
 	var f_head := UITheme.label_font()
 	var f_body := UITheme.body_font()
 
-	UITheme.draw_text(
-		self,
-		f_eyebrow,
-		pr.position + Vector2(30, 44),
-		"SAVE" if mode == "save" else "LOAD",
-		UITheme.FS_TINY,
-		UITheme.BRASS
-	)
+	UITheme.draw_text(self, f_eyebrow, pr.position + Vector2(30, 44), "SAVE" if mode == "save" else "LOAD", UITheme.FS_TINY, UITheme.BRASS)
 	var sub: String = "Choose where to set this down." if mode == "save" else "Choose a road already walked."
 	UITheme.draw_text(self, f_body, pr.position + Vector2(90, 45), sub, UITheme.FS_SMALL, UITheme.PARCHMENT_FAINT)
 	UITheme.carved_rule(self, pr.position + Vector2(30, 64), pr.size.x - 60)
@@ -211,9 +194,7 @@ func _draw() -> void:
 
 	var hint := "ESC  BACK"
 	var hw := UITheme.text_width(f_eyebrow, hint, UITheme.FS_TINY)
-	UITheme.draw_text(
-		self, f_eyebrow, Vector2(pr.end.x - 30 - hw, pr.end.y - 24), hint, UITheme.FS_TINY, UITheme.PARCHMENT_FAINT
-	)
+	UITheme.draw_text(self, f_eyebrow, Vector2(pr.end.x - 30 - hw, pr.end.y - 24), hint, UITheme.FS_TINY, UITheme.PARCHMENT_FAINT)
 
 
 func _draw_card(i: int, r: Rect2, f_eyebrow: Font, f_head: Font, f_body: Font) -> void:
@@ -233,9 +214,7 @@ func _draw_card(i: int, r: Rect2, f_eyebrow: Font, f_head: Font, f_body: Font) -
 
 	if _flash > 0.0 and i == _flash_slot:
 		var g := UITheme.glow_texture()
-		draw_texture_rect(
-			g, r.grow(18.0), false, Color(UITheme.SAFFRON.r, UITheme.SAFFRON.g, UITheme.SAFFRON.b, _flash * 0.28)
-		)
+		draw_texture_rect(g, r.grow(18.0), false, Color(UITheme.SAFFRON.r, UITheme.SAFFRON.g, UITheme.SAFFRON.b, _flash * 0.28))
 
 	UITheme.draw_text(
 		self,
@@ -250,12 +229,7 @@ func _draw_card(i: int, r: Rect2, f_eyebrow: Font, f_head: Font, f_body: Font) -
 		UITheme.draw_text(self, f_head, r.position + Vector2(20, 66), "Empty", UITheme.FS_HEAD, UITheme.PARCHMENT_FAINT)
 		if mode == "save":
 			UITheme.draw_text(
-				self,
-				f_body,
-				r.position + Vector2(110, 64),
-				"— write a new chapter here",
-				UITheme.FS_SMALL,
-				UITheme.PARCHMENT_FAINT
+				self, f_body, r.position + Vector2(110, 64), "— write a new chapter here", UITheme.FS_SMALL, UITheme.PARCHMENT_FAINT
 			)
 		return
 
@@ -275,13 +249,7 @@ func _draw_card(i: int, r: Rect2, f_eyebrow: Font, f_head: Font, f_body: Font) -
 	var np: int = int(s.get("discovered", 0))
 	var stats := (
 		"%d %s  ·  %d %s  ·  %s"
-		% [
-			nq,
-			"quest" if nq == 1 else "quests",
-			np,
-			"place" if np == 1 else "places",
-			UITheme.duration(float(s.get("play_seconds", 0.0)))
-		]
+		% [nq, "quest" if nq == 1 else "quests", np, "place" if np == 1 else "places", UITheme.duration(float(s.get("play_seconds", 0.0)))]
 	)
 	UITheme.draw_text(self, f_body, r.position + Vector2(20, 90), stats, UITheme.FS_SMALL, UITheme.PARCHMENT_DIM)
 
@@ -294,14 +262,7 @@ func _draw_card(i: int, r: Rect2, f_eyebrow: Font, f_head: Font, f_body: Font) -
 		var d := Time.get_datetime_dict_from_unix_time(when + int(tz.get("bias", 0)) * 60)
 		var stamp := "%04d-%02d-%02d  %02d:%02d" % [d.year, d.month, d.day, d.hour, d.minute]
 		var w := UITheme.text_width(f_eyebrow, stamp, UITheme.FS_TINY)
-		UITheme.draw_text(
-			self,
-			f_eyebrow,
-			Vector2(r.end.x - 20 - w, r.position.y + 30),
-			stamp,
-			UITheme.FS_TINY,
-			UITheme.PARCHMENT_FAINT
-		)
+		UITheme.draw_text(self, f_eyebrow, Vector2(r.end.x - 20 - w, r.position.y + 30), stamp, UITheme.FS_TINY, UITheme.PARCHMENT_FAINT)
 
 	if mode == "save":
 		var warn := "OVERWRITE"

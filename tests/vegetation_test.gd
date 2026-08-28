@@ -20,24 +20,8 @@ const SHOTS := [
 	{"n": "river_ford", "p": Vector2(-8, 44), "eye": 2.6, "t": Vector2(-40, 4), "tgt": 1.0, "h": 16.0},
 	{"n": "river_bank", "p": Vector2(-64, -26), "eye": 2.2, "t": Vector2(-24, 14), "tgt": 3.0, "h": 11.0},
 	{"n": "meadow_grass", "p": Vector2(-96, 12), "eye": 1.5, "t": Vector2(-130, 40), "tgt": 2.0, "h": 9.4},
-	{
-		"n": "lookout_valley",
-		"p": Vector2(96, -150),
-		"eye": 22.0,
-		"t": Vector2(-120, -40),
-		"tgt": 10.0,
-		"h": 15.6,
-		"fov": 66.0
-	},
-	{
-		"n": "canopy_above",
-		"p": Vector2(-150, 0),
-		"eye": 78.0,
-		"t": Vector2(-250, -70),
-		"tgt": 8.0,
-		"h": 12.0,
-		"fov": 70.0
-	},
+	{"n": "lookout_valley", "p": Vector2(96, -150), "eye": 22.0, "t": Vector2(-120, -40), "tgt": 10.0, "h": 15.6, "fov": 66.0},
+	{"n": "canopy_above", "p": Vector2(-150, 0), "eye": 78.0, "t": Vector2(-250, -70), "tgt": 8.0, "h": 12.0, "fov": 70.0},
 	{"n": "badlands", "p": Vector2(168, 122), "eye": 6.5, "t": Vector2(214, 178), "tgt": 6.0, "h": 16.8},
 	{"n": "ruins", "p": Vector2(-168, -104), "eye": 3.0, "t": Vector2(-168, -148), "tgt": 2.0, "h": 10.5},
 ]

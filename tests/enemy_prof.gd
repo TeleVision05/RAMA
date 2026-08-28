@@ -75,13 +75,7 @@ func _run() -> void:
 		if not is_finite(spot.x):
 			continue
 		var e := dir_node.spawn_at(
-			[
-				EnemyTypes.Kind.WARRIOR,
-				EnemyTypes.Kind.WARRIOR,
-				EnemyTypes.Kind.ARCHER,
-				EnemyTypes.Kind.BEAST,
-				EnemyTypes.Kind.ELITE
-			][i % 5],
+			[EnemyTypes.Kind.WARRIOR, EnemyTypes.Kind.WARRIOR, EnemyTypes.Kind.ARCHER, EnemyTypes.Kind.BEAST, EnemyTypes.Kind.ELITE][i % 5],
 			spot,
 			"prof"
 		)
@@ -138,21 +132,13 @@ func _run() -> void:
 	print(
 		(
 			"[ab]    TIME_PROCESS          %.2f ms -> %.2f ms   (%+.2f)"
-			% [
-				pr_none[pr_none.size() / 2],
-				pr_both[pr_both.size() / 2],
-				pr_both[pr_both.size() / 2] - pr_none[pr_none.size() / 2]
-			]
+			% [pr_none[pr_none.size() / 2], pr_both[pr_both.size() / 2], pr_both[pr_both.size() / 2] - pr_none[pr_none.size() / 2]]
 		)
 	)
 	print(
 		(
 			"[ab]    TIME_PHYSICS_PROCESS  %.2f ms -> %.2f ms   (%+.2f)"
-			% [
-				ph_none[ph_none.size() / 2],
-				ph_both[ph_both.size() / 2],
-				ph_both[ph_both.size() / 2] - ph_none[ph_none.size() / 2]
-			]
+			% [ph_none[ph_none.size() / 2], ph_both[ph_both.size() / 2], ph_both[ph_both.size() / 2] - ph_none[ph_none.size() / 2]]
 		)
 	)
 	print("[ab] load %s" % _load())
@@ -174,24 +160,9 @@ func _run() -> void:
 				act += 1
 		_min_active = mini(_min_active, act)
 	var wall := float(Time.get_ticks_usec() - t0) / 1000.0
-	print(
-		(
-			"[300f] 300 frames with %d enemies fighting: %.2f ms/frame (%.1f FPS)"
-			% [made.size(), wall / 300.0, 300000.0 / wall]
-		)
-	)
-	print(
-		(
-			"[300f] Performance.TIME_PROCESS         = %.2f ms"
-			% (Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0)
-		)
-	)
-	print(
-		(
-			"[300f] Performance.TIME_PHYSICS_PROCESS = %.2f ms"
-			% (Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0)
-		)
-	)
+	print("[300f] 300 frames with %d enemies fighting: %.2f ms/frame (%.1f FPS)" % [made.size(), wall / 300.0, 300000.0 / wall])
+	print("[300f] Performance.TIME_PROCESS         = %.2f ms" % (Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0))
+	print("[300f] Performance.TIME_PHYSICS_PROCESS = %.2f ms" % (Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0))
 	print(
 		(
 			"[300f] draw calls %d, objects %d, nodes %d"

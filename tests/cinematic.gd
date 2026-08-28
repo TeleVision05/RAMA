@@ -10,13 +10,7 @@ const SHOTS := [
 	{"n": "04_forest_road", "eye": Vector3(-150, 26, 24), "look": Vector3(-196, 26, -30), "h": 10.4, "fov": 44.0},
 	{"n": "05_the_falls", "eye": Vector3(74, 30, -158), "look": Vector3(36, 22, -194), "h": 12.0, "fov": 48.0},
 	{"n": "06_shrine_at_noon", "eye": Vector3(206, 58, -34), "look": Vector3(158, 52, -66), "h": 12.6, "fov": 42.0},
-	{
-		"n": "07_ruins_afternoon",
-		"eye": Vector3(-142, 42, -116),
-		"look": Vector3(-170, 34, -150),
-		"h": 15.2,
-		"fov": 46.0
-	},
+	{"n": "07_ruins_afternoon", "eye": Vector3(-142, 42, -116), "look": Vector3(-170, 34, -150), "h": 15.2, "fov": 46.0},
 	{"n": "08_lookout_sunset", "eye": Vector3(112, 78, -132), "look": Vector3(-30, 20, 20), "h": 18.1, "fov": 56.0},
 	{"n": "09_village_dusk", "eye": Vector3(-104, 19, 66), "look": Vector3(-128, 13, 42), "h": 19.2, "fov": 44.0},
 	{"n": "10_moonlit_river", "eye": Vector3(-52, 14, 40), "look": Vector3(-96, 7, 92), "h": 23.2, "fov": 50.0},

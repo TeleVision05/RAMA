@@ -318,9 +318,7 @@ func _draw() -> void:
 			col = UITheme.PARCHMENT_DIM
 		UITheme.draw_text(self, f_eyebrow, Vector2(tx, pr.position.y + 44.0), label, UITheme.FS_TINY, col)
 		if on:
-			draw_line(
-				Vector2(tx, pr.position.y + 52.0), Vector2(tx + tw, pr.position.y + 52.0), UITheme.SAFFRON, 2.0, true
-			)
+			draw_line(Vector2(tx, pr.position.y + 52.0), Vector2(tx + tw, pr.position.y + 52.0), UITheme.SAFFRON, 2.0, true)
 		tx += tw + 40.0
 
 	UITheme.carved_rule(self, pr.position + Vector2(32, 62), pr.size.x - 64)
@@ -332,9 +330,7 @@ func _draw() -> void:
 
 	var hint := "TAB  SWITCH      J  CLOSE"
 	var hw := UITheme.text_width(f_eyebrow, hint, UITheme.FS_TINY)
-	UITheme.draw_text(
-		self, f_eyebrow, Vector2(pr.end.x - 32 - hw, pr.end.y - 22), hint, UITheme.FS_TINY, UITheme.PARCHMENT_FAINT
-	)
+	UITheme.draw_text(self, f_eyebrow, Vector2(pr.end.x - 32 - hw, pr.end.y - 22), hint, UITheme.FS_TINY, UITheme.PARCHMENT_FAINT)
 
 
 func _draw_quests(pr: Rect2, f_eyebrow: Font, f_head: Font, f_body: Font) -> void:
@@ -386,9 +382,7 @@ func _draw_quests(pr: Rect2, f_eyebrow: Font, f_head: Font, f_body: Font) -> voi
 		var tag: String = "DONE" if done else "ACTIVE"
 		var tc: Color = UITheme.JADE if done else UITheme.SAFFRON
 		var tw := UITheme.text_width(f_eyebrow, tag, UITheme.FS_TINY)
-		UITheme.draw_text(
-			self, f_eyebrow, Vector2(r.end.x - 12.0 - tw, y + 21.0), tag, UITheme.FS_TINY, Color(tc.r, tc.g, tc.b, 0.85)
-		)
+		UITheme.draw_text(self, f_eyebrow, Vector2(r.end.x - 12.0 - tw, y + 21.0), tag, UITheme.FS_TINY, Color(tc.r, tc.g, tc.b, 0.85))
 		y += 44.0
 
 	# --- detail -----------------------------------------------------------
@@ -396,27 +390,11 @@ func _draw_quests(pr: Rect2, f_eyebrow: Font, f_head: Font, f_body: Font) -> voi
 	var dw: float = pr.end.x - 32.0 - dx
 	var q2: Dictionary = _quests[_sel_quest]
 	var dy: float = top + 20.0
-	UITheme.draw_text(
-		self,
-		f_head,
-		Vector2(dx, dy),
-		String(q2.title),
-		UITheme.FS_HEAD,
-		UITheme.PARCHMENT,
-		HORIZONTAL_ALIGNMENT_LEFT,
-		dw
-	)
+	UITheme.draw_text(self, f_head, Vector2(dx, dy), String(q2.title), UITheme.FS_HEAD, UITheme.PARCHMENT, HORIZONTAL_ALIGNMENT_LEFT, dw)
 	dy += 26.0
 	if String(q2.summary) != "":
 		UITheme.draw_text(
-			self,
-			f_body,
-			Vector2(dx, dy),
-			String(q2.summary),
-			UITheme.FS_SMALL,
-			UITheme.PARCHMENT_DIM,
-			HORIZONTAL_ALIGNMENT_LEFT,
-			dw
+			self, f_body, Vector2(dx, dy), String(q2.summary), UITheme.FS_SMALL, UITheme.PARCHMENT_DIM, HORIZONTAL_ALIGNMENT_LEFT, dw
 		)
 		dy += 30.0
 	dy += 10.0
@@ -433,32 +411,14 @@ func _draw_quests(pr: Rect2, f_eyebrow: Font, f_head: Font, f_body: Font) -> voi
 		# a small carved tick box
 		if done:
 			draw_colored_polygon(
-				PackedVector2Array(
-					[Vector2(dx, cy - 1), Vector2(dx + 4, cy + 4), Vector2(dx + 11, cy - 6), Vector2(dx + 4, cy + 7)]
-				),
+				PackedVector2Array([Vector2(dx, cy - 1), Vector2(dx + 4, cy + 4), Vector2(dx + 11, cy - 6), Vector2(dx + 4, cy + 7)]),
 				UITheme.JADE
 			)
 		else:
-			draw_arc(
-				Vector2(dx + 5, cy),
-				4.2,
-				0.0,
-				TAU,
-				18,
-				Color(UITheme.BRASS.r, UITheme.BRASS.g, UITheme.BRASS.b, 0.75),
-				1.2,
-				true
-			)
+			draw_arc(Vector2(dx + 5, cy), 4.2, 0.0, TAU, 18, Color(UITheme.BRASS.r, UITheme.BRASS.g, UITheme.BRASS.b, 0.75), 1.2, true)
 		var col: Color = UITheme.PARCHMENT_FAINT if done else UITheme.PARCHMENT
 		UITheme.draw_text(
-			self,
-			f_body,
-			Vector2(dx + 22.0, dy + 12.0),
-			String(o.text),
-			UITheme.FS_SMALL,
-			col,
-			HORIZONTAL_ALIGNMENT_LEFT,
-			dw - 96.0
+			self, f_body, Vector2(dx + 22.0, dy + 12.0), String(o.text), UITheme.FS_SMALL, col, HORIZONTAL_ALIGNMENT_LEFT, dw - 96.0
 		)
 		if int(o.need) > 1:
 			var frac := "%d / %d" % [int(o.have), int(o.need)]
@@ -508,10 +468,7 @@ func _draw_places(pr: Rect2, _f_eyebrow: Font, f_head: Font, f_body: Font) -> vo
 			break
 		var p: Dictionary = _places[i]
 		draw_colored_polygon(
-			PackedVector2Array(
-				[Vector2(x + 4, y + 4), Vector2(x + 8, y + 8), Vector2(x + 4, y + 12), Vector2(x, y + 8)]
-			),
-			UITheme.BRASS
+			PackedVector2Array([Vector2(x + 4, y + 4), Vector2(x + 8, y + 8), Vector2(x + 4, y + 12), Vector2(x, y + 8)]), UITheme.BRASS
 		)
 		UITheme.draw_text(
 			self,

@@ -140,15 +140,7 @@ func _init() -> void:
 		if not got[0]:
 			continue
 		var placed: bool = (child as Node3D).transform != Transform3D.IDENTITY
-		units.append(
-			{
-				"aabb": ab,
-				"name": String(child.name),
-				"origin": (child as Node3D).global_position,
-				"placed": placed,
-				"node": child
-			}
-		)
+		units.append({"aabb": ab, "name": String(child.name), "origin": (child as Node3D).global_position, "placed": placed, "node": child})
 		if placed:
 			positioned.append(units.size() - 1)
 		else:
@@ -179,10 +171,7 @@ func _init() -> void:
 			)
 		if over < SUNK_TOL:
 			sunk.append(
-				(
-					"%-40s BURIED %.2f m  top=%.2f ground=%.2f  at %.0f,%.0f"
-					% [units[i].name, -over, a.position.y + a.size.y, sp.x, c.x, c.z]
-				)
+				"%-40s BURIED %.2f m  top=%.2f ground=%.2f  at %.0f,%.0f" % [units[i].name, -over, a.position.y + a.size.y, sp.x, c.x, c.z]
 			)
 		if not who.has("ground") and gap <= FLOAT_TOL:
 			supported.append("%-40s rests on other geometry: %s" % [units[i].name, ", ".join(who.keys())])
@@ -218,10 +207,7 @@ func _init() -> void:
 		worst = maxf(worst, d)
 		if d > ORIGIN_TOL:
 			origin_bad.append(
-				(
-					"%-40s origin=%.2f height_at=%.2f delta=%.2f at %.0f,%.0f"
-					% [units[i].name, p.y, map.height_at(p.x, p.z), d, p.x, p.z]
-				)
+				"%-40s origin=%.2f height_at=%.2f delta=%.2f at %.0f,%.0f" % [units[i].name, p.y, map.height_at(p.x, p.z), d, p.x, p.z]
 			)
 
 	print("=== QA GROUNDING AUDIT (windowed, real MultiMesh buffers) ===")

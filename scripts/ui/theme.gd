@@ -113,9 +113,7 @@ static func _rr_inset(x: float, y: float, w: float, h: float, r: float) -> float
 ## The carved sandstone frame used by every panel. 96x96 with a 28 px nine-patch
 ## margin: a 2 px brass outer rule, a hairline inner rule, a translucent ink field
 ## and a small diamond rosette carved into each corner.
-static func frame_texture(
-	fill: Color = Color(0.075, 0.058, 0.046, 0.93), rule: Color = Color(0.784, 0.635, 0.290, 1.0)
-) -> Texture2D:
+static func frame_texture(fill: Color = Color(0.075, 0.058, 0.046, 0.93), rule: Color = Color(0.784, 0.635, 0.290, 1.0)) -> Texture2D:
 	var key := "frame_%s_%s" % [fill.to_html(), rule.to_html()]
 	if _textures.has(key):
 		return _textures[key]
@@ -342,24 +340,15 @@ static func get_theme() -> Theme:
 	t.set_stylebox("panel", "PanelContainer", panel_style())
 	t.set_type_variation("Inset", "PanelContainer")
 	t.set_stylebox(
-		"panel",
-		"Inset",
-		flat_style(Color(0.043, 0.035, 0.031, 0.62), 3, 1.0, Color(BRASS_DIM.r, BRASS_DIM.g, BRASS_DIM.b, 0.35), 16, 12)
+		"panel", "Inset", flat_style(Color(0.043, 0.035, 0.031, 0.62), 3, 1.0, Color(BRASS_DIM.r, BRASS_DIM.g, BRASS_DIM.b, 0.35), 16, 12)
 	)
 
 	# --- Button -----------------------------------------------------------
 	var b_normal := flat_style(
-		Color(INK_SOFT.r, INK_SOFT.g, INK_SOFT.b, 0.72),
-		3,
-		1.0,
-		Color(BRASS_DIM.r, BRASS_DIM.g, BRASS_DIM.b, 0.55),
-		18,
-		10
+		Color(INK_SOFT.r, INK_SOFT.g, INK_SOFT.b, 0.72), 3, 1.0, Color(BRASS_DIM.r, BRASS_DIM.g, BRASS_DIM.b, 0.55), 18, 10
 	)
 	var b_hover := flat_style(Color(0.243, 0.176, 0.098, 0.88), 3, 1.0, Color(BRASS.r, BRASS.g, BRASS.b, 0.85), 18, 10)
-	var b_press := flat_style(
-		Color(0.302, 0.192, 0.078, 0.95), 3, 1.0, Color(SAFFRON.r, SAFFRON.g, SAFFRON.b, 0.95), 18, 10
-	)
+	var b_press := flat_style(Color(0.302, 0.192, 0.078, 0.95), 3, 1.0, Color(SAFFRON.r, SAFFRON.g, SAFFRON.b, 0.95), 18, 10)
 	var b_disabled := flat_style(Color(0.086, 0.074, 0.066, 0.55), 3, 1.0, Color(0.28, 0.25, 0.21, 0.35), 18, 10)
 	var b_focus := StyleBoxFlat.new()
 	b_focus.bg_color = Color(0, 0, 0, 0)
@@ -460,15 +449,9 @@ static func get_theme() -> Theme:
 	# --- Scroll -----------------------------------------------------------
 	t.set_stylebox("panel", "ScrollContainer", StyleBoxEmpty.new())
 	t.set_stylebox("scroll", "VScrollBar", flat_style(Color(0.031, 0.027, 0.023, 0.5), 3, 0.0, BRASS, 0, 0))
-	t.set_stylebox(
-		"grabber", "VScrollBar", flat_style(Color(BRASS_DIM.r, BRASS_DIM.g, BRASS_DIM.b, 0.8), 3, 0.0, BRASS, 0, 0)
-	)
-	t.set_stylebox(
-		"grabber_highlight", "VScrollBar", flat_style(Color(BRASS.r, BRASS.g, BRASS.b, 0.9), 3, 0.0, BRASS, 0, 0)
-	)
-	t.set_stylebox(
-		"grabber_pressed", "VScrollBar", flat_style(Color(SAFFRON.r, SAFFRON.g, SAFFRON.b, 0.9), 3, 0.0, BRASS, 0, 0)
-	)
+	t.set_stylebox("grabber", "VScrollBar", flat_style(Color(BRASS_DIM.r, BRASS_DIM.g, BRASS_DIM.b, 0.8), 3, 0.0, BRASS, 0, 0))
+	t.set_stylebox("grabber_highlight", "VScrollBar", flat_style(Color(BRASS.r, BRASS.g, BRASS.b, 0.9), 3, 0.0, BRASS, 0, 0))
+	t.set_stylebox("grabber_pressed", "VScrollBar", flat_style(Color(SAFFRON.r, SAFFRON.g, SAFFRON.b, 0.9), 3, 0.0, BRASS, 0, 0))
 
 	# --- Separator --------------------------------------------------------
 	var sep := StyleBoxLine.new()
@@ -488,9 +471,7 @@ static func get_theme() -> Theme:
 
 ## A carved horizontal rule: two hairlines with a small diamond at the centre.
 ## Used to divide sections without a heavy border.
-static func carved_rule(
-	ci: CanvasItem, from: Vector2, width: float, col: Color = BRASS_DIM, alpha: float = 0.7
-) -> void:
+static func carved_rule(ci: CanvasItem, from: Vector2, width: float, col: Color = BRASS_DIM, alpha: float = 0.7) -> void:
 	var c := Color(col.r, col.g, col.b, col.a * alpha)
 	var faint := Color(col.r, col.g, col.b, col.a * alpha * 0.35)
 	var mid := from.x + width * 0.5
@@ -499,12 +480,7 @@ static func carved_rule(
 	ci.draw_line(from + Vector2(0, 2), Vector2(mid - 9.0, from.y + 2), faint, 1.0, true)
 	ci.draw_line(Vector2(mid + 9.0, from.y + 2), Vector2(from.x + width, from.y + 2), faint, 1.0, true)
 	var pts := PackedVector2Array(
-		[
-			Vector2(mid, from.y - 4.0),
-			Vector2(mid + 4.5, from.y + 1.0),
-			Vector2(mid, from.y + 6.0),
-			Vector2(mid - 4.5, from.y + 1.0)
-		]
+		[Vector2(mid, from.y - 4.0), Vector2(mid + 4.5, from.y + 1.0), Vector2(mid, from.y + 6.0), Vector2(mid - 4.5, from.y + 1.0)]
 	)
 	ci.draw_colored_polygon(pts, c)
 
@@ -515,35 +491,20 @@ static func draw_bar(ci: CanvasItem, rect: Rect2, frac: float, fill: Color, trac
 	var h := rect.size.y
 	var r := h * 0.5
 	var tc := Color(track.r, track.g, track.b, track.a * alpha)
-	ci.draw_line(
-		Vector2(rect.position.x + r, rect.position.y + r), Vector2(rect.end.x - r, rect.position.y + r), tc, h, true
-	)
+	ci.draw_line(Vector2(rect.position.x + r, rect.position.y + r), Vector2(rect.end.x - r, rect.position.y + r), tc, h, true)
 	var f: float = clampf(frac, 0.0, 1.0)
 	if f <= 0.0005:
 		return
 	var w: float = maxf((rect.size.x - h) * f, 0.5)
 	var fc := Color(fill.r, fill.g, fill.b, fill.a * alpha)
-	ci.draw_line(
-		Vector2(rect.position.x + r, rect.position.y + r),
-		Vector2(rect.position.x + r + w, rect.position.y + r),
-		fc,
-		h,
-		true
-	)
+	ci.draw_line(Vector2(rect.position.x + r, rect.position.y + r), Vector2(rect.position.x + r + w, rect.position.y + r), fc, h, true)
 
 
 ## Text with a soft ink shadow, so parchment type stays legible over bright terrain.
 ## Two offset passes rather than one: a single-pixel drop shadow disappears against
 ## sunlit sandstone, which is most of this world.
 static func draw_text(
-	ci: CanvasItem,
-	f: Font,
-	pos: Vector2,
-	text: String,
-	size: int,
-	col: Color,
-	align: int = HORIZONTAL_ALIGNMENT_LEFT,
-	width: float = -1.0
+	ci: CanvasItem, f: Font, pos: Vector2, text: String, size: int, col: Color, align: int = HORIZONTAL_ALIGNMENT_LEFT, width: float = -1.0
 ) -> void:
 	if col.a <= 0.004:
 		return

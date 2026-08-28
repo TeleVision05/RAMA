@@ -178,9 +178,7 @@ func _draw() -> void:
 			_ink_line(
 				Vector2(p.x, base_y - tick),
 				Vector2(p.x, base_y),
-				Color(
-					UITheme.PARCHMENT.r, UITheme.PARCHMENT.g, UITheme.PARCHMENT.b, (0.50 if major else 0.26) * p.y * a
-				)
+				Color(UITheme.PARCHMENT.r, UITheme.PARCHMENT.g, UITheme.PARCHMENT.b, (0.50 if major else 0.26) * p.y * a)
 			)
 		deg += 15
 
@@ -219,12 +217,7 @@ func _draw() -> void:
 			var lbl: String = "%s  %d m" % [m.name, int(dist)]
 			var lw: float = _font_small.get_string_size(lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, UITheme.FS_TINY).x
 			UITheme.draw_text(
-				self,
-				_font_small,
-				Vector2(p.x - lw * 0.5, base_y + 24.0),
-				lbl,
-				UITheme.FS_TINY,
-				Color(col.r, col.g, col.b, p.y * a * 0.95)
+				self, _font_small, Vector2(p.x - lw * 0.5, base_y + 24.0), lbl, UITheme.FS_TINY, Color(col.r, col.g, col.b, p.y * a * 0.95)
 			)
 
 	# --- the objective ----------------------------------------------------
@@ -239,12 +232,7 @@ func _draw() -> void:
 			var lbl: String = "%d m" % int(dist)
 			var lw: float = _font_small.get_string_size(lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, UITheme.FS_TINY).x
 			UITheme.draw_text(
-				self,
-				_font_small,
-				Vector2(p.x - lw * 0.5, base_y + 26.0),
-				lbl,
-				UITheme.FS_TINY,
-				Color(col.r, col.g, col.b, p.y * a * 0.9)
+				self, _font_small, Vector2(p.x - lw * 0.5, base_y + 26.0), lbl, UITheme.FS_TINY, Color(col.r, col.g, col.b, p.y * a * 0.9)
 			)
 		else:
 			# Off the strip: pin an arrow to whichever end is closer.
@@ -260,11 +248,7 @@ func _draw() -> void:
 		Vector2(cx, base_y + 4.0),
 		Color(UITheme.SAFFRON_PALE.r, UITheme.SAFFRON_PALE.g, UITheme.SAFFRON_PALE.b, 0.70 * a)
 	)
-	_diamond(
-		Vector2(cx, base_y - 13.0),
-		3.0,
-		Color(UITheme.SAFFRON_PALE.r, UITheme.SAFFRON_PALE.g, UITheme.SAFFRON_PALE.b, 0.85 * a)
-	)
+	_diamond(Vector2(cx, base_y - 13.0), 3.0, Color(UITheme.SAFFRON_PALE.r, UITheme.SAFFRON_PALE.g, UITheme.SAFFRON_PALE.b, 0.85 * a))
 
 
 ## Every mark on this strip is pale, and the strip sits across the top of the screen —
@@ -280,27 +264,18 @@ func _ink_line(a: Vector2, b: Vector2, col: Color, width: float = 1.0) -> void:
 func _diamond(c: Vector2, r: float, col: Color) -> void:
 	# A dark diamond one pixel out, so the brass one has an edge against the sky.
 	draw_colored_polygon(
-		PackedVector2Array(
-			[c + Vector2(0, -r - 1.0), c + Vector2(r + 1.0, 0), c + Vector2(0, r + 1.0), c + Vector2(-r - 1.0, 0)]
-		),
+		PackedVector2Array([c + Vector2(0, -r - 1.0), c + Vector2(r + 1.0, 0), c + Vector2(0, r + 1.0), c + Vector2(-r - 1.0, 0)]),
 		Color(0.0, 0.0, 0.0, col.a * 0.6)
 	)
-	draw_colored_polygon(
-		PackedVector2Array([c + Vector2(0, -r), c + Vector2(r, 0), c + Vector2(0, r), c + Vector2(-r, 0)]), col
-	)
+	draw_colored_polygon(PackedVector2Array([c + Vector2(0, -r), c + Vector2(r, 0), c + Vector2(0, r), c + Vector2(-r, 0)]), col)
 
 
 func _chevron(c: Vector2, r: float, col: Color) -> void:
 	draw_colored_polygon(
-		PackedVector2Array(
-			[c + Vector2(0, r), c + Vector2(r, -r * 0.85), c + Vector2(0, -r * 0.25), c + Vector2(-r, -r * 0.85)]
-		),
-		col
+		PackedVector2Array([c + Vector2(0, r), c + Vector2(r, -r * 0.85), c + Vector2(0, -r * 0.25), c + Vector2(-r, -r * 0.85)]), col
 	)
 
 
 func _side_arrow(c: Vector2, left: bool, col: Color) -> void:
 	var s: float = -1.0 if left else 1.0
-	draw_colored_polygon(
-		PackedVector2Array([c + Vector2(5.0 * s, 0), c + Vector2(-2.0 * s, -5.0), c + Vector2(-2.0 * s, 5.0)]), col
-	)
+	draw_colored_polygon(PackedVector2Array([c + Vector2(5.0 * s, 0), c + Vector2(-2.0 * s, -5.0), c + Vector2(-2.0 * s, 5.0)]), col)

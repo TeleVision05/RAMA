@@ -157,6 +157,14 @@ func _apply(_force: bool) -> void:
 	sun.visible = sun.light_energy > 0.005
 	sun.light_angular_distance = lerpf(2.2, 0.5, smoothstep(0.0, 0.3, elev)) + overcast * 3.0
 
+	# Foliage transmits sunlight, and that term CANNOT live in the light loop: Godot
+	# multiplies BACKLIGHT by the sun's shadow, and a canopy stands in its own shadow, so
+	# a canopy seen from below renders black. TreeBuilder carries an unshadowed
+	# transmission instead, and it needs to know where the sun is and to switch off after
+	# dark like every other unshaded tint in the world (see ARCHITECTURE, Atmosphere).
+	# `sd` points TOWARD the sun, so the light travels along -sd.
+	TreeBuilder.set_sun(-sd, clampf(sun.light_energy / 2.3, 0.0, 1.0))
+
 	moon.light_color = Color(0.60, 0.70, 1.0)
 	moon.light_energy = night * 0.42 * (1.0 - overcast * 0.6)
 	moon.visible = moon.light_energy > 0.004 and md.y > -0.05

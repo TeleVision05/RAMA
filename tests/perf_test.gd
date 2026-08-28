@@ -133,11 +133,7 @@ func _run() -> void:
 	print(
 		(
 			"target 60 fps: %s   target 30 fps: %s   gate 20 fps: %s"
-			% [
-				"met" if worst < 16.7 else "not met",
-				"met" if worst < 33.3 else "not met",
-				"met" if worst < 50.0 else "NOT MET"
-			]
+			% ["met" if worst < 16.7 else "not met", "met" if worst < 33.3 else "not met", "met" if worst < 50.0 else "NOT MET"]
 		)
 	)
 	var ok: bool = worst < 50.0

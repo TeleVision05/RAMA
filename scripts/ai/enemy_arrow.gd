@@ -17,9 +17,7 @@ var _player: Node3D = null
 var _spawn_grace: float = 0.04  # do not clip the archer's own bow arm
 
 
-static func shoot(
-	parent: Node, origin: Vector3, vel: Vector3, archer: Node, dmg: float, w: WorldRoot = null
-) -> EnemyArrow:
+static func shoot(parent: Node, origin: Vector3, vel: Vector3, archer: Node, dmg: float, w: WorldRoot = null) -> EnemyArrow:
 	var a := EnemyArrow.new()
 	a.velocity = vel
 	a.damage = dmg

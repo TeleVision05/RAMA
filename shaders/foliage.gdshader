@@ -1,13 +1,29 @@
 shader_type spatial;
 render_mode blend_mix, cull_disabled, depth_draw_opaque, diffuse_burley, specular_schlick_ggx;
 
-// Alpha-cut foliage card. Every leaf, frond, fern and flower in the Vale draws with
-// this. Four things it has to do and why:
+// Foliage. Every leaf, sprig, frond and fern in the Vale draws with this.
+//
+// IT IS NO LONGER A CARD SHADER. FULL and MID foliage is real geometry — a leaf is a
+// cambered, drooping, twisting lamina of 2 to 14 triangles (scripts/world/veg3d_leaf.gd)
+// — and only the FAR billboard is still a quad. Two consequences run through the whole
+// file: the normals are now MEANINGFUL rather than a fan baked to fake a curve, and
+// anything computed per-VERTEX that ought to be per-leaf will visibly tear a leaf in
+// half. See the flutter note below; that one was a real bug waiting to happen.
+//
+// VERTEX COLOUR CONTRACT (written by veg3d_leaf.gd and tree_builder.gd):
+//   r  flex   0 where the geometry is anchored, 1 at a leaf tip. Wind amplitude.
+//   g  ao     baked occlusion.
+//   b  hue    per-LEAF colour jitter, 0.5 neutral. Constant over one leaf.
+//   a  phase  per-SPRIG flutter phase. Constant over one sprig.
+//
+// Four things it has to do and why:
 //
 //  1. WIND. A layered gust: a slow world-space swell, a per-tree sway, and a fast
-//     per-card flutter. The amplitude is masked by COLOR.r ("flex"), which the mesh
+//     per-sprig flutter. The amplitude is masked by COLOR.r ("flex"), which the mesh
 //     builder bakes as 0 at the trunk base rising to 1 at a leaf tip, so trunks stay
 //     planted while the canopy moves. Without that mask whole trees skate sideways.
+//     Because flex ramps ALONG a sprig — low where its twig joins the branch, high at
+//     the blade tips — the sprig bends from its base instead of sliding sideways.
 //  2. TRANSLUCENCY. Godot's BACKLIGHT term. A canopy with no backlight reads as black
 //     cardboard whenever the sun is behind it; with it, the leaf edges glow.
 //  3. PER-INSTANCE VARIATION through INSTANCE_CUSTOM, so a forest of one baked mesh
@@ -54,6 +70,11 @@ uniform vec3 tint_b = vec3(0.74, 0.92, 0.66);
 uniform float ao_strength : hint_range(0.0, 1.0) = 0.55;
 uniform float roughness_value : hint_range(0.0, 1.0) = 0.72;
 uniform float normal_depth : hint_range(0.0, 2.0) = 0.30;
+// Per-leaf colour spread. The cluster atlas used to supply this for free — every card
+// carried a dozen leaves painted in slightly different greens. One lamina per leaf does
+// not, so the variation moves into the mesh (COLOR.b) and is applied here. 0 on the FAR
+// billboard, which is still an atlas.
+uniform float leaf_var : hint_range(0.0, 1.0) = 0.0;
 
 uniform vec2 wind_dir = vec2(0.82, 0.57);
 uniform float wind_strength : hint_range(0.0, 3.0) = 0.5;
@@ -63,6 +84,32 @@ uniform float flutter_scale = 0.14;
 
 uniform vec3 translucency_color : source_color = vec3(0.72, 0.86, 0.34);
 uniform float translucency : hint_range(0.0, 3.0) = 1.05;
+
+// SUN TRANSMITTED THROUGH THE BLADE — and the reason it is not BACKLIGHT.
+//
+// Godot adds BACKLIGHT inside the light loop, multiplied by that light's ATTENUATION,
+// and for a DirectionalLight that attenuation IS the shadow term. Every leaf inside a
+// canopy stands in the canopy's own shadow, so BACKLIGHT is multiplied to zero exactly
+// where it is the only light the leaf has. The result is a canopy that renders BLACK
+// from underneath — which is the single commonest way the player sees foliage.
+//
+// Measured 2026-08-28 at the forest canopy_under framing (tests/qa_dark_ab.gd), median
+// luminance over the non-sky pixels:
+//
+//   as shipped                    26.9   (36.7% of canopy pixels below luminance 10)
+//   translucency x4               26.9   (33.5%)  <- the knob does NOTHING
+//   SSAO off                      22.1   (36.6%)  <- not SSAO either
+//   sun shadow off                86.2   ( 0.8%)  <- the shadow is the whole cause
+//   sun shadow off + transl x4   157.7   ( 0.8%)  <- backlight only works unshadowed
+//
+// So the term has to live OUTSIDE the light loop or it does nothing at all. This one
+// does: it is emission, it is never shadowed, and it fires only when the viewer is
+// looking along the sunbeam THROUGH the leaf, which is precisely the case the light
+// loop cannot serve. Front-lit leaves get none of it and are unchanged.
+uniform vec3 sun_dir = vec3(0.36, -0.86, 0.36);  // direction the sunlight TRAVELS
+uniform float sun_transmit : hint_range(0.0, 2.0) = 1.0;  // 0 at night; SkySystem drives it
+uniform float transmit_strength : hint_range(0.0, 3.0) = 0.0;
+uniform float transmit_sharp : hint_range(0.5, 8.0) = 1.6;
 
 // x,y = fade IN band (near edge), z,w = fade OUT band (far edge). Keep x < y < z < w:
 // smoothstep with a zero-width edge is undefined in GLSL.
@@ -88,16 +135,14 @@ varying vec3 v_var;     // tint mix, brightness, dryness
 varying float v_fade;
 varying float v_flex;
 varying float v_ao;
-
-float hash11(float x) {
-	return fract(sin(x * 127.1) * 43758.5453123);
-}
+varying float v_hue;    // COLOR.b, per-leaf
 
 void vertex() {
 	vec3 iorg = MODEL_MATRIX[3].xyz;
 	v_var = vec3(INSTANCE_CUSTOM.x, INSTANCE_CUSTOM.y, INSTANCE_CUSTOM.w);
 	v_flex = COLOR.r;
 	v_ao = COLOR.g;
+	v_hue = COLOR.b;
 
 	float phase = INSTANCE_CUSTOM.z * 6.2831853 + iorg.x * 0.071 + iorg.z * 0.113;
 	float t = TIME * wind_speed;
@@ -120,9 +165,14 @@ void vertex() {
 	float sway = sin(t * 0.83 + phase) * 0.62 + sin(t * 1.67 + phase * 1.61) * 0.38;
 	vec3 off = lwd * (sway * amp * bend_scale * flex2);
 
-	// Per-card flutter. Hashing the model-space position gives every card its own
-	// beat, which is what stops a canopy from breathing like one solid object.
-	float h = hash11(dot(VERTEX, vec3(12.9898, 78.233, 37.719)));
+	// Per-SPRIG flutter, so a canopy does not breathe like one solid object.
+	//
+	// The phase is baked into COLOR.a by the mesh builder, one value per sprig. It used
+	// to be hashed from the model-space VERTEX, and that is fine for a card — four
+	// corners with four beats only skews a quad — but a real leaf has up to fifteen
+	// vertices, and giving each of them its own beat pulls the blade apart along its
+	// own triangles. Same reason the leaf's hue lives in COLOR.b rather than a hash.
+	float h = COLOR.a;
 	float fl = sin(t * 3.05 + h * 6.2831853 + phase) * flutter_scale * amp * v_flex;
 	off += lside * fl;
 	off.y += sin(t * 2.37 + h * 12.91 + phase) * flutter_scale * 0.55 * amp * v_flex;
@@ -160,7 +210,12 @@ void fragment() {
 	ALPHA_SCISSOR_THRESHOLD = alpha_cut;
 
 	vec3 tint = mix(tint_a, tint_b, clamp(v_var.x, 0.0, 1.0));
-	// Dryness pulls a card toward straw: the outer, sun-struck part of a canopy and
+	// Per-leaf jitter: brightness both ways, and a push toward straw on the light side,
+	// because within one crown the older outer leaves yellow and the shaded ones do not.
+	float lv = clamp(v_hue, 0.0, 1.0) * 2.0 - 1.0;
+	tint *= 1.0 + lv * leaf_var * 0.55;
+	tint = mix(tint, tint * vec3(1.14, 1.02, 0.70), max(lv, 0.0) * leaf_var);
+	// Dryness pulls a leaf toward straw: the outer, sun-struck part of a canopy and
 	// anything on the badlands side of the valley.
 	tint = mix(tint, vec3(1.16, 1.0, 0.62), clamp(v_var.z, 0.0, 1.0) * 0.55);
 	ALBEDO = tex.rgb * tint * albedo_gain * clamp(v_var.y, 0.4, 2.0);
@@ -194,17 +249,31 @@ void fragment() {
 	// tuning this on one backlit shot got it wrong.
 	BACKLIGHT = translucency_color * translucency * mix(0.25, 1.0, clamp(v_ao, 0.0, 1.0));
 
+	// The unshadowed half of the same effect. `through` is 1 when the camera is looking
+	// straight down the sunbeam (the leaf is between the viewer and the sun, so light
+	// that made it through the blade travels at the eye) and 0 when the sun is behind
+	// the viewer, so a front-lit leaf receives nothing and keeps the look it already
+	// has. Scaled by baked AO so the deep interior of a crown stays darker than the
+	// shell and the canopy keeps its depth instead of becoming a uniform glow.
+	if (transmit_strength > 0.0) {
+		vec3 ldir = normalize((VIEW_MATRIX * vec4(sun_dir, 0.0)).xyz);
+		float through = clamp(dot(normalize(VIEW), ldir), 0.0, 1.0);
+		through = pow(through, transmit_sharp);
+		EMISSION += ALBEDO * translucency_color * (transmit_strength * sun_transmit
+			* through * mix(0.35, 1.0, clamp(v_ao, 0.0, 1.0)));
+	}
+
 	if (use_normal_map) {
 		NORMAL_MAP = texture(normal_tex, UV).rgb;
 		NORMAL_MAP_DEPTH = normal_depth;
 	}
-	// Back faces MUST have their normal flipped. The mesh builder bakes canopy normals
-	// fanning outward from the centre of the tree, so the cards on the far side of a
-	// crown point their normals at the sun while the camera sees their backs. Leaving
-	// those unflipped renders a lit front surface on a face that should be in shade,
-	// and a backlit canopy came out bleached cream instead of dark and glowing. The
-	// sun-through-leaf effect is BACKLIGHT's job, not the geometric normal's — that
-	// term is added independently of N dot L, which is exactly why it works here.
+	// Back faces MUST have their normal flipped, and it matters MORE now than it did.
+	// A leaf is a real two-sided surface with a genuine outward normal, so half of every
+	// crown is seen from underneath; leaving those unflipped renders a lit front surface
+	// on a face that should be in shade, and a backlit canopy came out bleached cream
+	// instead of dark and glowing. The sun-through-leaf effect is BACKLIGHT's job, not
+	// the geometric normal's — that term is added independently of N dot L, which is
+	// exactly why it works here.
 	if (two_sided && !FRONT_FACING) {
 		NORMAL = -NORMAL;
 	}

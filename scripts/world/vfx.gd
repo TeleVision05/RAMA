@@ -341,9 +341,7 @@ func _build_pollen() -> void:
 	pm.turbulence_influence_min = 0.05
 	pm.turbulence_influence_max = 0.30
 	pm.lifetime_randomness = 0.45
-	pm.color_ramp = _ramp(
-		[0.0, 0.16, 0.72, 1.0], [Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 0.85), Color(1, 1, 1, 0)]
-	)
+	pm.color_ramp = _ramp([0.0, 0.16, 0.72, 1.0], [Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 0.85), Color(1, 1, 1, 0)])
 
 	_pollen_mat = _mat(
 		{
@@ -386,9 +384,7 @@ func _build_fireflies() -> void:
 	pm.turbulence_influence_min = 0.25
 	pm.turbulence_influence_max = 0.85
 	pm.lifetime_randomness = 0.50
-	pm.color_ramp = _ramp(
-		[0.0, 0.10, 0.85, 1.0], [Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0)]
-	)
+	pm.color_ramp = _ramp([0.0, 0.10, 0.85, 1.0], [Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0)])
 
 	var ffm := _mat(
 		{
@@ -436,9 +432,7 @@ func _build_leaves() -> void:
 	pm.turbulence_influence_min = 0.2
 	pm.turbulence_influence_max = 0.7
 	pm.lifetime_randomness = 0.40
-	pm.color_ramp = _ramp(
-		[0.0, 0.08, 0.86, 1.0], [Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0)]
-	)
+	pm.color_ramp = _ramp([0.0, 0.08, 0.86, 1.0], [Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 1), Color(1, 1, 1, 0)])
 
 	_leaf_mat = _mat(
 		{
@@ -485,9 +479,7 @@ func _build_gust() -> void:
 	pm.turbulence_noise_speed = Vector3(1.0, 0.4, 1.0)
 	pm.turbulence_influence_min = 0.2
 	pm.turbulence_influence_max = 0.8
-	pm.color_ramp = _ramp(
-		[0.0, 0.13, 0.55, 1.0], [Color(1, 1, 1, 0), Color(1, 1, 1, 0.85), Color(1, 1, 1, 0.55), Color(1, 1, 1, 0)]
-	)
+	pm.color_ramp = _ramp([0.0, 0.13, 0.55, 1.0], [Color(1, 1, 1, 0), Color(1, 1, 1, 0.85), Color(1, 1, 1, 0.55), Color(1, 1, 1, 0)])
 
 	var gm := _mat(
 		{
@@ -561,9 +553,7 @@ func _build_mist() -> void:
 	pm.turbulence_influence_min = 0.05
 	pm.turbulence_influence_max = 0.2
 	pm.lifetime_randomness = 0.35
-	pm.color_ramp = _ramp(
-		[0.0, 0.22, 0.72, 1.0], [Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 0.9), Color(1, 1, 1, 0)]
-	)
+	pm.color_ramp = _ramp([0.0, 0.22, 0.72, 1.0], [Color(1, 1, 1, 0), Color(1, 1, 1, 1), Color(1, 1, 1, 0.9), Color(1, 1, 1, 0)])
 
 	_mist_mat = _mat(
 		{
@@ -728,12 +718,7 @@ func make_firelight(intensity: float = 1.0, light_range: float = 9.0) -> Node3D:
 	fm.lifetime_randomness = 0.40
 	fm.color_ramp = _ramp(
 		[0.0, 0.16, 0.55, 1.0],
-		[
-			Color(1.00, 0.92, 0.55, 0.0),
-			Color(1.00, 0.80, 0.34, 1.0),
-			Color(1.00, 0.42, 0.11, 0.85),
-			Color(0.55, 0.13, 0.03, 0.0)
-		]
+		[Color(1.00, 0.92, 0.55, 0.0), Color(1.00, 0.80, 0.34, 1.0), Color(1.00, 0.42, 0.11, 0.85), Color(0.55, 0.13, 0.03, 0.0)]
 	)
 
 	var flame_mat := _shared_mat(
@@ -791,12 +776,7 @@ func make_firelight(intensity: float = 1.0, light_range: float = 9.0) -> Node3D:
 	em.lifetime_randomness = 0.55
 	em.color_ramp = _ramp(
 		[0.0, 0.12, 0.6, 1.0],
-		[
-			Color(1.0, 0.85, 0.45, 0.0),
-			Color(1.0, 0.62, 0.22, 1.0),
-			Color(1.0, 0.32, 0.07, 0.7),
-			Color(0.6, 0.12, 0.02, 0.0)
-		]
+		[Color(1.0, 0.85, 0.45, 0.0), Color(1.0, 0.62, 0.22, 1.0), Color(1.0, 0.32, 0.07, 0.7), Color(0.6, 0.12, 0.02, 0.0)]
 	)
 
 	var ember_mat := _shared_mat(
@@ -867,12 +847,7 @@ func make_smoke(scale_v: float = 1.0) -> GPUParticles3D:
 	pm.lifetime_randomness = 0.35
 	pm.color_ramp = _ramp(
 		[0.0, 0.12, 0.45, 1.0],
-		[
-			Color(0.60, 0.48, 0.38, 0.0),
-			Color(0.78, 0.72, 0.66, 1.0),
-			Color(0.92, 0.90, 0.88, 0.55),
-			Color(1.0, 1.0, 1.0, 0.0)
-		]
+		[Color(0.60, 0.48, 0.38, 0.0), Color(0.78, 0.72, 0.66, 1.0), Color(0.92, 0.90, 0.88, 0.55), Color(1.0, 1.0, 1.0, 0.0)]
 	)
 
 	# The tint is re-driven from the sky every evaluation - unshaded smoke that keeps
@@ -1008,14 +983,7 @@ func _scan_solids(n: Node, depth: int) -> void:
 		var a: AABB = mi.global_transform * mi.mesh.get_aabb()
 		# Hut-shaped: big enough to stand in, small enough not to be terrain or a
 		# canopy, tall enough not to be a doorstep.
-		if (
-			a.size.x > 2.0
-			and a.size.z > 2.0
-			and a.size.x < 34.0
-			and a.size.z < 34.0
-			and a.size.y > 1.4
-			and a.size.y < 17.0
-		):
+		if a.size.x > 2.0 and a.size.z > 2.0 and a.size.x < 34.0 and a.size.z < 34.0 and a.size.y > 1.4 and a.size.y < 17.0:
 			_solids.append(Rect2(a.position.x, a.position.z, a.size.x, a.size.z))
 	for c in n.get_children():
 		_scan_solids(c, depth + 1)
@@ -1062,11 +1030,7 @@ func _evaluate() -> void:
 	# Also: not standing on a riverbank. The emitter box reaches 9 m, so motes over the
 	# channel are the ones that read as dirt on the lens no matter how they are tuned.
 	var pollen_on: bool = (
-		lit > 0.55
-		and rain_off
-		and not barren
-		and map.water_depth_at(_focus.x, _focus.z) < 0.25
-		and map.wet_at(_focus.x, _focus.z) < 0.55
+		lit > 0.55 and rain_off and not barren and map.water_depth_at(_focus.x, _focus.z) < 0.25 and map.wet_at(_focus.x, _focus.z) < 0.55
 	)
 	if _pollen_mat:
 		_pollen_mat.set_shader_parameter("brightness", 0.8 + 1.55 * lit)

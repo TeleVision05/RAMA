@@ -405,12 +405,7 @@ func _find_falls() -> void:
 	_fall_b = mini(b + 2, _st.size() - 1)
 	var sa: Dictionary = _st[_fall_a]
 	var sb: Dictionary = _st[_fall_b]
-	print(
-		(
-			"[water] falls z %.1f -> %.1f, drop %.1f m over %d stations"
-			% [sa.p.y, sb.p.y, sa.wy - sb.wy, _fall_b - _fall_a]
-		)
-	)
+	print("[water] falls z %.1f -> %.1f, drop %.1f m over %d stations" % [sa.p.y, sb.p.y, sa.wy - sb.wy, _fall_b - _fall_a])
 
 
 ## Flow speed and froth per station. Speed comes from the gradient of the water surface
@@ -633,9 +628,7 @@ func _build_mist() -> void:
 	# sprites rather than as spray.
 	var grad := Gradient.new()
 	grad.offsets = PackedFloat32Array([0.0, 0.22, 0.65, 1.0])
-	grad.colors = PackedColorArray(
-		[Color(1, 1, 1, 0.0), Color(1, 1, 1, 1.0), Color(1, 1, 1, 0.75), Color(1, 1, 1, 0.0)]
-	)
+	grad.colors = PackedColorArray([Color(1, 1, 1, 0.0), Color(1, 1, 1, 1.0), Color(1, 1, 1, 0.75), Color(1, 1, 1, 0.0)])
 	var gt := GradientTexture1D.new()
 	gt.gradient = grad
 	gt.width = 64

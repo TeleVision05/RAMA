@@ -26,9 +26,7 @@ func _run() -> void:
 	if water == null:
 		fails.append("Game._spawn_content() did not create RiverWater")
 	else:
-		print(
-			"[integration] Game.water = %s (%s), %d children" % [water.name, water.get_class(), water.get_child_count()]
-		)
+		print("[integration] Game.water = %s (%s), %d children" % [water.name, water.get_class(), water.get_child_count()])
 		if not (water is RiverWater):
 			fails.append("Game.water is not a RiverWater")
 		elif water.get_child_count() == 0:

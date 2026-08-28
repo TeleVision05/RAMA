@@ -23,12 +23,7 @@ func _init() -> void:
 		var f := m.layer[j + 1] / 255.0
 		var r := m.layer[j + 2] / 255.0
 		var s := m.layer[j + 3] / 255.0
-		print(
-			(
-				"%-16s %-9s %.2f %.2f  %.2f %.2f | %.2f"
-				% [p, names[m.biomes[i]], d, f, r, s, clampf(1.0 - (d + f + r + s), 0, 1)]
-			)
-		)
+		print("%-16s %-9s %.2f %.2f  %.2f %.2f | %.2f" % [p, names[m.biomes[i]], d, f, r, s, clampf(1.0 - (d + f + r + s), 0, 1)])
 	# Average over the whole map
 	var tot := [0.0, 0.0, 0.0, 0.0]
 	var n := WorldMap.GRID * WorldMap.GRID

@@ -24,24 +24,8 @@ const SHOTS := [
 	{"n": "village_dusk", "eye": Vector2(-134, 62), "eh": 4.5, "tgt": Vector2(-118, 42), "th": 2.0, "h": 18.4},
 	{"n": "village_night", "eye": Vector2(-106, 56), "eh": 2.6, "tgt": Vector2(-120, 45), "th": 1.2, "h": 22.2},
 	{"n": "birds", "eye": Vector2(-40, 20), "eh": 2.0, "tgt": Vector2(-66, 36), "th": 18.0, "h": 9.2},
-	{
-		"n": "monkeys",
-		"eye": Vector2(-101, 34),
-		"eh": 1.4,
-		"tgt": Vector2(-104, 31),
-		"th": 0.5,
-		"h": 12.0,
-		"monkey": true
-	},
-	{
-		"n": "butterflies",
-		"eye": Vector2(-66, -14),
-		"eh": 1.5,
-		"tgt": Vector2(-60, -8),
-		"th": 1.0,
-		"h": 11.0,
-		"bfly": true
-	},
+	{"n": "monkeys", "eye": Vector2(-101, 34), "eh": 1.4, "tgt": Vector2(-104, 31), "th": 0.5, "h": 12.0, "monkey": true},
+	{"n": "butterflies", "eye": Vector2(-66, -14), "eh": 1.5, "tgt": Vector2(-60, -8), "th": 1.0, "h": 11.0, "bfly": true},
 	{"n": "ruins_bats", "eye": Vector2(-146, -128), "eh": 3.0, "tgt": Vector2(-168, -148), "th": 9.0, "h": 23.4},
 	{"n": "deer_close", "eye": Vector2(0, 0), "eh": 1.5, "tgt": Vector2(0, 0), "th": 0.7, "h": 15.5, "deer": true},
 	{"n": "river_fish", "eye": Vector2(0, 0), "eh": 1.2, "tgt": Vector2(0, 0), "th": 0.0, "h": 12.5, "fish": true},
@@ -186,9 +170,7 @@ func _shot(s: Dictionary) -> void:
 			eye = Vector3(m2.x + mo.x, map.height_at(m2.x + mo.x, m2.z + mo.y) + 1.1, m2.z + mo.y)
 			cam.global_position = eye
 			cam.look_at(m2 + Vector3(0.0, 0.30, 0.0), Vector3.UP)
-			print(
-				"  monkey re-framed at (%.1f, %.1f, %.1f), camera %.1f m away" % [m2.x, m2.y, m2.z, eye.distance_to(m2)]
-			)
+			print("  monkey re-framed at (%.1f, %.1f, %.1f), camera %.1f m away" % [m2.x, m2.y, m2.z, eye.distance_to(m2)])
 		await _settle(3)
 	elif s.get("bfly", false):
 		# The butterfly flocks are held at a fixed offset from the player, so a fixed
@@ -237,9 +219,7 @@ func _shot(s: Dictionary) -> void:
 			eye = Vector3(d2.x + off.x, map.height_at(d2.x + off.x, d2.z + off.y) + 2.4, d2.z + off.y)
 			cam.global_position = eye
 			cam.look_at(d2 + Vector3(0.0, 0.75, 0.0), Vector3.UP)
-			print(
-				"  deer re-framed at (%.1f, %.1f, %.1f), camera %.1f m away" % [d2.x, d2.y, d2.z, eye.distance_to(d2)]
-			)
+			print("  deer re-framed at (%.1f, %.1f, %.1f), camera %.1f m away" % [d2.x, d2.y, d2.z, eye.distance_to(d2)])
 		await _settle(3)
 
 	await RenderingServer.frame_post_draw

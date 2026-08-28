@@ -75,12 +75,7 @@ func _init() -> void:
 	print("steepest path gradient: %.2f  at %s  (%d samples over 0.34)" % [worst_step, worst_at, steep_list.size()])
 	steep_list.sort_custom(func(x, y): return x[0] > y[0])
 	for k in range(mini(6, steep_list.size())):
-		print(
-			(
-				"    grade %.2f at %s  %.2f -> %.2f"
-				% [steep_list[k][0], steep_list[k][1], steep_list[k][2], steep_list[k][3]]
-			)
-		)
+		print("    grade %.2f at %s  %.2f -> %.2f" % [steep_list[k][0], steep_list[k][1], steep_list[k][2], steep_list[k][3]])
 	if worst_step > 0.42:
 		fails.append("path too steep (%.2f) near %s" % [worst_step, worst_at])
 
@@ -98,12 +93,7 @@ func _init() -> void:
 		var depth := m.water_y_at(rp[i].x, rp[i].y) - m.height_at(rp[i].x, rp[i].y)
 		if depth <= 0.0:
 			dry += 1
-			print(
-				(
-					"    dry at %s  ground=%.2f water=%.2f"
-					% [rp[i], m.height_at(rp[i].x, rp[i].y), m.water_y_at(rp[i].x, rp[i].y)]
-				)
-			)
+			print("    dry at %s  ground=%.2f water=%.2f" % [rp[i], m.height_at(rp[i].x, rp[i].y), m.water_y_at(rp[i].x, rp[i].y)])
 		elif depth < 1.2:
 			shallow += 1
 	print("river: %d dry, %d shallow (<1.2 m) of %d samples" % [dry, shallow, n_s])

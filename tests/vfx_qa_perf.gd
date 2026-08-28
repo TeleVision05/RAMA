@@ -198,23 +198,10 @@ func _micro(nm: String, hour: float, centre: Vector2, rain: float) -> void:
 		if i % 60 == 0:
 			await get_tree().process_frame
 	_set_on(true, true)
+	print("  %-20s Wildlife._process  min %.3f  med %.3f  p95 %.3f ms" % [nm, _pct(lt, 0.0), _pct(lt, 0.5), _pct(lt, 0.95)])
+	print("  %-20s WorldVFX._process  min %.3f  med %.3f  p95 %.3f ms" % ["", _pct(vt, 0.0), _pct(vt, 0.5), _pct(vt, 0.95)])
 	print(
-		(
-			"  %-20s Wildlife._process  min %.3f  med %.3f  p95 %.3f ms"
-			% [nm, _pct(lt, 0.0), _pct(lt, 0.5), _pct(lt, 0.95)]
-		)
-	)
-	print(
-		(
-			"  %-20s WorldVFX._process  min %.3f  med %.3f  p95 %.3f ms"
-			% ["", _pct(vt, 0.0), _pct(vt, 0.5), _pct(vt, 0.95)]
-		)
-	)
-	print(
-		(
-			"  %-20s WorldVFX._evaluate min %.3f  med %.3f  p95 %.3f ms   (runs at 3.6 Hz)"
-			% ["", _pct(et, 0.0), _pct(et, 0.5), _pct(et, 0.95)]
-		)
+		"  %-20s WorldVFX._evaluate min %.3f  med %.3f  p95 %.3f ms   (runs at 3.6 Hz)" % ["", _pct(et, 0.0), _pct(et, 0.5), _pct(et, 0.95)]
 	)
 
 

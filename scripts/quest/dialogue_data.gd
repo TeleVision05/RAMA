@@ -89,14 +89,12 @@ static func _elder() -> Dictionary:
 			},
 			"e_who":
 			{
-				"text":
-				"I do, as my father did. Eleven households, forty-one souls, and one well that argues with all of us.",
+				"text": "I do, as my father did. Eleven households, forty-one souls, and one well that argues with all of us.",
 				"next": "e_hub",
 			},
 			"e_trouble":
 			{
-				"text":
-				"The forest has grown loud after dark. Not tiger. Not wolf. Something that laughs and then stops laughing.",
+				"text": "The forest has grown loud after dark. Not tiger. Not wolf. Something that laughs and then stops laughing.",
 				"choices":
 				[
 					{"text": "Has anyone been hurt?", "next": "e_hurt"},
@@ -111,14 +109,12 @@ static func _elder() -> Dictionary:
 			"e_look":
 			{
 				"action": "flag:elder_asked_help=true",
-				"text":
-				"Then go carefully, and come back to tell an old man he worried over nothing. I would enjoy being wrong.",
+				"text": "Then go carefully, and come back to tell an old man he worried over nothing. I would enjoy being wrong.",
 				"next": "e_hub",
 			},
 			"e_water":
 			{
-				"text":
-				"Then drink deep. The Godavari has never once refused anybody, which is more than I can say for this village.",
+				"text": "Then drink deep. The Godavari has never once refused anybody, which is more than I can say for this village.",
 				"next": "e_hub",
 			},
 			"e_hub":
@@ -135,8 +131,10 @@ static func _elder() -> Dictionary:
 			{
 				"action": "flag:heard_of_shrine=true",
 				"text":
-				"My mother swept its steps at every dawn of her life. Now the lamp is dark and the moss "
-						+ "has the stairway. Stone remembers longer than we do.",
+				(
+					"My mother swept its steps at every dawn of her life. Now the lamp is dark and the moss "
+					+ "has the stairway. Stone remembers longer than we do."
+				),
 				"next": "e_hub",
 			},
 			"e_bhadra":
@@ -256,8 +254,7 @@ static func _weaver() -> Dictionary:
 			},
 			"w_indigo":
 			{
-				"text":
-				"Six dips and a day in the sun for each. The colour is not in the cloth — it is in the waiting.",
+				"text": "Six dips and a day in the sun for each. The colour is not in the cloth — it is in the waiting.",
 				"next": "w_hub",
 			},
 			"w_sell":
@@ -386,8 +383,7 @@ static func _herder() -> Dictionary:
 			},
 			"gp_ask":
 			{
-				"text":
-				"If you are walking that way, and you have the look of a man who does, bring me the bell at least.",
+				"text": "If you are walking that way, and you have the look of a man who does, bring me the bell at least.",
 				"choices":
 				[
 					{"text": "I will find it.", "next": "gp_accept"},
@@ -651,8 +647,7 @@ static func _puru() -> Dictionary:
 			},
 			"p_well":
 			{
-				"text":
-				"There was a noise last night. Amma said it was the wind. The wind does not stop when you listen to it.",
+				"text": "There was a noise last night. Amma said it was the wind. The wind does not stop when you listen to it.",
 				"action": "flag:puru_heard_noise=true",
 				"next": "",
 			},
@@ -690,8 +685,7 @@ static func _guard() -> Dictionary:
 		{
 			"g_intro":
 			{
-				"text":
-				"Hold. ...No, walk on. You carry that bow like a man who has used it, and that is not yet a crime.",
+				"text": "Hold. ...No, walk on. You carry that bow like a man who has used it, and that is not yet a crime.",
 				"choices":
 				[
 					{"text": "Do you get much trouble here?", "next": "g_trouble"},
@@ -757,8 +751,7 @@ static func _traveller() -> Dictionary:
 			},
 			"b_where":
 			{
-				"text":
-				"East. Past the shrine knoll. I have slept beside that shrine on eight years of journeys — this time I did not.",
+				"text": "East. Past the shrine knoll. I have slept beside that shrine on eight years of journeys — this time I did not.",
 				"next": "b_why",
 			},
 			"b_shaken":
@@ -778,8 +771,7 @@ static func _traveller() -> Dictionary:
 			},
 			"b_safe":
 			{
-				"text":
-				"Safe and useless, which is the usual condition of a traveller. Let me be useful for one moment.",
+				"text": "Safe and useless, which is the usual condition of a traveller. Let me be useful for one moment.",
 				"next": "b_lamp",
 			},
 			"b_lamp":
@@ -801,8 +793,10 @@ static func _traveller() -> Dictionary:
 			"b_flatter":
 			{
 				"text":
-				"But you carry a bow, and you have the face of a man who finishes what he starts. Forgive me — "
-						+ "I trade in small things, and I read people for a living.",
+				(
+					"But you carry a bow, and you have the face of a man who finishes what he starts. Forgive me — "
+					+ "I trade in small things, and I read people for a living."
+				),
 				"choices":
 				[
 					{"text": "Then I will light it.", "next": "b_accept"},
@@ -816,11 +810,12 @@ static func _traveller() -> Dictionary:
 			},
 			"b_accept":
 			{
-				"action":
-				["quest_start:q_shrine", "give:lamp_oil:1", "flag:heard_of_shrine=true", "event:shrine_errand_taken"],
+				"action": ["quest_start:q_shrine", "give:lamp_oil:1", "flag:heard_of_shrine=true", "event:shrine_errand_taken"],
 				"text":
-				"Then take my oil. Good til oil, and I have no more use for a dark road. Rishi Vamadeva keeps "
-						+ "the knoll — tell him Bhadra still owes him a bowl of rice.",
+				(
+					"Then take my oil. Good til oil, and I have no more use for a dark road. Rishi Vamadeva keeps "
+					+ "the knoll — tell him Bhadra still owes him a bowl of rice."
+				),
 				"next": "b_accept_2",
 			},
 			"b_accept_2":
@@ -844,8 +839,7 @@ static func _traveller() -> Dictionary:
 			},
 			"b_dir":
 			{
-				"text":
-				"East across the ford, then the knoll with the crooked palm on it. Climb until the wind changes.",
+				"text": "East across the ford, then the knoll with the crooked palm on it. Climb until the wind changes.",
 				"next": "",
 			},
 			"b_thanks":
@@ -904,11 +898,7 @@ static func _hermit() -> Dictionary:
 				"choices":
 				[
 					{"text": "Do you live up here alone?", "next": "h_alone"},
-					{
-						"text": "The lamp at the threshold is out.",
-						"condition": "flag:heard_of_shrine",
-						"next": "h_lamp_talk"
-					},
+					{"text": "The lamp at the threshold is out.", "condition": "flag:heard_of_shrine", "next": "h_lamp_talk"},
 					{"text": "I will not disturb you.", "next": ""},
 				],
 			},
@@ -919,8 +909,7 @@ static func _hermit() -> Dictionary:
 			},
 			"h_lamp_talk":
 			{
-				"text":
-				"It is. My hands shake, and oil is dear. If ever you come by oil, climb up — I will find the flint.",
+				"text": "It is. My hands shake, and oil is dear. If ever you come by oil, climb up — I will find the flint.",
 				"next": "h_hub",
 			},
 			"h_hub":
@@ -971,8 +960,10 @@ static func _hermit() -> Dictionary:
 			{
 				"action": ["heal:35", "event:hermit_blessing"],
 				"text":
-				"Go with a steady hand. And do not sleep in the forest west of the ford — whatever walks "
-						+ "there now, it did not walk there when I was young.",
+				(
+					"Go with a steady hand. And do not sleep in the forest west of the ford — whatever walks "
+					+ "there now, it did not walk there when I was young."
+				),
 				"next": "h_bless_2",
 			},
 			"h_bless_2":

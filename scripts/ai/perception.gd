@@ -55,13 +55,7 @@ func configure(d: Dictionary) -> void:
 
 ## One perception tick. `light` is 0..1 from SkySystem; night halves effective range.
 func update(
-	delta: float,
-	eye: Vector3,
-	fwd: Vector3,
-	target: Node3D,
-	space: PhysicsDirectSpaceState3D,
-	map: WorldMap,
-	light: float
+	delta: float, eye: Vector3, fwd: Vector3, target: Node3D, space: PhysicsDirectSpaceState3D, map: WorldMap, light: float
 ) -> void:
 	var see := 0.0
 	can_see = false

@@ -36,12 +36,7 @@ func _run() -> void:
 		var mem := Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0
 		var orph := int(Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT))
 		rows.append([nodes, objs, mem, ms])
-		print(
-			(
-				"  lap %d: nodes=%5d objects=%6d orphans=%4d mem=%6.1f MB  frame=%6.2f ms"
-				% [lap, nodes, objs, orph, mem, ms]
-			)
-		)
+		print("  lap %d: nodes=%5d objects=%6d orphans=%4d mem=%6.1f MB  frame=%6.2f ms" % [lap, nodes, objs, orph, mem, ms])
 	var first: Array = rows[1]
 	var last: Array = rows[rows.size() - 1]
 	var node_growth: int = last[0] - first[0]
