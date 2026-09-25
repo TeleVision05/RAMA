@@ -326,3 +326,14 @@ knowing before concluding that something is regenerating a file.
 | quests — all three driven to completion, save round-trip | PASS (27/27) |
 | acceptance — the full checklist, menu to gameplay | PASS (50/50) |
 | perf — reports against 60/30 fps, gates at 20 | PASS |
+
+## 16. Maintenance pass, 2026-09-25
+
+- `tools/run_tests.sh` re-run on the committed tree (Godot 4.7.2 at `~/tools/Godot.app`)
+  under a 240 s wall-clock cap: parse, input, assets, worldmap, terrain, playtest,
+  audio, quests, saveload and leaks all PASS with 0 script errors. The cap expired
+  before `perf` and `accept` ran; `accept` was then run on its own and PASSES. `perf` was not re-run.
+  The full suite needs roughly 5+ minutes on this machine.
+- Tracked `tools/__pycache__/*.pyc` removed from the index and ignored.
+- README now names `tools/run_tests.sh` as the full gate.
+- Overhaul (`OVERHAUL.md`) tracks 2-4 remain open; nothing new was started here.

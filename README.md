@@ -78,6 +78,7 @@ discovered. Praying at the shrine restores you and sets where you wake.
 ## Tests
 
 ```bash
+tools/run_tests.sh                              # the full 12-suite gate (opens short-lived windows)
 tools/gd.sh scene res://scenes/playtest.tscn    # drives the game, asserts movement + combat
 tools/gd.sh scene res://scenes/asset_test.tscn  # every texture, sound and shader loads
 tools/gd.sh test tests/bake_map_test.gd         # world sanity + top-down map render
