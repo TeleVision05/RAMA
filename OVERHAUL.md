@@ -1,5 +1,8 @@
 # RAMA — Overhaul brief
 
+> **Status 2026-09-25:** Track 1 landed as WIP in `66c779a` on `main`, test-gate green
+> but never verified by renders; tracks 2–4 not started. Order of work is in `ROADMAP.md`.
+
 The baseline is a complete, passing vertical slice. This is the plan for the second
 pass. The driving note from review was blunt and correct:
 
