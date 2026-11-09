@@ -44,7 +44,7 @@ import numpy as np
 # ----------------------------------------------------------------------------
 
 SR = 44100
-OUT_DIR = "/Users/tarunvadapalli/Documents/Git/UltraOpen/assets/audio"
+OUT_DIR = "/Users/tarunvadapalli/Documents/Git/RAMA/assets/audio"
 TARGET_PEAK_DBFS = -3.0
 TARGET_PEAK = 10.0 ** (TARGET_PEAK_DBFS / 20.0)
 

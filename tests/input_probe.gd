@@ -24,6 +24,15 @@ const KEY_CHECKS := {
 	"quick_load": KEY_F6,
 	"dev_screenshot": KEY_F7,
 	"dev_time": KEY_T,
+	"parry": KEY_F,
+	"crouch": KEY_V,
+	"quick_heal": KEY_H,
+	"cycle_astra": KEY_R,
+	"astra_1": KEY_1,
+	"astra_2": KEY_2,
+	"astra_3": KEY_3,
+	"astra_4": KEY_4,
+	"astra_5": KEY_5,
 }
 const MOUSE_CHECKS := {"attack": MOUSE_BUTTON_LEFT, "aim": MOUSE_BUTTON_RIGHT}
 
@@ -32,8 +41,15 @@ func _ready() -> void:
 	# Settle before touching input. `parse_input_event` is queued, and the action state
 	# it feeds is only updated on the input flush, so pressing a key on the very first
 	# frame raced and intermittently reported the first action as not triggered.
-	for i in range(6):
+	DisplayServer.window_move_to_foreground()
+	for i in range(10):
 		await get_tree().process_frame
+	var warm := InputEventKey.new()
+	warm.physical_keycode = KEY_SHIFT
+	warm.pressed = false
+	Input.parse_input_event(warm)
+	Input.flush_buffered_events()
+	await get_tree().process_frame
 	_run()
 
 
@@ -56,6 +72,7 @@ func _run() -> void:
 		var kc: int = KEY_CHECKS[a]
 		var down := InputEventKey.new()
 		down.physical_keycode = kc
+		down.keycode = kc
 		down.pressed = true
 		Input.parse_input_event(down)
 		Input.flush_buffered_events()
@@ -63,6 +80,7 @@ func _run() -> void:
 		var got := Input.is_action_pressed(name)
 		var up := InputEventKey.new()
 		up.physical_keycode = kc
+		up.keycode = kc
 		up.pressed = false
 		Input.parse_input_event(up)
 		Input.flush_buffered_events()

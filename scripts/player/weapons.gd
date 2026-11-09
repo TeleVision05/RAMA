@@ -52,11 +52,42 @@ static func bow(scale_f: float = 1.0) -> Node3D:
 	bind.position = Vector3(0, -0.063, 0.0)
 	root.add_child(bind)
 	for mirror in [1.0, -1.0]:
+		var collar := MeshInstance3D.new()
+		collar.mesh = MeshKit.tube(0.055, [[0.0, 0.017], [0.45, 0.022], [1.0, 0.015]], 10)
+		collar.material_override = m_brass
+		collar.position = Vector3(0, (0.095 if mirror > 0.0 else -0.150), 0.032)
+		root.add_child(collar)
+
 		var nock := MeshInstance3D.new()
 		nock.mesh = MeshKit.sphere(0.013, 8, 6)
 		nock.material_override = m_brass
 		nock.position = Vector3(0, pts[n].y * mirror, pts[n].z)
 		root.add_child(nock)
+
+		var bell := MeshInstance3D.new()
+		bell.mesh = MeshKit.sphere(0.0085, 8, 6)
+		bell.material_override = m_brass
+		bell.position = Vector3(0, (pts[n].y - 0.022) * mirror, pts[n].z + 0.012)
+		root.add_child(bell)
+
+	# Divya Astra manifestation aura on the Kodanda riser.
+	var astra_glow := MeshInstance3D.new()
+	astra_glow.name = "AstraGlow"
+	astra_glow.mesh = MeshKit.sphere(0.042, 12, 8)
+	var m_glow := StandardMaterial3D.new()
+	m_glow.albedo_color = Color(1.0, 0.72, 0.22, 0.78)
+	m_glow.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m_glow.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	astra_glow.material_override = m_glow
+	astra_glow.position = Vector3(0, 0, -0.05)
+	astra_glow.visible = false
+	var astra_light := OmniLight3D.new()
+	astra_light.name = "Light"
+	astra_light.light_color = Color(1.0, 0.72, 0.22)
+	astra_light.light_energy = 1.6
+	astra_light.omni_range = 3.2
+	astra_glow.add_child(astra_light)
+	root.add_child(astra_glow)
 
 	# The string, which the animation pulls back.
 	var st := MeshInstance3D.new()
@@ -77,14 +108,14 @@ static func arrow() -> Node3D:
 	# Points along -Z, which is Godot's forward, so the projectile flies where it looks.
 	shaft.mesh = MeshKit.tube(0.72, [[0.0, 0.0042], [1.0, 0.0038]], 6)
 	shaft.material_override = Mats.pbr("wood_beam", 6.0)
-	shaft.rotation = Vector3(PI * 0.5, 0, 0)
+	shaft.rotation = Vector3(-PI * 0.5, 0, 0)
 	shaft.position = Vector3(0, 0, 0.30)
 	root.add_child(shaft)
 
 	var head := MeshInstance3D.new()
 	head.mesh = MeshKit.tube(0.085, [[0.0, 0.0125], [0.35, 0.0105], [1.0, 0.0008]], 6, 0.42)
 	head.material_override = Mats.flat(Color(0.42, 0.41, 0.40), 0.34, 0.85)
-	head.rotation = Vector3(PI * 0.5, 0, 0)
+	head.rotation = Vector3(-PI * 0.5, 0, 0)
 	head.position = Vector3(0, 0, -0.42)
 	root.add_child(head)
 
@@ -96,15 +127,15 @@ static func arrow() -> Node3D:
 		var f := MeshInstance3D.new()
 		f.mesh = vane
 		f.material_override = m_f
-		f.position = Vector3(0, 0, 0.245)
+		f.position = Vector3(0, 0, 0.19)
 		f.rotation = Vector3(0, 0, TAU * float(i) / 3.0)
 		root.add_child(f)
 	# Nock.
 	var nk := MeshInstance3D.new()
 	nk.mesh = MeshKit.tube(0.020, [[0.0, 0.0055], [0.6, 0.0060], [1.0, 0.0050]], 6)
 	nk.material_override = Mats.flat(Color(0.20, 0.16, 0.13), 0.6)
-	nk.rotation = Vector3(PI * 0.5, 0, 0)
-	nk.position = Vector3(0, 0, 0.355)
+	nk.rotation = Vector3(-PI * 0.5, 0, 0)
+	nk.position = Vector3(0, 0, 0.32)
 	root.add_child(nk)
 	return root
 
@@ -188,6 +219,22 @@ static func sword() -> Node3D:
 	guard.position = Vector3(0, 0.09, 0)
 	root.add_child(guard)
 
+	# Lotus-shaped golden crossguard bolster (Padma-mukha bolster).
+	var bolster := MeshInstance3D.new()
+	bolster.mesh = MeshKit.profile_loft(
+		0.058,
+		[
+			[0.0, 0.024, 0.015],
+			[0.35, 0.038, 0.018],
+			[0.75, 0.032, 0.012],
+			[1.0, 0.018, 0.008],
+		],
+		12
+	)
+	bolster.material_override = m_brass
+	bolster.position = Vector3(0, 0.098, 0)
+	root.add_child(bolster)
+
 	var grip := MeshInstance3D.new()
 	grip.mesh = MeshKit.tube(0.14, [[0.0, 0.016], [0.5, 0.0145], [1.0, 0.016]], 10, 0.72)
 	grip.material_override = Mats.pbr("wood_beam", 5.0)
@@ -246,4 +293,102 @@ static func staff() -> Node3D:
 	s.material_override = Mats.pbr("wood_beam", 4.0)
 	s.position = Vector3(0, -0.8, 0)
 	root.add_child(s)
+	return root
+
+
+## Hanuman's iconic golden fluted bulbous mace (Kaumodaki / Gada).
+static func gada() -> Node3D:
+	var root := Node3D.new()
+	root.name = "Gada"
+	var m_brass := Mats.brass()
+	var m_wood := Mats.pbr("wood_beam", 4.0)
+
+	# Ringed shaft with pommel bulb.
+	var shaft := MeshInstance3D.new()
+	shaft.mesh = MeshKit.tube(
+		0.72,
+		[
+			[0.0, 0.026],
+			[0.08, 0.018],
+			[0.55, 0.021],
+			[0.85, 0.028],
+			[1.0, 0.042],
+		],
+		12
+	)
+	shaft.material_override = m_wood
+	shaft.position = Vector3(0, -0.18, 0)
+	root.add_child(shaft)
+
+	for ry in [-0.14, 0.16, 0.38]:
+		var ring_mi := MeshInstance3D.new()
+		ring_mi.mesh = MeshKit.tube(0.024, [[0.0, 0.028], [0.5, 0.033], [1.0, 0.028]], 12)
+		ring_mi.material_override = m_brass
+		ring_mi.position = Vector3(0, ry, 0)
+		root.add_child(ring_mi)
+
+	# Lotus neck and heavy golden spherical/fluted mace head with finial spire.
+	var head := MeshInstance3D.new()
+	head.mesh = MeshKit.tube(
+		0.36,
+		[
+			[0.00, 0.044],
+			[0.18, 0.105],
+			[0.45, 0.138],
+			[0.68, 0.118],
+			[0.84, 0.052],
+			[0.95, 0.022],
+			[1.00, 0.004],
+		],
+		16
+	)
+	head.material_override = m_brass
+	head.position = Vector3(0, 0.52, 0)
+	root.add_child(head)
+
+	var flange := MeshInstance3D.new()
+	flange.mesh = MeshKit.tube(0.032, [[0.0, 0.142], [0.5, 0.156], [1.0, 0.142]], 16)
+	flange.material_override = m_brass
+	flange.position = Vector3(0, 0.66, 0)
+	root.add_child(flange)
+	return root
+
+
+## Ravana's curved golden-hilted crescent war-blade (Chandrahasa).
+static func chandrahasa() -> Node3D:
+	var root := Node3D.new()
+	root.name = "Chandrahasa"
+	var m_steel := Mats.flat(Color(0.76, 0.80, 0.88), 0.16, 0.96)
+	var m_brass := Mats.brass()
+
+	var blade := MeshInstance3D.new()
+	blade.mesh = MeshKit.blade(
+		0.86,
+		[
+			[0.00, 0.034, 0.008],
+			[0.25, 0.042, 0.009],
+			[0.58, 0.056, 0.008],
+			[0.82, 0.048, 0.006],
+			[0.95, 0.024, 0.004],
+			[1.00, 0.004, 0.001],
+		],
+		0.28,
+		7
+	)
+	blade.material_override = m_steel
+	blade.position = Vector3(0, 0.11, 0)
+	blade.rotation = Vector3(0.08, 0, 0)
+	root.add_child(blade)
+
+	var guard := MeshInstance3D.new()
+	guard.mesh = MeshKit.tube(0.036, [[0.0, 0.052], [0.5, 0.068], [1.0, 0.038]], 12, 0.45)
+	guard.material_override = m_brass
+	guard.position = Vector3(0, 0.085, 0)
+	root.add_child(guard)
+
+	var grip := MeshInstance3D.new()
+	grip.mesh = MeshKit.tube(0.16, [[0.0, 0.020], [0.5, 0.017], [1.0, 0.021]], 10)
+	grip.material_override = m_brass
+	grip.position = Vector3(0, -0.065, 0)
+	root.add_child(grip)
 	return root

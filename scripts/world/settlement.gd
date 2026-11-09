@@ -75,7 +75,8 @@ const NO_COLLIDE := [
 	"milestone",
 	"bund",
 	"sheaf",
-	"mat"
+	"mat",
+	"torana"
 ]
 
 
@@ -486,6 +487,10 @@ func _build_village() -> void:
 	_mm("VillagePots", Arch.water_pot_mesh(4), pot_x, 165.0)
 	_mm("VillageBaskets", Arch.basket_mesh(6), bas_x, 150.0)
 
+	# Ornamental Kosala Torana archway welcoming travellers into Panchavati.
+	var v_torana := _kosala_torana("VillageTorana")
+	_place_level(v_torana, SQUARE + Vector2(18.0, -8.0), 0.25, 0.8, 2.2, 0.05)
+
 	_poi.append({"name": "Panchavati", "position": _gv(SQUARE), "radius": 62.0, "kind": "village"})
 
 
@@ -507,10 +512,13 @@ func _build_shrine() -> void:
 	var st := Arch.stone_steps(a, b + Vector3(0, 0.05, 0), 3.6)
 	add_child(st)
 
-	# Torana at the head of the stair, straddling the processional path.
+	# Torana at the head of the stair, straddling the processional path, and a Kosala
+	# Torana archway with marigold garlands at the shrine approach.
 	var gp := Vector2(166.4, -72.4)
 	var gt := Arch.gate(3)
 	_place_level(gt, gp, PI * 0.5, 0.9, 2.4, 0.05)
+	var s_torana := _kosala_torana("ShrineTorana")
+	_place_level(s_torana, Vector2(158.8, -66.2), PI * 0.5, 0.8, 2.2, 0.05)
 
 	# Flagstone processional: north-south along the plateau lip, then west to the steps.
 	var route: Array = []
@@ -542,6 +550,64 @@ func _build_shrine() -> void:
 		{"name": "The Shrine of the Rising Sun", "position": Vector3(TEMPLE.x, plinth_top, TEMPLE.y), "radius": 30.0, "kind": "shrine"}
 	)
 	_poi.append({"name": "The Knoll Stair", "position": a, "radius": 10.0, "kind": "landmark"})
+
+
+## Ornamental Kosala Torana gateway: carved twin-pillar archway with curved
+## lintel crossbeams, golden kalasha finials, and hanging marigold garlands.
+func _kosala_torana(nm: String) -> Node3D:
+	var root := Node3D.new()
+	root.name = nm
+	var stone := Mats.pbr("carved_stone", 1.2)
+	var brass := Mats.brass()
+	var marigold := Mats.flat(Color(0.98, 0.62, 0.12), 0.72)
+	var saffron := Mats.flat(Color(0.95, 0.36, 0.10), 0.76)
+	# Twin carved stone pillars with stepped plinths
+	for sz in [-2.1, 2.1]:
+		var base := MeshInstance3D.new()
+		base.name = "ToranaBase"
+		base.mesh = MeshKit.box(Vector3(0.68, 0.45, 0.68), 1.0)
+		base.material_override = stone
+		base.position = Vector3(0.0, 0.22, sz)
+		root.add_child(base)
+		var pillar := MeshInstance3D.new()
+		pillar.name = "ToranaPillar"
+		pillar.mesh = MeshKit.profile_loft(
+			3.65,
+			[[0.0, 0.24, 0.24], [0.15, 0.21, 0.21], [0.82, 0.18, 0.18], [1.0, 0.25, 0.25]],
+			10
+		)
+		pillar.material_override = stone
+		pillar.position = Vector3(0.0, 0.42, sz)
+		root.add_child(pillar)
+	# Two tiered curved crossbeam lintels (torana architraves)
+	for tier in range(2):
+		var ty: float = 3.92 + float(tier) * 0.48
+		var span: float = 5.20 + float(tier) * 0.35
+		var beam := MeshInstance3D.new()
+		beam.name = "ToranaBeam_%d" % tier
+		beam.mesh = MeshKit.box(Vector3(0.36, 0.22, span), 1.2)
+		beam.material_override = stone
+		beam.position = Vector3(0.0, ty, 0.0)
+		root.add_child(beam)
+	# Central golden Surya/Kalasha finial atop the upper lintel
+	var finial := MeshInstance3D.new()
+	finial.name = "ToranaKalasha"
+	finial.mesh = MeshKit.profile_loft(0.42, [[0.0, 0.10, 0.10], [0.45, 0.16, 0.16], [0.80, 0.06, 0.06], [1.0, 0.02, 0.02]], 10)
+	finial.material_override = brass
+	finial.position = Vector3(0.0, 4.50, 0.0)
+	root.add_child(finial)
+	# Hanging marigold garland band (festoon of blossoms across the span)
+	for i in range(9):
+		var u: float = float(i) / 8.0
+		var gz: float = lerpf(-1.85, 1.85, u)
+		var sag: float = sin(u * PI) * 0.28
+		var blossom := MeshInstance3D.new()
+		blossom.name = "ToranaGarland_%d" % i
+		blossom.mesh = MeshKit.sphere(0.11, 8, 6)
+		blossom.material_override = marigold if i % 2 == 0 else saffron
+		blossom.position = Vector3(0.0, 3.74 - sag, gz)
+		root.add_child(blossom)
+	return root
 
 
 # ---------------------------------------------------------------------------

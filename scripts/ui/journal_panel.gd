@@ -9,29 +9,89 @@ extends Control
 
 const TAB_QUESTS := 0
 const TAB_PLACES := 1
+const TAB_KANDAS := 2
 
 ## Fallback flavour for the ten named places in the world, used until a content
 ## system registers something better.
 const PLACE_BLURB := {
-	"village": "Panchavati. Thatch and mud brick above the flood line.",
-	"panchavati": "Panchavati. Thatch and mud brick above the flood line.",
-	"shrine": "A stepped shrine on the eastern rise. The bell still rings true.",
-	"temple": "A stepped shrine on the eastern rise. The bell still rings true.",
-	"ruins": "Older than the village, and nobody will say by how much.",
-	"waterfall": "The river falls forty paces into white noise.",
-	"falls": "The river falls forty paces into white noise.",
-	"ford": "Shallow gravel where the road crosses the water.",
-	"forest_camp": "Ash, a ring of stones, and tracks that are not deer.",
-	"camp": "Ash, a ring of stones, and tracks that are not deer.",
-	"hidden_grove": "Still water under old trees. The birds go quiet here.",
-	"grove": "Still water under old trees. The birds go quiet here.",
-	"badlands": "Red rock cut into gullies. Little grows and less drinks.",
-	"fields": "Terraced rice below the village, green to the eye.",
-	"lookout": "A shoulder of stone with the whole valley laid out below.",
+	"village": "Panchavati Ashram & Hamlet. Built beside the five sacred banyans above the Godavari flood line.",
+	"panchavati": "Panchavati Ashram & Hamlet. Built beside the five sacred banyans above the Godavari flood line.",
+	"shrine": "Surya-Shiva Mandapa on the eastern rise. Its bronze ghanta echoes across the Dandaka valley.",
+	"temple": "Surya-Shiva Mandapa on the eastern rise. Its bronze ghanta echoes across the Dandaka valley.",
+	"ruins": "Ancient Ikshvaku & Rishi pillar ruins, older than the settlement and carved with forgotten hymns.",
+	"waterfall": "Godavari Cataract. The sacred river plunges forty paces into mist where sages perform sandhya.",
+	"falls": "Godavari Cataract. The sacred river plunges forty paces into mist where sages perform sandhya.",
+	"ford": "Tamasa & Godavari Gravel Ford. Shallow crossing where exiles and pilgrims wade the currents.",
+	"forest_camp": "Rakshasa Vanguard Camp. Ash, a broken fire-ring, and tracks of Khara's scouts in the red earth.",
+	"camp": "Rakshasa Vanguard Camp. Ash, a broken fire-ring, and tracks of Khara's scouts in the red earth.",
+	"hidden_grove": "Agastya & Shabari's Tapovana Grove. Still lotus water under ancient trees where birds fall silent.",
+	"grove": "Agastya & Shabari's Tapovana Grove. Still lotus water under ancient trees where birds fall silent.",
+	"badlands": "Janasthana Ravines & Lanka Causeway. Scorched red rock where the Rakshasa war-host gathers.",
+	"fields": "Ashram Terraced Paddy. Fed by bamboo sluices from the Godavari, green against the forest edge.",
+	"lookout": "Rishyamuka & Jatayu's Crag. A high stone shoulder with the entire Dandaka valley laid out below.",
 }
+
+const KANDA_CHRONICLE := [
+	{
+		"quest_id": "q_bala_kanda",
+		"short": "I. Bala Kanda",
+		"title": "I. Bala Kanda — Youth & The Bow of Shiva",
+		"epigraph": "\"Tapah-svadhyaya-niratam tapasvi vag-vidam varam...\"  (Valmiki Ramayana 1.1.1)",
+		"astra": "Shara & Agneyastra — Guided by Sage Vishvamitra against Tataka and Subahu.",
+		"lore":
+		"Born of the Solar Dynasty (Suryavamsha) in Ayodhya, young Sri Rama accompanied Brahmarshi Vishvamitra "
+		+ "to guard the sacred yajna at Siddhashrama, slew the demoness Tataka, and lifted Lord Shiva's celestial "
+		+ "bow Pinaka in Mithila to win the hand of Janaki (Sita).",
+	},
+	{
+		"quest_id": "q_ayodhya_kanda",
+		"short": "II. Ayodhya Kanda",
+		"title": "II. Ayodhya Kanda — The Exile & Golden Paduka",
+		"epigraph": "\"Ramo dvir nabhibhashate — Rama speaks not with a forked tongue.\"  (Ayodhya Kanda 2.18.30)",
+		"astra": "Varunastra — Steadfast composure and Dharmic resolve upon the Chitrakuta hills.",
+		"lore":
+		"To honour King Dasharatha's word to Kaikeyi without hesitation, Rama relinquished the throne of Kosala "
+		+ "for fourteen years of forest exile alongside Sita and Lakshmana. At Chitrakuta, Bharata received Rama's "
+		+ "golden Paduka sandals to rule Ayodhya in his name.",
+	},
+	{
+		"quest_id": "q_aranya_kanda",
+		"short": "III. Aranya Kanda",
+		"title": "III. Aranya Kanda — Panchavati & The Golden Deer",
+		"epigraph": "\"Katham nu bhagavan ramah... dharmanuga-gatih sada.\"  (Aranya Kanda 3.16)",
+		"astra": "Agneyastra — Bestowed through the grace of Sage Agastya in Dandakaranya.",
+		"lore":
+		"Dwelling among the five sacred banyans of Panchavati beside the Godavari, Rama protected the Rishis of "
+		+ "Dandakaranya from Khara and Dushana's host, pursued Maricha in the guise of the illusory Golden Deer, "
+		+ "and blessed the dying vulture-king Jatayu after Ravana's abduction of Sita.",
+	},
+	{
+		"quest_id": "q_kishkindha_kanda",
+		"short": "IV. Kishkindha & Sundara",
+		"title": "IV. Kishkindha & Sundara Kanda — Hanuman & The Seven Trees",
+		"epigraph": "\"Jayaty atibalo ramo lakshmanash cha mahabalah...\"  (Sundara Kanda 5.42.33)",
+		"astra": "Vayavyastra — The Gale of Vayu, piercing the Seven Sala Trees in a single shaft.",
+		"lore":
+		"Tasting the devoted ascetic Shabari's berries at Matanga Ashram, Rama forged an eternal alliance with "
+		+ "Sugriva and Hanuman at Rishyamuka, proved his might by piercing seven sala trees with one arrow, and "
+		+ "received Sita's Chudamani crest-jewel after Hanuman's leap across the ocean.",
+	},
+	{
+		"quest_id": "q_yuddha_kanda",
+		"short": "V. Yuddha Kanda",
+		"title": "V. Yuddha Kanda — Rama Setu & The Fall of Ravana",
+		"epigraph": "\"Adityahridayam punyam sarva-shatru-vinashanam...\"  (Yuddha Kanda 6.105.4)",
+		"astra": "Brahmastra — The Solar Disk of Brahma, invoked after chanting the Aditya Hridaya.",
+		"lore":
+		"Crossing the stone causeway of Nala's Setu with the Vanara host, Lakshmana vanquished Indrajit and "
+		+ "Rama—blessed with the Aditya Hridaya hymn by Sage Agastya—released the blazing Brahmastra to pierce "
+		+ "Dasagriva Ravana's heart, restoring Sita and cosmic Dharma.",
+	},
+]
 
 var tab: int = TAB_QUESTS
 var _sel_quest: int = 0
+var _sel_kanda: int = 0
 var _quests: Array = []  # [{id, title, summary, state, objectives:[...]}]
 var _places: Array = []  # [{id, name, blurb}]
 var _qsys: Node = null
@@ -228,7 +288,7 @@ func place_count() -> int:
 func set_tab(t: int) -> void:
 	if t == tab:
 		return
-	tab = clampi(t, TAB_QUESTS, TAB_PLACES)
+	tab = clampi(t, TAB_QUESTS, TAB_KANDAS)
 	AudioDirector.play_ui("ui_click")
 	queue_redraw()
 
@@ -267,16 +327,28 @@ func _gui_input(e: InputEvent) -> void:
 					_select_quest(i)
 					accept_event()
 					return
+		elif tab == TAB_KANDAS:
+			for i in range(_row_rects.size()):
+				if (_row_rects[i] as Rect2).has_point(mb.position):
+					_select_kanda(i)
+					accept_event()
+					return
 	if e is InputEventKey and (e as InputEventKey).pressed:
 		var k := (e as InputEventKey).keycode
 		if k == KEY_DOWN:
-			_select_quest(_sel_quest + 1)
+			if tab == TAB_KANDAS:
+				_select_kanda(_sel_kanda + 1)
+			else:
+				_select_quest(_sel_quest + 1)
 			accept_event()
 		elif k == KEY_UP:
-			_select_quest(_sel_quest - 1)
+			if tab == TAB_KANDAS:
+				_select_kanda(_sel_kanda - 1)
+			else:
+				_select_quest(_sel_quest - 1)
 			accept_event()
 		elif k == KEY_TAB:
-			set_tab(TAB_PLACES if tab == TAB_QUESTS else TAB_QUESTS)
+			set_tab((tab + 1) % 3)
 			accept_event()
 
 
@@ -290,6 +362,25 @@ func _select_quest(i: int) -> void:
 	queue_redraw()
 
 
+func _select_kanda(i: int) -> void:
+	var n := clampi(i, 0, KANDA_CHRONICLE.size() - 1)
+	if n != _sel_kanda:
+		_sel_kanda = n
+		AudioDirector.play_ui("ui_click")
+	queue_redraw()
+
+
+func _kanda_state(quest_id: String) -> String:
+	if GameState.quests.has(quest_id):
+		var raw: Variant = GameState.quests[quest_id]
+		if typeof(raw) == TYPE_DICTIONARY:
+			var st := String((raw as Dictionary).get("state", "active"))
+			if st == "complete":
+				return "Completed"
+			return "In Progress"
+	return "Awaiting"
+
+
 # --- drawing ---------------------------------------------------------------
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), Color(0.020, 0.016, 0.012, 0.66), true)
@@ -300,15 +391,22 @@ func _draw() -> void:
 	var f_head := UITheme.label_font()
 	var f_body := UITheme.body_font()
 
-	UITheme.draw_text(self, f_eyebrow, pr.position + Vector2(32, 44), "JOURNAL", UITheme.FS_TINY, UITheme.BRASS)
+	UITheme.draw_text(self, f_eyebrow, pr.position + Vector2(32, 44), "TALA-PATRA CHRONICLE", UITheme.FS_TINY, UITheme.BRASS)
 
 	# --- tabs -------------------------------------------------------------
 	_tab_rects.clear()
-	var names := ["QUESTS", "PLACES"]
-	var counts := [_quests.size(), _places.size()]
-	var tx: float = pr.position.x + 150.0
-	for i in range(names.size()):
-		var label: String = "%s  %d" % [names[i], counts[i]]
+	var kandas_done := 0
+	for k in KANDA_CHRONICLE:
+		if _kanda_state(String(k["quest_id"])) == "Completed":
+			kandas_done += 1
+	var labels := [
+		"DHARMA & QUESTS  %d" % _quests.size(),
+		"SACRED PLACES  %d" % _places.size(),
+		"THE FIVE KANDAS  %d/5" % kandas_done,
+	]
+	var tx: float = pr.position.x + 236.0
+	for i in range(labels.size()):
+		var label: String = labels[i]
 		var tw := UITheme.text_width(f_eyebrow, label, UITheme.FS_TINY)
 		var r := Rect2(Vector2(tx - 10.0, pr.position.y + 26.0), Vector2(tw + 20.0, 28.0))
 		_tab_rects.append(r)
@@ -319,16 +417,18 @@ func _draw() -> void:
 		UITheme.draw_text(self, f_eyebrow, Vector2(tx, pr.position.y + 44.0), label, UITheme.FS_TINY, col)
 		if on:
 			draw_line(Vector2(tx, pr.position.y + 52.0), Vector2(tx + tw, pr.position.y + 52.0), UITheme.SAFFRON, 2.0, true)
-		tx += tw + 40.0
+		tx += tw + 34.0
 
 	UITheme.carved_rule(self, pr.position + Vector2(32, 62), pr.size.x - 64)
 
 	if tab == TAB_QUESTS:
 		_draw_quests(pr, f_eyebrow, f_head, f_body)
-	else:
+	elif tab == TAB_PLACES:
 		_draw_places(pr, f_eyebrow, f_head, f_body)
+	else:
+		_draw_kandas(pr, f_eyebrow, f_head, f_body)
 
-	var hint := "TAB  SWITCH      J  CLOSE"
+	var hint := "TAB  SWITCH      UP/DOWN  SELECT      J  CLOSE"
 	var hw := UITheme.text_width(f_eyebrow, hint, UITheme.FS_TINY)
 	UITheme.draw_text(self, f_eyebrow, Vector2(pr.end.x - 32 - hw, pr.end.y - 22), hint, UITheme.FS_TINY, UITheme.PARCHMENT_FAINT)
 
@@ -491,3 +591,87 @@ func _draw_places(pr: Rect2, _f_eyebrow: Font, f_head: Font, f_body: Font) -> vo
 			col_w - 40.0
 		)
 		y += 56.0
+
+
+func _draw_kandas(pr: Rect2, f_eyebrow: Font, f_head: Font, f_body: Font) -> void:
+	_row_rects.clear()
+	var list_w: float = 310.0
+	var top: float = pr.position.y + 88.0
+
+	draw_line(
+		Vector2(pr.position.x + list_w + 44.0, top - 12.0),
+		Vector2(pr.position.x + list_w + 44.0, pr.end.y - 46.0),
+		Color(UITheme.BRASS_DIM.r, UITheme.BRASS_DIM.g, UITheme.BRASS_DIM.b, 0.45),
+		1.0,
+		true
+	)
+
+	var y: float = top
+	for i in range(KANDA_CHRONICLE.size()):
+		var k: Dictionary = KANDA_CHRONICLE[i]
+		var r := Rect2(Vector2(pr.position.x + 26.0, y - 4.0), Vector2(list_w, 46.0))
+		_row_rects.append(r)
+		var st := _kanda_state(String(k["quest_id"]))
+		if i == _sel_kanda:
+			var sb := UITheme.flat_style(Color(0.180, 0.125, 0.058, 0.76), 3, 0.0, UITheme.BRASS, 0, 0)
+			draw_style_box(sb, r)
+			draw_rect(Rect2(r.position, Vector2(2.5, r.size.y)), UITheme.SAFFRON, true)
+		var col: Color = UITheme.PARCHMENT if st != "Awaiting" else UITheme.PARCHMENT_DIM
+		UITheme.draw_text(
+			self,
+			f_body,
+			Vector2(r.position.x + 14.0, y + 25.0),
+			String(k["short"]),
+			UITheme.FS_BODY,
+			col,
+			HORIZONTAL_ALIGNMENT_LEFT,
+			list_w - 104.0
+		)
+		var tc: Color = UITheme.PARCHMENT_FAINT
+		if st == "Completed":
+			tc = UITheme.JADE
+		elif st == "In Progress":
+			tc = UITheme.SAFFRON
+		var tag := st.to_upper()
+		var tw := UITheme.text_width(f_eyebrow, tag, UITheme.FS_TINY)
+		UITheme.draw_text(self, f_eyebrow, Vector2(r.end.x - 12.0 - tw, y + 24.0), tag, UITheme.FS_TINY, tc)
+		y += 52.0
+
+	var dx: float = pr.position.x + list_w + 72.0
+	var dw: float = pr.end.x - 32.0 - dx
+	var kd: Dictionary = KANDA_CHRONICLE[clampi(_sel_kanda, 0, KANDA_CHRONICLE.size() - 1)]
+	var k_st := _kanda_state(String(kd["quest_id"]))
+	var dy: float = top + 16.0
+
+	UITheme.draw_text(self, f_eyebrow, Vector2(dx, dy), "VALMIKI RAMAYANA  ·  " + k_st.to_upper(), UITheme.FS_TINY, UITheme.BRASS)
+	dy += 28.0
+	UITheme.draw_text(self, f_head, Vector2(dx, dy), String(kd["title"]), UITheme.FS_LABEL, UITheme.PARCHMENT, HORIZONTAL_ALIGNMENT_LEFT, dw)
+	dy += 26.0
+	UITheme.draw_text(
+		self, f_body, Vector2(dx, dy), String(kd["epigraph"]), UITheme.FS_SMALL, UITheme.SAFFRON_PALE, HORIZONTAL_ALIGNMENT_LEFT, dw
+	)
+	dy += 26.0
+	UITheme.carved_rule(self, Vector2(dx, dy), dw, UITheme.BRASS_DIM, 0.55)
+	dy += 24.0
+	dy = _draw_paragraph(f_body, Vector2(dx, dy), String(kd["lore"]), UITheme.FS_SMALL, UITheme.PARCHMENT_DIM, dw, 21.0)
+	dy += 18.0
+	UITheme.draw_text(self, f_eyebrow, Vector2(dx, dy), "DIVYA ASTRA ATTUNEMENT", UITheme.FS_TINY, UITheme.BRASS)
+	dy += 22.0
+	UITheme.draw_text(self, f_body, Vector2(dx, dy), String(kd["astra"]), UITheme.FS_SMALL, UITheme.PARCHMENT, HORIZONTAL_ALIGNMENT_LEFT, dw)
+
+
+func _draw_paragraph(f: Font, pos: Vector2, text: String, fsize: int, col: Color, max_w: float, line_h: float) -> float:
+	var cur := ""
+	var y: float = pos.y
+	for word in text.split(" ", false):
+		var trial: String = word if cur == "" else cur + " " + word
+		if cur == "" or UITheme.text_width(f, trial, fsize) <= max_w:
+			cur = trial
+		else:
+			UITheme.draw_text(self, f, Vector2(pos.x, y), cur, fsize, col)
+			y += line_h
+			cur = word
+	if cur != "":
+		UITheme.draw_text(self, f, Vector2(pos.x, y), cur, fsize, col)
+		y += line_h
+	return y

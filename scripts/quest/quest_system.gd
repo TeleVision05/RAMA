@@ -702,10 +702,10 @@ func _build_marker() -> void:
 	cyl.rings = 1
 	_marker_mesh.mesh = cyl
 	_marker_mat = StandardMaterial3D.new()
-	_marker_mat.albedo_color = Color(1.0, 0.80, 0.44, 0.15)
+	_marker_mat.albedo_color = Color(1.0, 0.82, 0.46, 0.22)
 	_marker_mat.emission_enabled = true
-	_marker_mat.emission = Color(1.0, 0.72, 0.34)
-	_marker_mat.emission_energy_multiplier = 1.5
+	_marker_mat.emission = Color(1.0, 0.76, 0.38)
+	_marker_mat.emission_energy_multiplier = 2.4
 	_marker_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	_marker_mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 	_marker_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -811,8 +811,8 @@ func _update_marker(force: bool) -> void:
 	# at, and stays legible from the far side of the valley.
 	var d := _player.global_position.distance_to(at)
 	var near: float = clampf((d - 7.0) / 22.0, 0.0, 1.0)
-	_marker_mat.albedo_color = Color(1.0, 0.80, 0.44, 0.155 * near)
-	_marker_mat.emission_energy_multiplier = 1.5 * near
+	_marker_mat.albedo_color = Color(1.0, 0.82, 0.46, 0.22 * near)
+	_marker_mat.emission_energy_multiplier = 2.4 * near
 	_marker_puff.emitting = near > 0.05
 	_marker.visible = near > 0.02
 

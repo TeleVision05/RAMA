@@ -247,7 +247,11 @@ static func _build_beast(owner_node: Node3D, seed_v: int) -> Dictionary:
 static func _build_rakshasa(kind: int, owner_node: Node3D, seed_v: int) -> Dictionary:
 	var rig := ProcRig.new()
 	rig.name = "Rig"
-	rig.configure(_rig_config(kind, seed_v))
+	var rcfg := _rig_config(kind, seed_v)
+	var is_dasagriva: bool = owner_node != null and bool(owner_node.get("ten_heads"))
+	if is_dasagriva:
+		rcfg["ten_heads"] = true
+	rig.configure(rcfg)
 	owner_node.add_child(rig)
 	# Build UNMERGED. `build()` collapses each joint's meshes into one draw at the end,
 	# and everything below needs the individual meshes to still exist. Same order
@@ -272,6 +276,8 @@ static func _build_rakshasa(kind: int, owner_node: Node3D, seed_v: int) -> Dicti
 	_build_extremities(rig, mats)
 	_fit_dhoti(rig, mats.hide)
 	_build_gear(rig, kind, seed_v, mats)
+	if is_dasagriva:
+		_build_ravana_ten_heads(rig, mats)
 
 	var out := {"rig": rig, "beast": null, "weapon": null, "string": null}
 	match kind:
@@ -1665,3 +1671,43 @@ static func item_label(id: String) -> String:
 		"beast_claw":
 			return "Tiger Claw"
 	return id.capitalize()
+
+
+## Dasagriva Ravana's crown of auxiliary heads and golden mukutas.
+static func _build_ravana_ten_heads(rig: ProcRig, mats: Dictionary) -> void:
+	if rig == null or rig.head == null:
+		return
+	if rig.head.get_node_or_null("RavanaHeads") != null:
+		return
+	var r: float = float(rig.cfg.get("head", 0.12))
+	var crown_mat: StandardMaterial3D = mats.get("brass", Mats.pbr("brass", 2.0))
+	var skin_mat: StandardMaterial3D = mats.get("skin", Mats.pbr("skin_warm", 2.0))
+	# Central tall golden Mukuta on main head
+	var main_crown := MeshInstance3D.new()
+	main_crown.name = "MainMukuta"
+	main_crown.mesh = MeshKit.tube(r * 1.45, [[0.0, r * 0.78], [0.45, r * 0.62], [0.85, r * 0.34], [1.0, r * 0.08]], 10)
+	main_crown.material_override = crown_mat
+	main_crown.position = Vector3(0.0, r * 1.65, 0.0)
+	rig.head.add_child(main_crown)
+	# Fan of flanking heads (5 left, 4 right) along an arched collar
+	var offsets := [-4, -3, -2, -1, 1, 2, 3, 4, 5]
+	for idx in offsets:
+		var side_sign: float = signf(float(idx))
+		var tier: float = absf(float(idx))
+		var ang: float = side_sign * (0.26 * tier)
+		var hr: float = r * clampf(0.68 - tier * 0.04, 0.46, 0.66)
+		var hx: float = sin(ang) * (r * 1.05 + tier * r * 0.46)
+		var hy: float = r * (0.78 - tier * 0.06)
+		var hz: float = (1.0 - cos(ang)) * r * 0.55
+		var sub_skull := MeshInstance3D.new()
+		sub_skull.mesh = MeshKit.ovoid(hr * 0.86, hr * 1.04, 0.5, 10, 8)
+		sub_skull.material_override = skin_mat
+		sub_skull.position = Vector3(hx, hy, hz)
+		sub_skull.rotation = Vector3(0.0, -ang * 0.55, -side_sign * 0.08 * tier)
+		rig.head.add_child(sub_skull)
+		var sub_crown := MeshInstance3D.new()
+		sub_crown.mesh = MeshKit.tube(hr * 1.15, [[0.0, hr * 0.72], [0.6, hr * 0.44], [1.0, hr * 0.08]], 8)
+		sub_crown.material_override = crown_mat
+		sub_crown.position = Vector3(hx, hy + hr * 0.85, hz)
+		sub_crown.rotation = sub_skull.rotation
+		rig.head.add_child(sub_crown)

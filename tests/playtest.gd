@@ -12,15 +12,18 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	DisplayServer.window_move_to_foreground()
+	for i in range(10):
+		await get_tree().process_frame
 	game = Game.new()
 	add_child(game)
-	await get_tree().process_frame
-	await get_tree().process_frame
+	for i in range(10):
+		await get_tree().process_frame
 	var p := game.player
 	print("spawn: %s  ground=%.2f" % [p.global_position, game.world.map.height_at(p.global_position.x, p.global_position.z)])
 
 	# --- settle -----------------------------------------------------------
-	await steps(60)
+	await steps(90)
 	var settled := p.global_position
 	var g := game.world.map.height_at(settled.x, settled.z)
 	print("after settle: y=%.3f ground=%.3f delta=%.3f on_floor=%s" % [settled.y, g, settled.y - g, p.is_on_floor()])

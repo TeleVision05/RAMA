@@ -39,6 +39,10 @@ var cfg := {
 	"beard": false,
 	"horns": false,
 	"claws": false,
+	"tilaka": false,
+	"channavira": false,
+	"vanara": false,
+	"ten_heads": false,
 	"skin_tint": Color(1, 1, 1),
 	"cloth_tint": Color(1, 1, 1),
 	# Everything below is derived from `seed` when left at its sentinel, so twelve
@@ -71,6 +75,7 @@ var hand_attach := {}  # where a weapon parents
 var eye := {}  # "L"/"R" -> Node3D, rotates to track what the head is looking at
 var skirt_node: Node3D  # the dhoti / lungi / sari, swung by velocity
 var sash_node: Node3D  # the uttariya or pallu, lighter and quicker
+var humanoid_model: HumanoidModel = null
 
 # --- animation state -------------------------------------------------------
 var stride_phase: float = 0.0
@@ -246,16 +251,15 @@ func build() -> void:
 	neck.position = Vector3(0, cfg.chest * 0.92, 0)
 	chest.add_child(neck)
 	_mesh(neck, MeshKit.limb(cfg.neck, 0.052 * b, 0.062 * b, 1.0, 10), m_skin, Vector3.ZERO)
-	# Sternocleidomastoids: the two cords down the front of the neck. Without them the
-	# neck is a pipe and the head looks screwed on.
+	# Sternocleidomastoids: the two cords down the front of the neck (-Z).
 	for sxx in [-1.0, 1.0]:
 		_mesh(
 			neck,
 			MeshKit.limb(cfg.neck * 0.95, 0.014 * b, 0.019 * b, 1.0, 6),
 			m_skin,
-			Vector3(sxx * 0.026 * b, 0.004, 0.036 * b),
+			Vector3(sxx * 0.026 * b, 0.004, -0.036 * b),
 			Vector3.ONE,
-			Vector3(0.30, 0.0, sxx * 0.24)
+			Vector3(-0.30, 0.0, sxx * 0.24)
 		)
 
 	head = Node3D.new()
@@ -273,10 +277,17 @@ func build() -> void:
 		_build_skirt(m_cloth)
 	if cfg.sash:
 		_build_sash(m_cloth2)
-	if cfg.jewellery:
+	if cfg.jewellery or bool(cfg.get("channavira", false)) or bool(cfg.get("vanara", false)) or bool(cfg.get("ten_heads", false)):
 		_build_jewellery()
 
 	_merge_draws()
+
+	if cfg.has("model") and String(cfg["model"]) != "":
+		humanoid_model = HumanoidModel.build(String(cfg["model"]))
+		if humanoid_model:
+			humanoid_model.rotation.y = PI
+			add_child(humanoid_model)
+			_hide_procedural_meshes()
 
 	for side in ["L", "R"]:
 		_foot_world[side] = _rest_foot(side)
@@ -368,12 +379,12 @@ func _build_torso(m_skin: Material, b: float, sh_w: float) -> void:
 		Vector3(0, -cfg.spine, 0)
 	)
 	for sxx in [-1.0, 1.0]:
-		# Pectoral.
+		# Pectoral on front (-Z).
 		_mesh(
 			chest,
 			MeshKit.ovoid(0.070 * b, 0.10, 0.5, 10, 7),
 			m_skin,
-			Vector3(sxx * 0.078 * b, cfg.chest * 0.56, 0.078 * b),
+			Vector3(sxx * 0.078 * b, cfg.chest * 0.56, -0.078 * b),
 			Vector3(1.30, 0.72, 0.42)
 		)
 		# Trapezius, running from the neck out to the point of the shoulder.
@@ -381,11 +392,10 @@ func _build_torso(m_skin: Material, b: float, sh_w: float) -> void:
 			chest,
 			MeshKit.ovoid(0.062 * b, 0.12, 0.5, 10, 7),
 			m_skin,
-			Vector3(sxx * 0.105 * wide, cfg.chest * 0.80, -0.010 * b),
+			Vector3(sxx * 0.105 * wide, cfg.chest * 0.80, 0.010 * b),
 			Vector3(1.2, 1.0, 0.9)
 		)
-		# Collarbone: an S from the sternum to the acromion. It is two centimetres of
-		# geometry and it is most of what says "there is a skeleton in there".
+		# Collarbone: an S from the sternum to the acromion sweeping forward (-Z).
 		var cl := PackedVector3Array()
 		var cr := PackedFloat32Array()
 		for i in range(5):
@@ -396,27 +406,27 @@ func _build_torso(m_skin: Material, b: float, sh_w: float) -> void:
 					Vector3(
 						sxx * f * cfg.shoulder_w * 0.94,
 						cfg.chest * 0.755 + sin(f * PI) * 0.006,
-						lerpf(0.072, 0.012, f * f) * b,
+						-lerpf(0.072, 0.012, f * f) * b,
 					)
 				)
 			)
 			cr.append(lerpf(0.0125, 0.0165, f) * b)
 		_mesh(chest, MeshKit.sweep(cl, cr, 6, 0.85, Vector3.UP), m_skin, Vector3.ZERO)
-		# Shoulder blade.
+		# Shoulder blade on back (+Z).
 		_mesh(
 			chest,
 			MeshKit.ovoid(0.062 * b, 0.135, 0.45, 9, 6),
 			m_skin,
-			Vector3(sxx * 0.078 * wide, cfg.chest * 0.52, -0.088 * b),
+			Vector3(sxx * 0.078 * wide, cfg.chest * 0.52, 0.088 * b),
 			Vector3(1.0, 1.0, 0.30),
 			Vector3(0.0, 0.0, sxx * 0.22)
 		)
-	# The line down the sternum and the linea alba below it.
+	# The line down the sternum and the linea alba below it on front (-Z).
 	_mesh(
 		chest,
 		MeshKit.limb(cfg.spine + cfg.chest * 0.90, 0.010 * b, 0.014 * b, 1.0, 6),
 		m_skin,
-		Vector3(0, -cfg.spine, (0.086 + belly * 0.052) * b)
+		Vector3(0, -cfg.spine, -(0.086 + belly * 0.052) * b)
 	)
 
 
@@ -455,6 +465,32 @@ func _build_head(m_skin: Material, m_hair: Material) -> void:
 	hlo.visible = false
 	_near_mats = [m_skin, m_hair, _mat_cavity()]
 	_build_eyes(r, m_skin)
+	if bool(cfg.get("tilaka", false)):
+		var fh := MeshKit.head_surface(0.24, -PI * 0.5, r, MeshKit.face_preset(fp))
+		var fh_pos := Vector3(0, yc + fh.y, fh.z - r * 0.012)
+		var m_gold := Mats.brass()
+		var m_kumkuma := Mats.flat(Color(0.86, 0.12, 0.12), 0.28, 0.25)
+		for sx in [-1.0, 1.0]:
+			_mesh(
+				head,
+				MeshKit.tube(r * 0.20, [[0.0, r * 0.016], [0.5, r * 0.020], [1.0, r * 0.010]], 6, 0.45),
+				m_gold,
+				fh_pos + Vector3(sx * r * 0.044, -r * 0.055, 0.0),
+				Vector3.ONE,
+				Vector3(0.16, 0.0, -sx * 0.07)
+			)
+		_mesh(
+			head,
+			MeshKit.box(Vector3(r * 0.10, r * 0.022, r * 0.016)),
+			m_gold,
+			fh_pos + Vector3(0.0, -r * 0.055, 0.0)
+		)
+		_mesh(
+			head,
+			MeshKit.sphere(r * 0.026, 8, 6, 1.45),
+			m_kumkuma,
+			fh_pos + Vector3(0.0, 0.015, -r * 0.008)
+		)
 	if cfg.horns:
 		var m_horn := StandardMaterial3D.new()
 		m_horn.albedo_color = Color(0.14, 0.12, 0.12)
@@ -792,14 +828,174 @@ func _build_sash(m: Material) -> void:
 
 func _build_jewellery() -> void:
 	var m := Mats.brass()
-	# Armlets, a torque and ear studs. Small, but they catch the light and read as
-	# deliberate rather than as an unclothed placeholder.
-	for side in ["L", "R"]:
-		var sh: Node3D = shoulder[side]
-		_mesh(sh, MeshKit.tube(0.035, [[0.0, 0.062], [1.0, 0.062]], 12), m, Vector3(0, -cfg.upper_arm * 0.42, 0))
-		var el: Node3D = elbow[side]
-		_mesh(el, MeshKit.tube(0.022, [[0.0, 0.046], [1.0, 0.046]], 10), m, Vector3(0, -cfg.lower_arm * 0.82, 0))
-	_mesh(chest, MeshKit.tube(0.028, [[0.0, 0.085], [1.0, 0.082]], 14, 0.75), m, Vector3(0, cfg.chest * 0.88, 0.01))
+	var b: float = float(cfg.build)
+	var r: float = float(cfg.head)
+	var yc: float = r * HEAD_C
+	if cfg.jewellery:
+		# Armlets, a torque and ear studs. Small, but they catch the light and read as
+		# deliberate rather than as an unclothed placeholder.
+		for side in ["L", "R"]:
+			var sh: Node3D = shoulder[side]
+			_mesh(sh, MeshKit.tube(0.035, [[0.0, 0.062], [1.0, 0.062]], 12), m, Vector3(0, -cfg.upper_arm * 0.42, 0))
+			var el: Node3D = elbow[side]
+			_mesh(el, MeshKit.tube(0.022, [[0.0, 0.046], [1.0, 0.046]], 10), m, Vector3(0, -cfg.lower_arm * 0.82, 0))
+		_mesh(chest, MeshKit.tube(0.028, [[0.0, 0.085], [1.0, 0.082]], 14, 0.75), m, Vector3(0, cfg.chest * 0.88, 0.01))
+
+	if bool(cfg.get("channavira", false)):
+		_build_channavira(m, b, r, yc)
+	if bool(cfg.get("vanara", false)):
+		_build_vanara_iconography(m, b, r, yc)
+	if bool(cfg.get("ten_heads", false)):
+		_build_ten_heads(m, r, yc)
+
+
+func _build_channavira(m_gold: Material, b: float, r: float, yc: float) -> void:
+	var c: float = float(cfg.chest)
+	var sp: float = float(cfg.spine)
+	# Crossed golden warrior bands (Channavira) looping over shoulders and crossing front (-Z) and back (+Z).
+	for sx in [-1.0, 1.0]:
+		var front_band := PackedVector3Array(
+			[
+				Vector3(sx * 0.115 * b, c * 0.88, 0.0),
+				Vector3(sx * 0.065 * b, c * 0.62, -0.106 * b),
+				Vector3(0.0, c * 0.36, -0.116 * b),
+				Vector3(-sx * 0.075 * b, 0.04, -0.108 * b),
+				Vector3(-sx * 0.125 * b, -sp * 0.55, -0.04 * b),
+			]
+		)
+		var back_band := PackedVector3Array(
+			[
+				Vector3(sx * 0.115 * b, c * 0.88, 0.0),
+				Vector3(sx * 0.065 * b, c * 0.60, 0.104 * b),
+				Vector3(0.0, c * 0.34, 0.112 * b),
+				Vector3(-sx * 0.075 * b, 0.04, 0.104 * b),
+				Vector3(-sx * 0.125 * b, -sp * 0.55, 0.04 * b),
+			]
+		)
+		var rads := PackedFloat32Array([0.011, 0.012, 0.013, 0.012, 0.010])
+		_mesh(chest, MeshKit.sweep(front_band, rads, 6, 0.55, Vector3.FORWARD), m_gold, Vector3.ZERO)
+		_mesh(chest, MeshKit.sweep(back_band, rads, 6, 0.55, Vector3.BACK), m_gold, Vector3.ZERO)
+
+	# Central Surya-chakra solar disc medallion on the sternum (-Z) + ruby center.
+	_mesh(
+		chest,
+		MeshKit.tube(0.016, [[0.0, 0.038], [0.5, 0.042], [1.0, 0.028]], 14),
+		m_gold,
+		Vector3(0, c * 0.36, -0.118 * b),
+		Vector3.ONE,
+		Vector3(-PI * 0.5, 0, 0)
+	)
+	var m_ruby := Mats.flat(Color(0.88, 0.14, 0.12), 0.20, 0.4)
+	_mesh(chest, MeshKit.sphere(0.018, 10, 8), m_ruby, Vector3(0, c * 0.36, -0.124 * b))
+
+	# Yajnopavita: white sacred thread from left shoulder (+X) to right waist (-X).
+	var m_thread := Mats.flat(Color(0.96, 0.94, 0.88), 0.65)
+	var yajna_path := PackedVector3Array(
+		[
+			Vector3(0.118 * b, c * 0.90, -0.01 * b),
+			Vector3(0.055 * b, c * 0.52, -0.112 * b),
+			Vector3(-0.045 * b, 0.08, -0.110 * b),
+			Vector3(-0.122 * b, -sp * 0.48, 0.0),
+			Vector3(-0.045 * b, 0.08, 0.106 * b),
+			Vector3(0.055 * b, c * 0.52, 0.108 * b),
+			Vector3(0.118 * b, c * 0.90, -0.01 * b),
+		]
+	)
+	var yajna_r := PackedFloat32Array([0.005, 0.005, 0.005, 0.005, 0.005, 0.005, 0.005])
+	_mesh(chest, MeshKit.sweep(yajna_path, yajna_r, 5, 0.8, Vector3.UP), m_thread, Vector3.ZERO)
+
+	# Golden Crown Fillet & Rudraksha ring around the Jata-mukuta topknot on `head`.
+	_mesh(
+		head,
+		MeshKit.tube(r * 0.14, [[0.0, r * 0.78], [0.5, r * 0.81], [1.0, r * 0.77]], 16, 1.15),
+		m_gold,
+		Vector3(0, yc + r * 0.34, -r * 0.02)
+	)
+	_mesh(
+		head,
+		MeshKit.tube(r * 0.12, [[0.0, r * 0.38], [0.5, r * 0.42], [1.0, r * 0.36]], 12),
+		m_gold,
+		Vector3(0, yc + r * 0.94, r * 0.08)
+	)
+
+
+func _build_vanara_iconography(m_gold: Material, b: float, r: float, yc: float) -> void:
+	# Expressive S-curved golden monkey tail attached to `hips`, curving up behind the back (+Z).
+	var m_tail := _mat(cfg.skin, Color(cfg.skin_tint) * Color(1.08, 0.92, 0.65))
+	var tail_path := PackedVector3Array(
+		[
+			Vector3(0.0, -0.06, 0.10 * b),
+			Vector3(0.0, -0.10, 0.24 * b),
+			Vector3(0.02, 0.04, 0.36 * b),
+			Vector3(0.04, 0.28, 0.42 * b),
+			Vector3(0.02, 0.56, 0.36 * b),
+			Vector3(-0.02, 0.78, 0.42 * b),
+			Vector3(0.0, 0.88, 0.52 * b),
+		]
+	)
+	var tail_r := PackedFloat32Array([0.032 * b, 0.028 * b, 0.025 * b, 0.022 * b, 0.020 * b, 0.024 * b, 0.012 * b])
+	_mesh(hips, MeshKit.sweep(tail_path, tail_r, 8, 1.0, Vector3.UP), m_tail, Vector3.ZERO)
+	# Golden tail band near the base and Kundala hoop earrings + Kiritam coronet on head.
+	_mesh(
+		hips,
+		MeshKit.tube(0.028, [[0.0, 0.034 * b], [1.0, 0.034 * b]], 10),
+		m_gold,
+		Vector3(0, -0.08, 0.16 * b),
+		Vector3.ONE,
+		Vector3(1.2, 0, 0)
+	)
+	for sx in [-1.0, 1.0]:
+		_mesh(
+			head,
+			MeshKit.tube(r * 0.08, [[0.0, r * 0.22], [0.5, r * 0.25], [1.0, r * 0.22]], 10),
+			m_gold,
+			Vector3(sx * r * 0.78, yc - r * 0.12, -r * 0.05),
+			Vector3.ONE,
+			Vector3(0, 0, PI * 0.5)
+		)
+	_mesh(
+		head,
+		MeshKit.tube(r * 0.95, [[0.0, r * 0.76], [0.25, r * 0.68], [0.60, r * 0.44], [0.88, r * 0.20], [1.0, r * 0.04]], 14, 1.10),
+		m_gold,
+		Vector3(0, yc + r * 0.36, -r * 0.02)
+	)
+
+
+func _build_ten_heads(m_gold: Material, r: float, yc: float) -> void:
+	# Regal crescent fan of smaller sculpted dark-indigo heads (4 left, 4 right, 1 high crest) crowned with golden Kirita spires.
+	var fan := Node3D.new()
+	fan.name = "DasagrivaCrown"
+	head.add_child(fan)
+	var m_indigo := Mats.flat(Color(0.16, 0.17, 0.28), 0.55)
+	var sub_r: float = r * 0.56
+	var sub_mesh := MeshKit.head_shell(1.0, int(cfg.face), 1)
+	var spire_mesh := MeshKit.tube(
+		sub_r * 1.35,
+		[[0.0, sub_r * 0.75], [0.35, sub_r * 0.52], [0.75, sub_r * 0.26], [1.0, sub_r * 0.04]],
+		10
+	)
+	for side_sign in [-1.0, 1.0]:
+		for idx in range(1, 5):
+			var fi := float(idx)
+			var ang: float = side_sign * (0.28 * fi)
+			var dist: float = r * (0.95 + fi * 0.58)
+			var hy: float = yc + r * (0.08 + sin(fi * 0.42) * 0.28)
+			var hz: float = r * (0.12 + fi * 0.10)
+			var hpos := Vector3(side_sign * dist, hy, hz)
+			_mesh(fan, sub_mesh, m_indigo, hpos, Vector3.ONE * sub_r, Vector3(0.0, -ang * 0.55, -side_sign * 0.08 * fi))
+			_mesh(fan, spire_mesh, m_gold, hpos + Vector3(0, sub_r * 0.42, 0), Vector3.ONE, Vector3(0.0, -ang * 0.55, -side_sign * 0.08 * fi))
+	# High crest 10th head + tall Mukuta spire.
+	var crest_pos := Vector3(0.0, yc + r * 1.45, r * 0.08)
+	_mesh(fan, sub_mesh, m_indigo, crest_pos, Vector3.ONE * (sub_r * 1.08))
+	_mesh(fan, spire_mesh, m_gold, crest_pos + Vector3(0, sub_r * 0.48, 0), Vector3.ONE * 1.18)
+	# Main central head golden Kirita crown.
+	_mesh(
+		fan,
+		MeshKit.tube(r * 1.30, [[0.0, r * 0.80], [0.35, r * 0.58], [0.75, r * 0.30], [1.0, r * 0.06]], 14, 1.10),
+		m_gold,
+		Vector3(0.0, yc + r * 0.38, -r * 0.02)
+	)
+	_merge_joint(fan)
 
 
 # --- helpers ---------------------------------------------------------------
@@ -974,9 +1170,9 @@ func animate(delta: float, st: Dictionary) -> void:
 	var breathe: float = sin(_breath) * 0.008 * (1.0 - moving * 0.7)
 
 	# --- body ------------------------------------------------------------
-	var target_lean := Vector2(clampf(speed * 0.055, 0.0, 0.24), 0.0)
+	var target_lean := Vector2(-clampf(speed * 0.055, 0.0, 0.22), 0.0)
 	if dodge > 0.01:
-		target_lean.x += 0.55 * sin(dodge * PI)
+		target_lean.x -= 0.45 * sin(dodge * PI)
 	_lean = _lean.lerp(target_lean, 1.0 - pow(0.0008, delta))
 
 	var air_tuck: float = clampf(air_t * 1.6, 0.0, 1.0) if not on_floor else 0.0
@@ -1016,6 +1212,58 @@ func animate(delta: float, st: Dictionary) -> void:
 		hurt_amount = maxf(0.0, hurt_amount - delta * 3.2)
 	if dead_amount > 0.001:
 		_pose_dead(dead_amount)
+
+	if humanoid_model != null:
+		_animate_humanoid_model(delta, st)
+
+
+func _hide_procedural_meshes() -> void:
+	if skirt_node:
+		skirt_node.visible = false
+	if sash_node:
+		sash_node.visible = false
+	var joints: Array[Node3D] = [hips, spine, chest, neck, head]
+	for side in ["L", "R"]:
+		if shoulder.has(side):
+			joints.append(shoulder[side])
+		if elbow.has(side):
+			joints.append(elbow[side])
+		if hand.has(side):
+			joints.append(hand[side])
+		if thigh.has(side):
+			joints.append(thigh[side])
+		if knee.has(side):
+			joints.append(knee[side])
+		if ankle.has(side):
+			joints.append(ankle[side])
+	for j in joints:
+		if j != null:
+			for c in j.get_children():
+				if c is MeshInstance3D:
+					(c as MeshInstance3D).visible = false
+
+
+func _animate_humanoid_model(_delta: float, st: Dictionary) -> void:
+	if humanoid_model == null:
+		return
+	var speed: float = st.get("speed", 0.0)
+	var on_floor: bool = st.get("on_floor", true)
+	if dead_amount > 0.1:
+		humanoid_model.play("death")
+	elif hurt_amount > 0.1:
+		humanoid_model.play("hit")
+	elif attack_swing > 0.05:
+		humanoid_model.play("melee_slash", 0.1, 1.4)
+	elif aim_weight > 0.05:
+		humanoid_model.play("bow_aim", 0.15)
+	elif not on_floor:
+		humanoid_model.play("jump_idle", 0.15)
+	elif speed > 2.8:
+		humanoid_model.play("run", 0.2, clampf(speed / 3.0, 0.8, 1.6))
+	elif speed > 0.12:
+		humanoid_model.play("walk", 0.2, clampf(speed / 1.4, 0.7, 1.4))
+	else:
+		humanoid_model.play("idle", 0.25)
 
 
 func _animate_legs(_delta: float, speed: float, stride: float, moving: float, on_floor: bool, air_tuck: float, dodge: float) -> void:

@@ -200,8 +200,20 @@ func _rig_config(height: float) -> Dictionary:
 		"beard": bool(look_cfg.get("beard", false)),
 		"skin_tint": look_cfg.get("skin_tint", Color(1, 1, 1)),
 		"cloth_tint": look_cfg.get("cloth_tint", Color(1, 1, 1)),
+		"vanara": bool(look_cfg.get("vanara", false)),
+		"channavira": bool(look_cfg.get("channavira", false)),
 		"seed": hash(id),
 	}
+	var model_name: String = "farmer"
+	if role == Role.MOTHER or id.contains("sita") or id.contains("ila") or id.contains("shanta") or id.contains("priya"):
+		model_name = "woman"
+	elif role == Role.GUARD or id.contains("guard") or id.contains("lakshmana"):
+		model_name = "adventurer"
+	elif role == Role.ELDER or role == Role.HERMIT or id.contains("sage") or id.contains("vasishtha") or id.contains("viswamitra"):
+		model_name = "king"
+	c["model"] = model_name
+	if look_cfg.has("garment"):
+		c["garment"] = String(look_cfg["garment"])
 	return c
 
 
@@ -580,6 +592,16 @@ func _attach_prop() -> void:
 			prop = net_mesh()
 			rig.hand_attach["R"].add_child(prop)
 			prop.position = Vector3(0.0, -0.06, 0.03)
+		"bow":
+			prop = Weapons.bow(0.94)
+			rig.hand_attach["L"].add_child(prop)
+			prop.position = Vector3(0.0, 0.02, 0.04)
+			prop.rotation = Vector3(0.08, 0.0, 0.06)
+		"gada":
+			prop = Weapons.gada()
+			rig.hand_attach["R"].add_child(prop)
+			prop.position = Vector3(0.02, 0.04, 0.03)
+			prop.rotation = Vector3(0.12, 0.0, 0.05)
 		_:
 			prop = null
 
@@ -674,6 +696,29 @@ static func net_mesh() -> Node3D:
 		f.material_override = Mats.pbr("wood_beam", 4.0)
 		f.position = Vector3(cos(a) * 0.09, -0.23, sin(a) * 0.09)
 		root.add_child(f)
+	return root
+
+
+## Hanuman's golden Kaumodaki-style Gada mace fallback.
+static func gada_mesh() -> Node3D:
+	var root := Node3D.new()
+	root.name = "Gada"
+	var gold := Mats.pbr("brass", 2.0)
+	var haft := MeshInstance3D.new()
+	haft.mesh = MeshKit.tube(0.82, [[0.0, 0.018], [0.75, 0.022], [1.0, 0.028]], 10)
+	haft.material_override = gold
+	haft.position = Vector3(0.0, -0.22, 0.0)
+	root.add_child(haft)
+	var bulb := MeshInstance3D.new()
+	bulb.mesh = MeshKit.ovoid(0.135, 0.165, 0.5, 14, 12)
+	bulb.material_override = gold
+	bulb.position = Vector3(0.0, 0.64, 0.0)
+	root.add_child(bulb)
+	var finial := MeshInstance3D.new()
+	finial.mesh = MeshKit.tube(0.10, [[0.0, 0.038], [0.5, 0.022], [1.0, 0.004]], 10)
+	finial.material_override = gold
+	finial.position = Vector3(0.0, 0.79, 0.0)
+	root.add_child(finial)
 	return root
 
 

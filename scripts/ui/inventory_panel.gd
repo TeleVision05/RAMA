@@ -15,38 +15,252 @@ const ICON_PX := 64
 ## id -> {name, desc, icon, tint}. Anything not listed still shows up, with a
 ## prettified name and the lotus fallback icon.
 const CATALOGUE := {
-	"arrow": {"name": "Arrow", "desc": "Cane shaft, iron head. Steady in a crosswind.", "icon": "arrow", "tint": "brass"},
-	"arrows": {"name": "Arrows", "desc": "A bundle bound with waxed thread.", "icon": "arrow", "tint": "brass"},
-	"healing_herb":
-	{"name": "Healing Herb", "desc": "Bitter leaf from the riverbank. Closes small wounds.", "icon": "leaf", "tint": "jade"},
-	"herb": {"name": "Herb", "desc": "Gathered at the water's edge, still damp.", "icon": "leaf", "tint": "jade"},
-	"lotus": {"name": "Lotus", "desc": "Offered at the shrine. It opens at first light.", "icon": "flower", "tint": "parchment"},
-	"blue_lotus":
-	{"name": "Blue Lotus", "desc": "Rare in still water. The priests ask for it by name.", "icon": "flower", "tint": "indigo"},
-	"mango": {"name": "Mango", "desc": "Sun-warm and heavy. Enough for the walk back.", "icon": "fruit", "tint": "saffron"},
-	"rice": {"name": "Rice", "desc": "A measure from the village store.", "icon": "bowl", "tint": "parchment"},
-	"ghee": {"name": "Ghee", "desc": "Clarified butter in a stoppered pot. Lamp fuel, and food.", "icon": "vial", "tint": "saffron"},
-	"honey": {"name": "Wild Honey", "desc": "Cut from a bough above the ford.", "icon": "vial", "tint": "brass"},
-	"water_skin": {"name": "Water Skin", "desc": "Filled at the ford. Cool for about a mile.", "icon": "vial", "tint": "jade"},
-	"brass_bell": {"name": "Brass Bell", "desc": "Its note carries further than a shout.", "icon": "bell", "tint": "brass"},
-	"oil_lamp": {"name": "Oil Lamp", "desc": "A clay diya. Enough wick for one long night.", "icon": "lamp", "tint": "saffron"},
-	"amulet": {"name": "Amulet", "desc": "Kaustubha glass on a knotted cord. Warm to hold.", "icon": "gem", "tint": "indigo"},
-	"ruby": {"name": "Ruby", "desc": "Cut in the old style, from the ruins below the ridge.", "icon": "gem", "tint": "crimson"},
-	"gold_coin": {"name": "Gold Coin", "desc": "Punch-marked, older than the village.", "icon": "coin", "tint": "brass"},
-	"coin": {"name": "Coin", "desc": "Small change from the market road.", "icon": "coin", "tint": "brass"},
-	"rope": {"name": "Coir Rope", "desc": "Coconut fibre, three fathoms. It will hold a man.", "icon": "ring", "tint": "parchment"},
-	"sacred_thread": {"name": "Sacred Thread", "desc": "Three strands, worn over the left shoulder.", "icon": "ring", "tint": "parchment"},
-	"palm_leaf":
-	{"name": "Palm Leaf", "desc": "Scratched with a stylus. Half the words have worn away.", "icon": "scroll", "tint": "parchment"},
-	"scroll": {"name": "Scroll", "desc": "Rolled and tied. Someone meant this to be found.", "icon": "scroll", "tint": "parchment"},
-	"key": {"name": "Iron Key", "desc": "Pitted with rust. Something in the ruins still locks.", "icon": "key", "tint": "brass"},
-	"rakshasa_fang":
-	{"name": "Rakshasa Fang", "desc": "Proof, and a weight you would rather not carry.", "icon": "fang", "tint": "parchment"},
-	"bow_string": {"name": "Bowstring", "desc": "Twisted sinew, waxed against the damp.", "icon": "ring", "tint": "brass"},
-	"torch": {"name": "Torch", "desc": "Resin-soaked cloth on a hardwood shaft.", "icon": "lamp", "tint": "crimson"},
-	"flint": {"name": "Flint", "desc": "A struck edge and a scrap of char cloth.", "icon": "gem", "tint": "parchment"},
-	"sandalwood":
-	{"name": "Sandalwood", "desc": "Cut from the hill grove. It scents everything it touches.", "icon": "blade", "tint": "brass"},
+	"arrow": {
+		"name": "Arrow",
+		"desc": "Cane shaft, iron head. Steady in a crosswind.",
+		"icon": "arrow",
+		"tint": "brass",
+	},
+	"arrows": {
+		"name": "Arrows",
+		"desc": "A bundle bound with waxed thread.",
+		"icon": "arrow",
+		"tint": "brass",
+	},
+	"arrow_bundle": {
+		"name": "Quiver of Arrows",
+		"desc": "Eight cane-shafted arrows fletched with river-heron plume. Use to replenish your quiver.",
+		"icon": "arrow",
+		"tint": "brass",
+	},
+	"healing_herb": {
+		"name": "Sanjivani Herb",
+		"desc": "Bitter leaf from the riverbank infused with forest vitality. Restores Jiva (Health).",
+		"icon": "leaf",
+		"tint": "jade",
+	},
+	"herb": {
+		"name": "River Herb",
+		"desc": "Gathered at the water's edge, still damp. Closes small wounds.",
+		"icon": "leaf",
+		"tint": "jade",
+	},
+	"healing_salve": {
+		"name": "Ashram Healing Salve",
+		"desc": "Clarified ghee steeped with crushed neem and turmeric. Restores deep wounds.",
+		"icon": "vial",
+		"tint": "jade",
+	},
+	"shabari_berries": {
+		"name": "Shabari's Sweet Berries",
+		"desc": "Tasted and offered with pure devotion at Matanga Ashram. Restores Health, Stamina, and Prana.",
+		"icon": "fruit",
+		"tint": "saffron",
+	},
+	"soma_tulsi": {
+		"name": "Sacred Soma-Tulsi",
+		"desc": "Fragrant basil leaf blessed by the Rishis. Restores celestial Prana for invoking Divya Astras.",
+		"icon": "leaf",
+		"tint": "indigo",
+	},
+	"lotus": {
+		"name": "Sacred Lotus",
+		"desc": "Padma offered at the hilltop shrine. It opens at first light.",
+		"icon": "flower",
+		"tint": "parchment",
+	},
+	"blue_lotus": {
+		"name": "Nilotpala Blue Lotus",
+		"desc": "Rare in still water. The sages ask for it by name for twilight puja.",
+		"icon": "flower",
+		"tint": "indigo",
+	},
+	"grove_seed": {
+		"name": "Panchavati Banyan Seed",
+		"desc": "A living seed from the five sacred trees of the quiet grove, warm with ancient prana.",
+		"icon": "fruit",
+		"tint": "jade",
+	},
+	"mango": {
+		"name": "Ripe Mango",
+		"desc": "Sun-warm and heavy from the Godavari orchard. Restores vigour for the walk back.",
+		"icon": "fruit",
+		"tint": "saffron",
+	},
+	"rice": {
+		"name": "Measure of Rice",
+		"desc": "Unpolished grain from the terraced fields below Panchavati.",
+		"icon": "bowl",
+		"tint": "parchment",
+	},
+	"ghee": {
+		"name": "Clarified Ghee",
+		"desc": "Pure butter in a stoppered clay pot. Temple lamp fuel and strengthening food.",
+		"icon": "vial",
+		"tint": "saffron",
+	},
+	"lamp_oil": {
+		"name": "Sesame Lamp Oil",
+		"desc": "Pressed oil for the stone dipastambha lamps that ward off the night shadows.",
+		"icon": "vial",
+		"tint": "saffron",
+	},
+	"honey": {
+		"name": "Wild Forest Honey",
+		"desc": "Cut from a high bough above the ford. Restores stamina and breath.",
+		"icon": "vial",
+		"tint": "brass",
+	},
+	"water_skin": {
+		"name": "Godavari Water Skin",
+		"desc": "Filled at the sacred ford. Cool and refreshing for a long march.",
+		"icon": "vial",
+		"tint": "jade",
+	},
+	"brass_bell": {
+		"name": "Brass Ghanta",
+		"desc": "Cast in bronze and brass; its clear note carries further than a shout.",
+		"icon": "bell",
+		"tint": "brass",
+	},
+	"temple_bell": {
+		"name": "Sanctum Temple Bell",
+		"desc": "The stolen bronze ghanta of the hilltop shrine, inscribed with solar verses.",
+		"icon": "bell",
+		"tint": "brass",
+	},
+	"goat_bell": {
+		"name": "Herdsman's Copper Bell",
+		"desc": "Tied to a stray goat's collar on the eastern pasture.",
+		"icon": "bell",
+		"tint": "saffron",
+	},
+	"oil_lamp": {
+		"name": "Clay Diya",
+		"desc": "An earthen lamp with cotton wick. Enough oil for one long watch.",
+		"icon": "lamp",
+		"tint": "saffron",
+	},
+	"amulet": {
+		"name": "Suryavamsha Kavacha",
+		"desc": "Solar talisman of the Ikshvaku lineage on a three-strand cord. Channels Prana.",
+		"icon": "gem",
+		"tint": "indigo",
+	},
+	"chudamani": {
+		"name": "Sita's Chudamani Crest-Jewel",
+		"desc": "Luminous crest-gem of Janaki, token of unwavering hope across the ocean.",
+		"icon": "gem",
+		"tint": "saffron",
+	},
+	"rama_paduka": {
+		"name": "Golden Paduka of Rama",
+		"desc": "Consecrated sandals entrusted to Bharata as the regent symbol of Dharma in Ayodhya.",
+		"icon": "ring",
+		"tint": "brass",
+	},
+	"ruby": {
+		"name": "Uncut Manikya Ruby",
+		"desc": "Cut in the old style, recovered from the sunken mandapa ruins.",
+		"icon": "gem",
+		"tint": "crimson",
+	},
+	"gold_coin": {
+		"name": "Nishka Gold Coin",
+		"desc": "Punch-marked solar gold, older than the forest settlement.",
+		"icon": "coin",
+		"tint": "brass",
+	},
+	"coin": {
+		"name": "Karshapana Coin",
+		"desc": "Stamped silver and copper from the Dakshinapatha trade road.",
+		"icon": "coin",
+		"tint": "brass",
+	},
+	"rope": {
+		"name": "Coir Rope",
+		"desc": "Braided coconut fibre, three fathoms. Strong enough to hold a climber.",
+		"icon": "ring",
+		"tint": "parchment",
+	},
+	"sacred_thread": {
+		"name": "Yajnopavita Thread",
+		"desc": "Three spun cotton strands worn over the left shoulder.",
+		"icon": "ring",
+		"tint": "parchment",
+	},
+	"palm_leaf": {
+		"name": "Tala-Patra Folio",
+		"desc": "Incised with an iron stylus and rubbed with lampblack. Verses of the Adi Kavya.",
+		"icon": "scroll",
+		"tint": "parchment",
+	},
+	"scroll": {
+		"name": "Birch-Bark Scroll",
+		"desc": "Rolled bhurjapatra tied with red thread. A sage's commentary on the Astras.",
+		"icon": "scroll",
+		"tint": "parchment",
+	},
+	"key": {
+		"name": "Sanctum Iron Key",
+		"desc": "Heavy wrought iron. Opens an old chest in the ruined mandapa.",
+		"icon": "key",
+		"tint": "brass",
+	},
+	"iron_scrap": {
+		"name": "Forged Loham Iron",
+		"desc": "Fragments of dark meteoric iron suitable for arrowheads and smithing.",
+		"icon": "blade",
+		"tint": "parchment",
+	},
+	"rakshasa_fang": {
+		"name": "Rakshasa Fang",
+		"desc": "Jagged trophy from a night-stalker of Dandakaranya.",
+		"icon": "fang",
+		"tint": "parchment",
+	},
+	"rakshasa_horn": {
+		"name": "Rakshasa War-Horn",
+		"desc": "Curved black horn of a Lanka vanguard captain, etched with ash.",
+		"icon": "fang",
+		"tint": "crimson",
+	},
+	"beast_claw": {
+		"name": "Dandaka Beast Claw",
+		"desc": "Hooked talon shed by a predator in the ravines.",
+		"icon": "fang",
+		"tint": "brass",
+	},
+	"beast_pelt": {
+		"name": "Spotted Forest Pelt",
+		"desc": "Thick hide cured with bark tannin against the monsoon chill.",
+		"icon": "scroll",
+		"tint": "saffron",
+	},
+	"bow_string": {
+		"name": "Kodanda Bowstring",
+		"desc": "Twisted sinew and silk, waxed against the river damp.",
+		"icon": "ring",
+		"tint": "brass",
+	},
+	"torch": {
+		"name": "Resin Torch",
+		"desc": "Dammar-resin cloth bound to a sal-wood shaft.",
+		"icon": "lamp",
+		"tint": "crimson",
+	},
+	"flint": {
+		"name": "Chakmak Flint",
+		"desc": "A struck quartz edge and dry tinder.",
+		"icon": "gem",
+		"tint": "parchment",
+	},
+	"sandalwood": {
+		"name": "Malaya Sandalwood",
+		"desc": "Heartwood billet from the southern hills. Scents everything it touches.",
+		"icon": "blade",
+		"tint": "brass",
+	},
 }
 
 const TINTS := {
@@ -63,6 +277,8 @@ static var _icon_cache: Dictionary = {}
 var _entries: Array = []  # [{id, count, name, desc, icon, tint}]
 var _selected: int = 0
 var _hover: int = -1
+var _hover_use: bool = false
+var _use_rect := Rect2()
 var _panel: StyleBoxTexture
 var _slot_style: StyleBoxFlat
 var _slot_sel: StyleBoxFlat
@@ -342,7 +558,7 @@ func _panel_rect() -> Rect2:
 	var w: float = COLS * SLOT + (COLS - 1) * SLOT_GAP + 64.0
 	var rows: int = maxi(2, int(ceil(float(maxi(_entries.size(), 1)) / float(COLS))))
 	rows = mini(rows, 4)
-	var h: float = 106.0 + rows * SLOT + (rows - 1) * SLOT_GAP + 152.0
+	var h: float = 106.0 + rows * SLOT + (rows - 1) * SLOT_GAP + 172.0
 	return Rect2(Vector2((size.x - w) * 0.5, (size.y - h) * 0.5), Vector2(w, h))
 
 
@@ -362,17 +578,23 @@ func _gui_input(e: InputEvent) -> void:
 	if e is InputEventMouseMotion:
 		var mp: Vector2 = (e as InputEventMouseMotion).position
 		var was := _hover
+		var was_use := _hover_use
 		_hover = -1
+		_hover_use = _use_rect.size.x > 0.0 and _use_rect.has_point(mp)
 		for i in range(_entries.size()):
 			if _slot_rect(i, pr).has_point(mp):
 				_hover = i
 				break
-		if _hover != was and _hover >= 0:
+		if (_hover != was and _hover >= 0) or (_hover_use and not was_use):
 			AudioDirector.play_ui("ui_hover")
 		return
 	if e is InputEventMouseButton:
 		var mb := e as InputEventMouseButton
 		if mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
+			if _use_rect.size.x > 0.0 and _use_rect.has_point(mb.position):
+				_use_selected()
+				accept_event()
+				return
 			for i in range(_entries.size()):
 				if _slot_rect(i, pr).has_point(mb.position):
 					select(i)
@@ -392,6 +614,59 @@ func _gui_input(e: InputEvent) -> void:
 		elif k == KEY_UP:
 			select(_selected - COLS)
 			accept_event()
+		elif k in [KEY_E, KEY_ENTER, KEY_KP_ENTER, KEY_SPACE]:
+			_use_selected()
+			accept_event()
+
+
+func _unhandled_input(e: InputEvent) -> void:
+	if not visible:
+		return
+	if e is InputEventKey and (e as InputEventKey).pressed and not (e as InputEventKey).echo:
+		var k := (e as InputEventKey).keycode
+		if k in [KEY_E, KEY_ENTER, KEY_KP_ENTER, KEY_SPACE]:
+			_use_selected()
+			get_viewport().set_input_as_handled()
+
+
+func _use_selected() -> void:
+	var id := selected_id()
+	if id == "" or id == "arrow":
+		return
+	var used := false
+	if GameState.has_method("use_item"):
+		used = bool(GameState.call("use_item", id))
+	else:
+		if id in ["healing_herb", "herb", "healing_salve", "shabari_berries", "mango", "honey", "ghee", "water_skin"]:
+			var heal_amt := 45.0 if id in ["healing_salve", "shabari_berries"] else 28.0
+			GameState.health = minf(GameState.max_health, GameState.health + heal_amt)
+			GameState.stamina = minf(GameState.max_stamina, GameState.stamina + 35.0)
+			GameState.remove_item(id, 1)
+			EventBus.player_healed.emit(heal_amt)
+			EventBus.player_stat_changed.emit(
+				GameState.health, GameState.max_health, GameState.stamina, GameState.max_stamina
+			)
+			used = true
+		elif id in ["arrow_bundle", "arrows"]:
+			GameState.arrows = mini(GameState.max_arrows, GameState.arrows + 8)
+			GameState.remove_item(id, 1)
+			used = true
+		elif id in ["soma_tulsi", "blue_lotus", "lotus"]:
+			if GameState.get("prana") != null:
+				var mp: float = float(GameState.get("max_prana")) if GameState.get("max_prana") != null else 100.0
+				GameState.set("prana", minf(mp, float(GameState.get("prana")) + 40.0))
+			GameState.remove_item(id, 1)
+			used = true
+		else:
+			var meta: Dictionary = CATALOGUE.get(id, {})
+			var nice := String(meta.get("name", UITheme.prettify(id)))
+			EventBus.notify.emit("Inspecting Relic", nice, "info")
+			used = true
+	if used:
+		AudioDirector.play_ui("ui_click")
+	else:
+		AudioDirector.play_ui("ui_close")
+	refresh()
 
 
 func select(i: int) -> void:
@@ -424,6 +699,7 @@ func _draw() -> void:
 	UITheme.carved_rule(self, pr.position + Vector2(32, 62), pr.size.x - 64)
 
 	if _entries.is_empty():
+		_use_rect = Rect2()
 		UITheme.draw_text(self, f_body, pr.position + Vector2(32, 132), "Your satchel is empty.", UITheme.FS_BODY, UITheme.PARCHMENT_FAINT)
 		return
 
@@ -464,13 +740,13 @@ func _draw() -> void:
 	var dy: float = _grid_origin(pr).y + rows * (SLOT + SLOT_GAP) + 16.0
 	UITheme.carved_rule(self, Vector2(pr.position.x + 32, dy), pr.size.x - 64)
 	var sel_e: Dictionary = _entries[_selected]
-	UITheme.draw_text(self, f_head, Vector2(pr.position.x + 32, dy + 40.0), String(sel_e.name), UITheme.FS_HEAD, UITheme.PARCHMENT)
+	UITheme.draw_text(self, f_head, Vector2(pr.position.x + 32, dy + 38.0), String(sel_e.name), UITheme.FS_HEAD, UITheme.PARCHMENT)
 	if int(sel_e.count) > 1:
 		var cw2 := UITheme.text_width(f_head, String(sel_e.name), UITheme.FS_HEAD)
 		UITheme.draw_text(
 			self,
 			UITheme.font(1, 0.06),
-			Vector2(pr.position.x + 42 + cw2, dy + 40.0),
+			Vector2(pr.position.x + 42 + cw2, dy + 38.0),
 			"x%d" % int(sel_e.count),
 			UITheme.FS_SMALL,
 			UITheme.BRASS
@@ -478,13 +754,31 @@ func _draw() -> void:
 	UITheme.draw_text(
 		self,
 		f_body,
-		Vector2(pr.position.x + 32, dy + 66.0),
+		Vector2(pr.position.x + 32, dy + 64.0),
 		String(sel_e.desc),
 		UITheme.FS_SMALL,
 		UITheme.PARCHMENT_DIM,
 		HORIZONTAL_ALIGNMENT_LEFT,
 		pr.size.x - 64
 	)
-	var hint := "ARROWS  SELECT      I  CLOSE"
+	if String(sel_e.id) != "arrow":
+		var btn_label := "[E / Enter]  Use / Attune Item"
+		var bw: float = UITheme.text_width(f_eyebrow, btn_label, UITheme.FS_TINY) + 28.0
+		_use_rect = Rect2(Vector2(pr.position.x + 32.0, pr.end.y - 44.0), Vector2(bw, 26.0))
+		var b_bg := Color(0.24, 0.17, 0.08, 0.92) if _hover_use else Color(0.14, 0.10, 0.05, 0.84)
+		var b_bd := UITheme.SAFFRON if _hover_use else UITheme.BRASS
+		var b_sb := UITheme.flat_style(b_bg, 3, 1.0, b_bd, 0, 0)
+		draw_style_box(b_sb, _use_rect)
+		UITheme.draw_text(
+			self,
+			f_eyebrow,
+			Vector2(_use_rect.position.x + 14.0, _use_rect.position.y + 18.0),
+			btn_label,
+			UITheme.FS_TINY,
+			UITheme.SAFFRON_PALE if _hover_use else UITheme.PARCHMENT
+		)
+	else:
+		_use_rect = Rect2()
+	var hint := "ARROWS  SELECT      E  USE      I  CLOSE"
 	var hw := UITheme.text_width(f_eyebrow, hint, UITheme.FS_TINY)
 	UITheme.draw_text(self, f_eyebrow, Vector2(pr.end.x - 32 - hw, pr.end.y - 22), hint, UITheme.FS_TINY, UITheme.PARCHMENT_FAINT)

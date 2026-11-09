@@ -351,7 +351,7 @@ class TitleArt:
 			self,
 			fe,
 			Vector2(x + 6, y + 62.0),
-			"THE VALE OF PANCHAVATI",
+			"THE EPIC OF THE VALMIKI RAMAYANA  ·  PANCHAVATI & THE FIVE KANDAS",
 			UITheme.FS_TINY,
 			Color(UITheme.SAFFRON_PALE.r, UITheme.SAFFRON_PALE.g, UITheme.SAFFRON_PALE.b, 0.92)
 		)
@@ -361,7 +361,7 @@ class TitleArt:
 			self,
 			fb,
 			Vector2(x + 6, y + 94.0),
-			"An open-world adventure in ancient India.",
+			"Wield Kodanda, invoke the Divya Astras, and walk the Dharmic path of Sri Ramachandra.",
 			UITheme.FS_SMALL,
 			Color(UITheme.PARCHMENT_DIM.r, UITheme.PARCHMENT_DIM.g, UITheme.PARCHMENT_DIM.b, 0.85)
 		)
