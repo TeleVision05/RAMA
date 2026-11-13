@@ -20,13 +20,49 @@ HOW A SUITE IS LAUNCHED (the `mode` column)
             reads 0.00 ms on every leg, so only its CPU frame time is a real figure.
 
 Every launch also passes `-- --quiet-test` (see scripts/core/quiet_mode.gd), so the
-game never captures the mouse, never asks for focus and mutes its audio.
+game never captures the mouse, never asks for focus and mutes its audio, and seeds the
+global random number generator with a fixed value.
+
+Every launch also passes `--fixed-fps 60`: each frame advances the game by exactly
+1/60 s and one physics tick, however long it took to compute. Game time is then a
+pure function of the frame count, so a busy machine slows a suite down but cannot
+change what it sees. (Without it, a stalled frame hands the game a longer delta, and
+anything paced on process time drifts from anything paced on physics ticks.) Timing
+figures are unaffected: they read Performance.TIME_PROCESS and the GPU timer, which
+measure the work, not the step.
 
 `perf` marks suites whose output contains timing figures; the runner stamps every
 such line with the 1-minute load average at the moment it was printed, because a
 frame time measured on a loaded machine is not the same number.
 
+`timing` lists the failure lines (by substring) that are frame-time assertions.
+When a suite fails ONLY on those and the 1-minute load average was above
+LOAD_LIMIT when they were measured, the runner waits for the machine to quieten and
+runs the suite again (tools/gate_load.py). If the load never drops, the suite is
+reported BUSY: a known failure caused by the machine, with the load figures as the
+evidence, never a PASS. Thresholds are never loosened for load.
+
 `fast` marks suites cheap enough for the pre-commit hook (a few seconds each).
+
+KNOWN ENGINE EXIT WARNINGS (Godot 4.7.2; measured 2026-11-13, see KNOWN_EXIT below)
+
+Each of these is printed at exit and reproduced in an EMPTY project with no game code,
+so it is the engine's, not the game's. The runner labels the shader lines in
+failures.txt; "resources still in use" is left unlabelled because a game leak prints
+the same line (run the suite with --verbose to see which resources). None of these
+affect a suite's result.
+  * "N ObjectDB instances were leaked" listing only AudioStreamWAV and
+    AudioStreamPlaybackWAV, and "resources still in use" naming a .wav: an
+    AudioStreamPlayer that has played and is still alive at quit leaves its playback
+    in the AudioServer, even when stopped first; only freeing it and letting several
+    frames run releases it. Repro: one looping AudioStreamPlayer, play, quit.
+  * "4 RID allocations of type ...DummyShader... leaked", or under --embedded "4
+    shaders of type ParticlesShaderRD were never freed" with "4 RID allocations of type
+    ...MaterialStorage6Shader... leaked": ParticleProcessMaterial's shared shader cache
+    keeps a use count that sometimes never returns to zero. Repro: a GPUParticles3D
+    with a QuadMesh draw pass and a default ParticleProcessMaterial, held in a local
+    variable, added under a Node3D, freed, quit: 1 shader leaked, 3 runs out of 3.
+    The count moves with assignment order and timing, not with what the game frees.
 """
 
 from dataclasses import dataclass
@@ -40,6 +76,7 @@ class Suite:
     timeout: int  # seconds before the runner kills it
     perf: bool = False
     fast: bool = False
+    timing: tuple = ()  # substrings of the failure lines that are frame-time checks
 
     @property
     def is_script(self) -> bool:
@@ -68,12 +105,20 @@ SUITES = [
     # Long streaming circuit: node and memory growth.
     Suite("leaks", "res://scenes/leak_test.tscn", "headless", 600, perf=True),
     # Frame time per region, GPU and CPU.
-    Suite("perf", "res://scenes/perf_test.tscn", "render", 600, perf=True),
+    Suite("perf", "res://scenes/perf_test.tscn", "render", 600, perf=True, timing=("a leg averaged under 20 fps",)),
     # The acceptance checklist; includes a frame-time check in the village.
-    Suite("accept", "res://scenes/acceptance_test.tscn", "render", 600, perf=True),
+    Suite("accept", "res://scenes/acceptance_test.tscn", "render", 600, perf=True, timing=("performance is playable",)),
     # Every UI screen rendered and sampled.
     Suite("ui", "res://scenes/ui_test.tscn", "render", 600),
 ]
+
+
+# Lines printed at exit that are the engine's (see the header). Matched by substring.
+KNOWN_EXIT = (
+    "RID allocations of type 'N13RendererDummy15MaterialStorage11DummyShaderE'",
+    "RID allocations of type 'N10RendererRD15MaterialStorage6ShaderE'",
+    "shaders of type ParticlesShaderRD were never freed",
+)
 
 
 def by_name() -> dict:

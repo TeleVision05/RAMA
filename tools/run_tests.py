@@ -19,8 +19,12 @@ What it guarantees:
   * Every timing figure from a perf suite is stamped with the 1-minute load average
     at the moment it was printed.
   * summary.json in the same folder is the machine-readable result.
-  * Exit status 0 only if every suite that ran passed; 1 on any failure; 2 when the
-    gate itself could not run (no Godot, bad arguments).
+  * Frame-time checks measured on a busy machine are retried once it quietens, and
+    reported BUSY (a known failure, with the load figures) if it never does; see
+    tools/gate_load.py. Suites run with --fixed-fps 60 (see gate_suites.py).
+  * Exit status 0 only if every suite that ran passed; 1 on any failure; 3 when the
+    only problem is BUSY frame-time checks; 2 when the gate itself could not run (no
+    Godot, bad arguments).
 """
 
 import argparse
@@ -31,11 +35,14 @@ import sys
 import time
 from pathlib import Path
 
+import gate_load
 import gate_suites
 from gate_proc import run_godot
 
 ROOT = Path(__file__).resolve().parent.parent
 DETAIL_LINES = 8  # failure lines shown on the terminal per suite
+STATUSES = ("PASS", "FAIL", "TIMEOUT", "FOCUS", "CRASH", "BUSY", "SKIP")
+KNOWN_TAG = "    [known engine exit warning; see tools/gate_suites.py]"
 
 
 def find_godot() -> str:
@@ -59,7 +66,7 @@ def godot_args(suite: gate_suites.Suite) -> list:
         # at a debugger prompt.
         launch = ["--embedded", "-d", "--ignore-error-breaks", "--skip-breakpoints", "--audio-driver", "Dummy"]
     target = ["--script", suite.target] if suite.is_script else [suite.target]
-    return launch + ["--path", str(ROOT)] + target + ["--", "--quiet-test"]
+    return launch + ["--fixed-fps", "60", "--path", str(ROOT)] + target + ["--", "--quiet-test"]
 
 
 def can_render() -> bool:
@@ -81,7 +88,8 @@ def failure_lines(lines: list) -> list:
     for i, line in enumerate(lines):
         s = line.rstrip()
         if "SCRIPT ERROR" in s or s.startswith("ERROR:"):
-            errors.append(s)
+            known = any(k in s for k in gate_suites.KNOWN_EXIT)
+            errors.append(s + (KNOWN_TAG if known else ""))
             if i + 1 < len(lines) and lines[i + 1].lstrip().startswith("at:"):
                 errors.append(lines[i + 1].rstrip())
     return (bang or rows) + errors
@@ -113,7 +121,12 @@ def run_one(suite, godot: str, logdir: Path) -> dict:
             line = "%s    [load1 %.2f]" % (line.rstrip(), load)
         stamped.append(line.rstrip())
     res["lines"] = stamped
-    (logdir / ("%s.log" % suite.name)).write_text("\n".join(stamped) + "\n")
+    log = logdir / ("%s.log" % suite.name)
+    if log.exists():
+        # A retry (gate_load.py): keep the earlier attempt's log as evidence.
+        n = len(list(logdir.glob("%s.attempt*.log" % suite.name))) + 1
+        log.rename(logdir / ("%s.attempt%d.log" % (suite.name, n)))
+    log.write_text("\n".join(stamped) + "\n")
     return res
 
 
@@ -176,6 +189,12 @@ def parse_args(argv: list) -> argparse.Namespace:
     ap.add_argument("--fast", action="store_true", help="only the few-second suites (pre-commit)")
     ap.add_argument("--list", action="store_true", help="list the suites and exit")
     ap.add_argument("--no-import", action="store_true", help="skip refreshing the import cache")
+    ap.add_argument(
+        "--load-wait",
+        type=int,
+        default=300,
+        help="seconds to wait for the load to drop before retrying a frame-time check (default 300)",
+    )
     return ap.parse_args(argv)
 
 
@@ -216,7 +235,12 @@ def run_all(chosen: list, godot: str, args, logdir: Path) -> list:
             s = {"name": suite.name, "mode": suite.mode, "status": "SKIP", "secs": 0.0, "rc": None,
                  "script_errors": 0, "failures": [], "perf": [], "tail": [], "note": why}
         else:
-            s = summarise(suite, run_one(suite, godot, logdir))
+            s = gate_load.run_with_retries(
+                suite,
+                lambda suite=suite: summarise(suite, run_one(suite, godot, logdir)),
+                args.load_wait,
+                lambda msg: print(msg, flush=True),
+            )
         print_suite(s)
         results.append(s)
     return results
@@ -245,15 +269,25 @@ def main(argv: list) -> int:
         return 2
     results = run_all(chosen, godot, args, logdir)
     write_failures(logdir / "failures.txt", results)
-    counts = {k: sum(1 for r in results if r["status"] == k) for k in ("PASS", "FAIL", "TIMEOUT", "FOCUS", "CRASH", "SKIP")}
+    counts = {k: sum(1 for r in results if r["status"] == k) for k in STATUSES}
     summary = {"run": run_id, "godot": godot, "load_end": os.getloadavg(), "counts": counts, "suites": results}
     (logdir / "summary.json").write_text(json.dumps(summary, indent=1) + "\n")
+    return report(counts, run_id)
+
+
+def report(counts: dict, run_id: str) -> int:
     bad = counts["FAIL"] + counts["TIMEOUT"] + counts["FOCUS"] + counts["CRASH"]
     parts = ["%d %s" % (v, k.lower()) for k, v in counts.items() if v]
-    print("== %s: %s ==" % ("ALL PASS" if bad == 0 else "FAILURES", ", ".join(parts)))
     if bad:
+        verdict, code = "FAILURES", 1
+    elif counts["BUSY"]:
+        verdict, code = "NO FAILURES, BUT FRAME TIME NOT MEASURED (machine busy; known failure)", 3
+    else:
+        verdict, code = "ALL PASS", 0
+    print("== %s: %s ==" % (verdict, ", ".join(parts)))
+    if code:
         print("   Failure details: build/test-logs/%s/failures.txt" % run_id)
-    return 0 if bad == 0 else 1
+    return code
 
 
 if __name__ == "__main__":

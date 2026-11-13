@@ -78,7 +78,7 @@ static func get_instance() -> DialogueSystem:
 
 func _ready() -> void:
 	_inst = self
-	_rng.randomize()
+	QuietMode.seed_rng(_rng)
 	add_to_group("dialogue_system")
 	_ensure_ui()
 

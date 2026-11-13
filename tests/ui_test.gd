@@ -604,12 +604,15 @@ func _test_death() -> void:
 		tries += 1
 	check(game.player.is_dead(), "the player never died after %d blows" % tries)
 
-	# Game revives Rama about 3.2 s later, so the overlay is measured on a wall clock
-	# inside that window rather than on a frame count that drifts with the framerate.
-	var died_at := Time.get_ticks_msec()
-	while Time.get_ticks_msec() - died_at < 1300:
+	# Game revives Rama 3.2 s of game time later (a SceneTree timer), and the overlay
+	# fades in on process delta, so measure on that same clock: the sum of process
+	# deltas. A frame count drifts with the framerate, and a wall clock drifts from game
+	# time whenever a loaded machine stalls a frame.
+	var game_ms := 0
+	while game_ms < 1300:
 		await frames(1)
-	var elapsed := Time.get_ticks_msec() - died_at
+		game_ms += int(get_process_delta_time() * 1000.0)
+	var elapsed := game_ms
 	print("    measured the death screen %d ms after the blow" % elapsed)
 	check(hud._hud_alpha < 0.2, "the diegetic HUD stayed up over the death screen (a=%.2f)" % hud._hud_alpha)
 	check(hud.death._a > 0.6, "death overlay had not risen after %d ms (a=%.2f)" % [elapsed, hud.death._a])

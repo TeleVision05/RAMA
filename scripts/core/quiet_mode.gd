@@ -11,6 +11,7 @@ extends Node
 ##   * the user argument `--quiet-test` is passed:  Godot --path . <scene> -- --quiet-test
 ##
 ## In quiet mode the game:
+##   * seeds its random number generators with TEST_SEED, so every run is the same;
 ##   * never sets the mouse to captured or confined; the cursor stays free;
 ##   * never moves its window to the foreground, and marks the window no-focus;
 ##   * mutes the Master bus, so nothing reaches the speakers. Players still report
@@ -21,6 +22,8 @@ extends Node
 ## mouse-motion events exactly as it would from a real mouse.
 
 const FLAG := "--quiet-test"
+## The seed every random number generator starts from in quiet mode.
+const TEST_SEED := 0x52414D41  # "RAMA"
 
 ## True when this run must not touch the mouse, the focus or the speakers.
 var active: bool = false
@@ -34,6 +37,10 @@ func _enter_tree() -> void:
 	if not active:
 		return
 	AudioServer.set_bus_mute(AudioServer.get_bus_index("Master"), true)
+	# A test run must see the same world every time. The global generator (enemy
+	# hearing, UI jitter, sound variation) starts from a fixed seed, and systems that
+	# own a generator ask seed_rng() instead of randomising it.
+	seed(TEST_SEED)
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	if DisplayServer.get_name() != "headless":
 		_calm_window()
@@ -63,6 +70,14 @@ func is_mouse_look() -> bool:
 	if active:
 		return _wanted_mouse == Input.MOUSE_MODE_CAPTURED
 	return Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
+
+
+## Randomise `rng` for play, or give it the fixed test seed in quiet mode.
+func seed_rng(rng: RandomNumberGenerator) -> void:
+	if active:
+		rng.seed = TEST_SEED
+	else:
+		rng.randomize()
 
 
 ## Bring the game window to the front, unless it must stay out of the way.
