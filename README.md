@@ -26,7 +26,7 @@ what is next.
 
 ```bash
 # 1. Godot 4.7.2 (any 4.7.x) at ~/tools/Godot.app — the scripts hard-code this path
-# 2. Commit gate: gdlint + Godot parse check on staged .gd files
+# 2. Commit gate: gdlint on staged .gd files + the fast test suites (run_tests.sh --fast)
 pip3 install "gdtoolkit==4.*"
 git config core.hooksPath .githooks
 # 3. Only if you regenerate textures or audio (tools/gen_*.py)
@@ -87,7 +87,9 @@ Ramayana companions), and 10 discoverable landmarks bring the valley to life.
 ## Test
 
 ```bash
-tools/run_tests.sh                              # the full 12-suite gate; 5+ min, opens short-lived windows
+tools/run_tests.sh                              # the full 13-suite gate; quiet: no window, no focus, no sound
+tools/run_tests.sh --headless-only              # the 9 suites that need no renderer (CI)
+tools/run_tests.sh quests ui                    # just these suites; logs in build/test-logs/
 tools/gd.sh scene res://scenes/playtest.tscn    # drives the game, asserts movement + combat
 tools/gd.sh scene res://scenes/asset_test.tscn  # every texture, sound and shader loads
 tools/gd.sh test tests/bake_map_test.gd         # world sanity + top-down map render

@@ -128,6 +128,10 @@ and `tests/acceptance_test.gd` has a checklist row for each new mechanic.
   macOS/Metal via `~/tools/Godot.app` and the `tools/make_app.sh` launcher.
 - Cross-platform CI. Ten of the twelve suites open a window (only `worldmap` and `terrain`
   are headless) and `perf` needs a real GPU; it runs on the owner's machine.
+  *Corrected 2026-11-13:* no suite opens a window any more. Nine of the thirteen
+  (`ui` joined the gate) run headless, so `tools/run_tests.sh --headless-only` can run
+  in CI; `quests`, `perf`, `accept` and `ui` still need the macOS embedded renderer.
+  Check with `tools/run_tests.sh --list`.
 - Multiplayer, mobile, or a story beyond the Panchavati vertical slice.
 
 ## Open questions for the owner
