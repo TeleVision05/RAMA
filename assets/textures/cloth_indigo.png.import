@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://1abh438tp3ro"
 path.s3tc="res://.godot/imported/cloth_indigo.png-99785c70b3a47a2da08e6ce17ee2aaf3.s3tc.ctex"
+path.etc2="res://.godot/imported/cloth_indigo.png-99785c70b3a47a2da08e6ce17ee2aaf3.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/cloth_indigo.png"
-dest_files=["res://.godot/imported/cloth_indigo.png-99785c70b3a47a2da08e6ce17ee2aaf3.s3tc.ctex"]
+dest_files=["res://.godot/imported/cloth_indigo.png-99785c70b3a47a2da08e6ce17ee2aaf3.s3tc.ctex", "res://.godot/imported/cloth_indigo.png-99785c70b3a47a2da08e6ce17ee2aaf3.etc2.ctex"]
 
 [params]
 

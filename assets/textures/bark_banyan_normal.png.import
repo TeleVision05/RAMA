@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://ci38c81ntpqun"
 path.s3tc="res://.godot/imported/bark_banyan_normal.png-0ce10b9946c7df273668ef6290d8c837.s3tc.ctex"
+path.etc2="res://.godot/imported/bark_banyan_normal.png-0ce10b9946c7df273668ef6290d8c837.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/bark_banyan_normal.png"
-dest_files=["res://.godot/imported/bark_banyan_normal.png-0ce10b9946c7df273668ef6290d8c837.s3tc.ctex"]
+dest_files=["res://.godot/imported/bark_banyan_normal.png-0ce10b9946c7df273668ef6290d8c837.s3tc.ctex", "res://.godot/imported/bark_banyan_normal.png-0ce10b9946c7df273668ef6290d8c837.etc2.ctex"]
 
 [params]
 

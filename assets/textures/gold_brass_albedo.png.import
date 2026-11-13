@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cc2qwhnhf8cda"
 path.s3tc="res://.godot/imported/gold_brass_albedo.png-e04e7d9f57d4008357b7e9552a2c1d8f.s3tc.ctex"
+path.etc2="res://.godot/imported/gold_brass_albedo.png-e04e7d9f57d4008357b7e9552a2c1d8f.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/gold_brass_albedo.png"
-dest_files=["res://.godot/imported/gold_brass_albedo.png-e04e7d9f57d4008357b7e9552a2c1d8f.s3tc.ctex"]
+dest_files=["res://.godot/imported/gold_brass_albedo.png-e04e7d9f57d4008357b7e9552a2c1d8f.s3tc.ctex", "res://.godot/imported/gold_brass_albedo.png-e04e7d9f57d4008357b7e9552a2c1d8f.etc2.ctex"]
 
 [params]
 

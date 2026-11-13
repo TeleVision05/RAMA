@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://vl6ev14bsymo"
 path.s3tc="res://.godot/imported/mud_river_normal.png-c29e88231e486935541578b21d555945.s3tc.ctex"
+path.etc2="res://.godot/imported/mud_river_normal.png-c29e88231e486935541578b21d555945.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/mud_river_normal.png"
-dest_files=["res://.godot/imported/mud_river_normal.png-c29e88231e486935541578b21d555945.s3tc.ctex"]
+dest_files=["res://.godot/imported/mud_river_normal.png-c29e88231e486935541578b21d555945.s3tc.ctex", "res://.godot/imported/mud_river_normal.png-c29e88231e486935541578b21d555945.etc2.ctex"]
 
 [params]
 

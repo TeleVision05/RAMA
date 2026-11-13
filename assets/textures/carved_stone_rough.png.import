@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dhaeeobwuqmp"
 path.s3tc="res://.godot/imported/carved_stone_rough.png-2579cb0ace84227f45bbfa81098daded.s3tc.ctex"
+path.etc2="res://.godot/imported/carved_stone_rough.png-2579cb0ace84227f45bbfa81098daded.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/carved_stone_rough.png"
-dest_files=["res://.godot/imported/carved_stone_rough.png-2579cb0ace84227f45bbfa81098daded.s3tc.ctex"]
+dest_files=["res://.godot/imported/carved_stone_rough.png-2579cb0ace84227f45bbfa81098daded.s3tc.ctex", "res://.godot/imported/carved_stone_rough.png-2579cb0ace84227f45bbfa81098daded.etc2.ctex"]
 
 [params]
 
