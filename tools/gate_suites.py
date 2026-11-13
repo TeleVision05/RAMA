@@ -55,14 +55,14 @@ affect a suite's result.
     AudioStreamPlaybackWAV, and "resources still in use" naming a .wav: an
     AudioStreamPlayer that has played and is still alive at quit leaves its playback
     in the AudioServer, even when stopped first; only freeing it and letting several
-    frames run releases it. Repro: one looping AudioStreamPlayer, play, quit.
+    frames run releases it. Repro: tests/engine_repro/audio_playback_leak.gd.
   * "4 RID allocations of type ...DummyShader... leaked", or under --embedded "4
     shaders of type ParticlesShaderRD were never freed" with "4 RID allocations of type
     ...MaterialStorage6Shader... leaked": ParticleProcessMaterial's shared shader cache
-    keeps a use count that sometimes never returns to zero. Repro: a GPUParticles3D
-    with a QuadMesh draw pass and a default ParticleProcessMaterial, held in a local
-    variable, added under a Node3D, freed, quit: 1 shader leaked, 3 runs out of 3.
-    The count moves with assignment order and timing, not with what the game frees.
+    keeps a use count that sometimes never returns to zero. Repro:
+    tests/engine_repro/particle_shader_leak.gd (1 shader leaked, 3 runs of 3). The
+    count moves with assignment order and timing, not with what the game frees.
+Both repro scripts say in their header how to run them in an empty project.
 """
 
 from dataclasses import dataclass

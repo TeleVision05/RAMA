@@ -310,7 +310,9 @@ knowing before concluding that something is regenerating a file.
 
 ## 15. Test suite
 
-`tools/run_tests.sh` runs everything. Current state:
+`tools/run_tests.sh` runs everything. State at the time (before the 2026-11-13
+character commit; **superseded**: the runner, suites and results changed on
+2026-11-13, see §17):
 
 | suite | result |
 |---|---|
@@ -337,3 +339,58 @@ knowing before concluding that something is regenerating a file.
 - Tracked `tools/__pycache__/*.pyc` removed from the index and ignored.
 - README now names `tools/run_tests.sh` as the full gate.
 - Overhaul (`OVERHAUL.md`) tracks 2-4 remain open; nothing new was started here.
+
+## 17. Making the gate honest, 2026-11-13
+
+After the character-model commit (d051bc5) the gate was red and changed its mind
+between runs: one run failed playtest, quests and leaks, another perf and accept.
+Every Godot launch below went through the quiet runner or a headless launch with
+`--quiet-test`; no window was opened. Each failure got at least three competing
+explanations and a check that could kill each one.
+
+**playtest** (audit: dodge 0 m, draw 0.00, no arrow, no Arrow node, no weapon swap)
+
+| explanation | layer | check | result |
+|---|---|---|---|
+| the game was **paused** (Esc, Tab or J reached the windowed game) while the suite kept stepping on `physics_frame`, which a paused tree still emits | input / harness | pause the tree just before the dodge | reproduces all five audit lines word for word, and `take_damage` (a direct call) still passes, as in the audit. **Survives** |
+| an unfocused window released the synthetic presses (`Input.release_pressed_events`, called from `windowDidResignKey` and `windowDidMove` in Godot 4.7.2) | input path | release every pressed action mid-draw | draw drops to 0.00 but an arrow is still fired (24 -> 23). Does not match "did not fire an arrow". Ruled out as the whole story |
+| the new parry/astra code, or stamina spent sprinting, blocks the dodge | state machine | log stamina, floor, lock and dodge timer at each step | stamina 100, on the floor, unlocked; dodge 3.51 m, draw 1.00, arrow fired, swap works. Ruled out |
+| frame stalls on a loaded machine | physics timing | run at load 20 to 120 | passes at every load (it steps on physics ticks). Ruled out |
+
+**quests** (audit: discovery, GO_TO, COLLECT, evidence 0/2, kills 0/4; in quiet runs: one pixel check)
+
+| explanation | layer | check | result |
+|---|---|---|---|
+| paused tree, as above | harness | headless probe: walk into a far place, tree running vs paused | running: discovered; paused: not. Discovery, position steps and ambush spawns all run in `QuestSystem._process`. **Survives** for the audit's six |
+| the marker pair differed by more than the marker | harness | per-pixel diff of `marker_on`/`marker_off` | HUD toasts and wind-blown foliage differed; the peak column landed at x=801, 1243, 1335, 1383. **Survives** for the pixel check |
+| the marker is drawn in the wrong place | game | marker position vs the objective; peak after freezing time | within 1.5 m; peak at x=798 of 1600 (centre 800). Ruled out |
+| the embedded renderer differs | renderer | same check across runs | peak 798 every run after the fix. Ruled out |
+
+**leaks** (16 steady orphans; flaky): the orphans were the four animation `.glb`
+scenes `HumanoidModel` instanced and never freed. Fixed; 0 orphans, and the suite
+now fails on any. Node counts per lap are identical in every run since
+(5049, 5005, 5045, 5013, 5033, 5015, 5035).
+
+**perf and accept** (frame time): run headless side by side with the f2f5225
+build at load 16 to 95, the old build failed the same 20 fps gate in 4 of 5 runs
+and the new one in 4 of 4. Mean frame time overlapped (old 31 to 93 ms, new 32 to
+88 ms); whole-run user CPU was 35 to 36 s old and 41 to 44 s new, most of it the
+new content's boot. At that load the numbers cannot show a regression or rule one
+out, which is why frame-time checks now wait for a quiet machine. The machine sat
+at load 15 to 120 all day.
+
+**What changed**
+
+- `--fixed-fps 60` on every suite: game time is a function of the frame count, so
+  load slows a suite but cannot change it.
+- quiet mode seeds every random generator; the ui suite times the death overlay
+  on process deltas, not the wall clock; the quest suite stops time
+  (`Engine.time_scale = 0`, which also stops shader `TIME`) for its marker pair.
+- frame-time checks measured at a 1-minute load above 6 are retried after the load
+  drops, and reported **BUSY** (exit 3, never a pass) if it never does
+  (`tools/gate_load.py`). Thresholds unchanged.
+- playtest, quests and accept fail with "the game was paused during the run" if
+  the tree is left paused.
+- Exit-time engine warnings (AudioStream playbacks; ParticleProcessMaterial
+  shaders) are reproduced in an empty project and documented in
+  `tools/gate_suites.py`.
