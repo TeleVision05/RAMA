@@ -592,7 +592,7 @@ func set_paused(p: bool) -> void:
 func _apply_menu_state() -> void:
 	var open := not _stack.is_empty()
 	get_tree().paused = open
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if open else Input.MOUSE_MODE_CAPTURED
+	QuietMode.set_mouse_mode(Input.MOUSE_MODE_VISIBLE if open else Input.MOUSE_MODE_CAPTURED)
 	if cam_rig != null and is_instance_valid(cam_rig) and cam_rig.has_method("set_enabled"):
 		cam_rig.set_enabled(not open)
 	if player != null and is_instance_valid(player) and player.has_method("lock_input"):
@@ -602,7 +602,7 @@ func _apply_menu_state() -> void:
 
 func _to_main_menu() -> void:
 	get_tree().paused = false
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	QuietMode.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	AudioDirector.stop_music(0.8)
 	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
 

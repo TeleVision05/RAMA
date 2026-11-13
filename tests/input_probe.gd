@@ -41,7 +41,7 @@ func _ready() -> void:
 	# Settle before touching input. `parse_input_event` is queued, and the action state
 	# it feeds is only updated on the input flush, so pressing a key on the very first
 	# frame raced and intermittently reported the first action as not triggered.
-	DisplayServer.window_move_to_foreground()
+	QuietMode.bring_to_front()
 	for i in range(10):
 		await get_tree().process_frame
 	var warm := InputEventKey.new()
@@ -113,7 +113,36 @@ func _run() -> void:
 		if not got2:
 			fails.append("%s: mouse button %d does not raise the action" % [name, btn])
 
+	await _check_mouse_look(fails)
+
 	print("RESULT: " + ("PASS" if fails.is_empty() else "FAIL"))
 	for f in fails:
 		print("  ! " + f)
 	get_tree().quit(0 if fails.is_empty() else 1)
+
+
+## 3. Mouse look. A synthetic mouse-motion event must turn the camera, in quiet mode
+## too, where the cursor is never actually captured. If this breaks, quiet mode has
+## changed gameplay rather than only keeping the game out of the user's way.
+func _check_mouse_look(fails: Array[String]) -> void:
+	var cam := PlayerCamera.new()
+	add_child(cam)
+	await get_tree().process_frame
+	var yaw0 := cam.yaw
+	var pitch0 := cam.pitch
+	var mm := InputEventMouseMotion.new()
+	mm.relative = Vector2(120.0, 40.0)
+	Input.parse_input_event(mm)
+	Input.flush_buffered_events()
+	await get_tree().process_frame
+	var turned := absf(cam.yaw - yaw0) > 0.1 and absf(cam.pitch - pitch0) > 0.01
+	var captured := Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
+	var verdict := "OK" if turned else "NOT TURNED"
+	print("  %-16s motion     -> %s (quiet=%s, cursor captured=%s)" % ["mouse look", verdict, QuietMode.active, captured])
+	if not turned:
+		fails.append("mouse look: a mouse-motion event did not turn the camera")
+	if QuietMode.active and captured:
+		fails.append("mouse look: quiet mode captured the cursor")
+	QuietMode.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	cam.queue_free()
+	await get_tree().process_frame

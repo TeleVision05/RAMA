@@ -12,7 +12,7 @@ func _ready() -> void:
 
 
 func _run() -> void:
-	DisplayServer.window_move_to_foreground()
+	QuietMode.bring_to_front()
 	for i in range(10):
 		await get_tree().process_frame
 	game = Game.new()

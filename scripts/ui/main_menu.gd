@@ -30,7 +30,7 @@ var _continue_btn: Button
 
 func _ready() -> void:
 	SettingsMenu.load_config()
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	QuietMode.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	get_tree().paused = false
 	_build_world()
 	_build_ui()

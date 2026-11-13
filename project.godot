@@ -12,6 +12,7 @@ boot_splash/show_image=false
 
 [autoload]
 
+QuietMode="*res://scripts/core/quiet_mode.gd"
 InputSetup="*res://scripts/core/input_setup.gd"
 EventBus="*res://scripts/core/event_bus.gd"
 GameState="*res://scripts/core/game_state.gd"
