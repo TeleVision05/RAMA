@@ -142,6 +142,15 @@ func _run() -> void:
 	if worst > 1.2:
 		fails.append("player sank %.2f m below the terrain during a long run" % worst)
 
+	# A paused tree still emits physics_frame, so this suite keeps stepping while the
+	# game stands still and every later check fails with a misleading reason. That is
+	# exactly what the 2026-11-13 audit saw in a windowed run (a pause key reached the
+	# window): dodge 0 m, draw 0.00, no arrow, no swap, while take_damage still worked.
+	if get_tree().paused:
+		fails.append(
+			"the game was paused during the run, so the checks after that tested nothing"
+			+ " (did a pause, inventory or journal key reach the window?)"
+		)
 	print("\nfinal pos %s  fps-equivalent frames simulated" % p.global_position)
 	print("RESULT: " + ("PASS" if fails.is_empty() else "FAIL"))
 	for f in fails:

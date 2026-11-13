@@ -399,6 +399,10 @@ func _run() -> void:
 
 
 func _finish() -> void:
+	# The checklist pauses and unpauses on purpose; anything still paused here came
+	# from outside it (a key reaching the window) and froze every check after it.
+	if get_tree().paused:
+		ok("the game was not left paused", false, "a pause, inventory or journal key may have reached the window")
 	var passed := 0
 	for c in checks:
 		if c[1]:

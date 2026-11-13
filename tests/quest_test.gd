@@ -970,6 +970,15 @@ func shot(name: String) -> void:
 
 
 func _finish() -> void:
+	# A paused tree stops discovery, position objectives and ambush spawns (all in
+	# QuestSystem._process) while this suite keeps stepping on physics_frame. The
+	# 2026-11-13 audit's six quest failures in a windowed run are reproduced exactly by
+	# pausing the tree; say so instead of reporting six unrelated-looking failures.
+	if get_tree().paused:
+		fails.append(
+			"the game was paused during the run, so quest progress could not happen"
+			+ " (did a pause, inventory or journal key reach the window?)"
+		)
 	print("\nRESULT: " + ("PASS" if fails.is_empty() else "FAIL"))
 	for f in fails:
 		print("  ! " + f)
