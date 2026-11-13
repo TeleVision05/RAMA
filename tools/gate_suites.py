@@ -16,6 +16,8 @@ HOW A SUITE IS LAUNCHED (the `mode` column)
             read the framebuffer or time rendering. Measured 2026-11-13: the frontmost
             app did not change across the run, and a 1600x900 frame was read back.
             On other platforms, and with --headless-only, these are reported SKIP.
+            Known gap (2026-11-13): under --embedded the perf suite's GPU column
+            reads 0.00 ms on every leg, so only its CPU frame time is a real figure.
 
 Every launch also passes `-- --quiet-test` (see scripts/core/quiet_mode.gd), so the
 game never captures the mouse, never asks for focus and mutes its audio.

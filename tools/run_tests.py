@@ -74,6 +74,9 @@ def failure_lines(lines: list) -> list:
     """
     bang = [ln.rstrip() for ln in lines if ln.startswith("  !")]
     rows = [ln.rstrip() for ln in lines if "[FAIL]" in ln]
+    if not bang and not rows:
+        # Some suites (perf, leaks) explain a failure only on their RESULT line.
+        rows = [ln.rstrip() for ln in lines if ln.startswith("RESULT: FAIL")]
     errors = []
     for i, line in enumerate(lines):
         s = line.rstrip()
@@ -141,6 +144,8 @@ def print_suite(s: dict) -> None:
     for ln in s["perf"]:
         print("      " + ln.strip())
     shown = s["failures"] if s["status"] != "PASS" else [f for f in s["failures"] if "SCRIPT ERROR" in f]
+    # A failed perf assertion is already on screen with its load average.
+    shown = [f for f in shown if not any(p.startswith(f) for p in s["perf"])]
     for ln in (shown or s["tail"])[:DETAIL_LINES]:
         print("      " + ln.strip())
     hidden = len(shown or s["tail"]) - DETAIL_LINES
@@ -157,6 +162,9 @@ def write_failures(path: Path, results: list) -> None:
         if s["note"]:
             out.append(s["note"])
         out.extend(s["failures"] or ["(no failure lines; last output follows)"] + s["tail"])
+        if s["status"] != "PASS" and s["perf"]:
+            out.append("-- timing figures, each with the 1-minute load average when it was printed:")
+            out.extend(s["perf"])
         out.append("")
     path.write_text("\n".join(out) + "\n" if out else "no failures\n")
 
