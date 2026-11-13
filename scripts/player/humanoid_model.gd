@@ -39,6 +39,7 @@ const CLIP_MAP := {
 }
 
 static var _cached_anims: Dictionary = {}
+# ANIM_SOURCES key -> {source clip name: Animation}, filled by _load_raw_sources().
 static var _raw_sources: Dictionary = {}
 
 var model_instance: Node3D
@@ -130,15 +131,7 @@ static func _get_or_build_library(skel: Skeleton3D, model_root: Node3D) -> Anima
 
 	var lib := AnimationLibrary.new()
 
-	# Load raw source animation players
-	for src_key in ANIM_SOURCES:
-		if not _raw_sources.has(src_key):
-			var packed: PackedScene = load(ANIM_SOURCES[src_key])
-			if packed:
-				var scene := packed.instantiate()
-				for c in scene.find_children("*", "AnimationPlayer"):
-					_raw_sources[src_key] = c as AnimationPlayer
-					break
+	_load_raw_sources()
 
 	for clip_name in CLIP_MAP:
 		var info: Array = CLIP_MAP[clip_name]
@@ -146,11 +139,11 @@ static func _get_or_build_library(skel: Skeleton3D, model_root: Node3D) -> Anima
 		var raw_name: String = info[1]
 		var should_loop: bool = info[2]
 
-		var src_ap: AnimationPlayer = _raw_sources.get(src_key)
-		if src_ap == null or not src_ap.has_animation(raw_name):
+		var src_clips: Dictionary = _raw_sources.get(src_key, {})
+		if not src_clips.has(raw_name):
 			continue
 
-		var anim := src_ap.get_animation(raw_name).duplicate() as Animation
+		var anim := (src_clips[raw_name] as Animation).duplicate() as Animation
 		if should_loop:
 			anim.loop_mode = Animation.LOOP_LINEAR
 		else:
@@ -181,6 +174,32 @@ static func _get_or_build_library(skel: Skeleton3D, model_root: Node3D) -> Anima
 
 	_cached_anims[cache_key] = lib
 	return lib
+
+
+## Read the clips this file uses out of each animation source, once. The source scene
+## is instantiated only to reach its AnimationPlayer and is freed straight away: it is
+## never added to the tree, so keeping the player (as this once did) kept its whole
+## scene alive as 16 orphan nodes, and at exit leaked 88 objects and 72 resources.
+static func _load_raw_sources() -> void:
+	for src_key in ANIM_SOURCES:
+		if _raw_sources.has(src_key):
+			continue
+		var clips := {}
+		var packed: PackedScene = load(ANIM_SOURCES[src_key])
+		if packed:
+			var scene := packed.instantiate()
+			for c in scene.find_children("*", "AnimationPlayer"):
+				var ap := c as AnimationPlayer
+				for clip_name in CLIP_MAP:
+					var raw_name: String = CLIP_MAP[clip_name][1]
+					if CLIP_MAP[clip_name][0] == src_key and ap.has_animation(raw_name):
+						# A copy: the original belongs to the .glb in the resource cache,
+						# and a static reference to it is still held when the engine
+						# checks for resources in use at exit.
+						clips[raw_name] = ap.get_animation(raw_name).duplicate()
+				break
+			scene.free()
+		_raw_sources[src_key] = clips
 
 
 func play(anim_name: String, custom_blend: float = 0.20, speed: float = 1.0) -> void:

@@ -20,6 +20,7 @@ func _run() -> void:
 	p.lock_input(true)
 	var t := 0.0
 	var rows: Array = []
+	var worst_orphans := 0
 	for lap in range(7):
 		for f in range(220):
 			t += 0.016
@@ -36,6 +37,7 @@ func _run() -> void:
 		var mem := Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0
 		var orph := int(Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT))
 		rows.append([nodes, objs, mem, ms])
+		worst_orphans = maxi(worst_orphans, orph)
 		print("  lap %d: nodes=%5d objects=%6d orphans=%4d mem=%6.1f MB  frame=%6.2f ms" % [lap, nodes, objs, orph, mem, ms])
 	var first: Array = rows[1]
 	var last: Array = rows[rows.size() - 1]
@@ -48,5 +50,11 @@ func _run() -> void:
 	# that has nothing to do with the game. Node and memory growth are what prove
 	# whether the streamers actually free what they replace.
 	var ok: bool = node_growth < 250 and mem_growth < 25.0
-	print("RESULT: " + ("PASS" if ok else "FAIL (streaming leaks nodes or memory)"))
+	# An orphan is a node that was built and never added to the tree or freed: it lives
+	# until exit and is reported there as a leak. The humanoid animation sources once
+	# left 16 of them on every run (2026-11-13); there is no reason for even one.
+	if worst_orphans > 0:
+		ok = false
+		print("  ! %d orphan nodes (built, never added to the tree, never freed)" % worst_orphans)
+	print("RESULT: " + ("PASS" if ok else "FAIL (streaming leaks nodes or memory, or nodes were orphaned)"))
 	get_tree().quit(0 if ok else 1)
