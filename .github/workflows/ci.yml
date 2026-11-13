@@ -54,7 +54,7 @@ jobs:
       - name: Import project resources
         run: '"$GODOT" --headless --path . --import || true'
 
-      - name: Headless suites (rendered suites are skipped: no GPU on hosted runners)
+      - name: "Headless suites (rendered suites are skipped, no GPU on hosted runners)"
         run: python3 tools/run_tests.py --headless-only
 
       - name: Upload failure logs
