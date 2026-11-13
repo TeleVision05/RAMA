@@ -380,7 +380,7 @@ class TitleArt:
 			self,
 			fe,
 			Vector2(x + 6, size.y - 46.0),
-			"GODOT 4.7  ·  PROCEDURAL WORLD  ·  NO IMPORTED ART",
+			"GODOT 4.7  ·  PROCEDURAL WORLD  ·  CHARACTERS: QUATERNIUS & KAYKIT (CC0)",
 			UITheme.FS_TINY,
 			Color(UITheme.PARCHMENT_FAINT.r, UITheme.PARCHMENT_FAINT.g, UITheme.PARCHMENT_FAINT.b, 0.55)
 		)

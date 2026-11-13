@@ -4,10 +4,16 @@ An open-world action-adventure epic set in ancient India, chronicling the life a
 of **Lord Rama** (*Suryavamsha Prince of Kosala*) across the **Five Kandas** of the
 *Valmiki Ramayana*. Built in **Godot 4.7.2** (Forward+ / Metal), macOS only.
 
-Every asset in this project is generated: the textures and sound are synthesised in
-Python, the terrain, trees, buildings, sacred monuments, characters, iconography, and
-divine weapons are generated as meshes in GDScript, and the music is synthesised from
-first principles. Nothing is downloaded and nothing is copied.
+Almost everything in this project is generated. The textures, sound effects, ambience
+and music are synthesised in Python (`tools/gen_*.py`); the terrain, water, trees,
+buildings, sacred monuments, animals, rakshasas, iconography and divine weapons are
+generated as meshes in GDScript.
+
+Two things are licensed rather than generated: the humanoid base meshes for the human
+characters (Rama, Sita, Lakshmana, sages, guards and villagers), from Quaternius's
+*Ultimate Modular Men* and *Women* packs, and their animation clips, from Kay Lousberg's
+*KayKit Character Animations*. Both are CC0 1.0. [assets/CREDITS.md](assets/CREDITS.md)
+lists each file with its source, author and licence.
 
 **Status (2026-11-05): working.** All 12 test suites + UI verification pass on `main`
 (`parse`, `input`, `assets`, `worldmap`, `terrain`, `playtest`, `audio`, `quests`,

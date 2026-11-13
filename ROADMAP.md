@@ -14,8 +14,12 @@ comes next, in order.
   characters, ~5000 lines). The `overhaul/3d-and-depth` branch is one commit *behind*
   `main`, so `main` is now the overhaul line, not the untouched baseline.
 - Engine: Godot 4.7.2 (Forward+ / Metal), expected at `~/tools/Godot.app`.
-- Every asset is generated: textures and audio by the Python scripts in `tools/`, all
-  meshes procedurally in GDScript. No downloaded content.
+- Generated: textures and audio (music included) by the Python scripts in `tools/`, and
+  every world, creature and weapon mesh procedurally in GDScript. Licensed: the humanoid
+  base meshes (Quaternius) and their animation clips (KayKit, Kay Lousberg), both CC0
+  1.0, listed file by file in `assets/CREDITS.md`. *(Corrected 2026-11-13: this line
+  said "every asset is generated, no downloaded content", which stopped being true when
+  `d051bc5` added the eight character `.glb` files.)*
 - Systems present (see `ARCHITECTURE.md` "Systems now present"): world heightfield,
   chunked LOD terrain, sky/day-night, river and waterfall, vegetation streaming,
   settlements, wildlife, player with bow and sword, four enemy archetypes, twelve
@@ -111,7 +115,12 @@ and `tests/acceptance_test.gd` has a checklist row for each new mechanic.
 
 ## Won't do / out of scope
 
-- Downloaded or copied assets of any kind. Everything stays generated (project rule).
+- Third-party assets beyond the CC0 character meshes and animation clips already
+  credited in `assets/CREDITS.md`. Anything else stays generated, and any new
+  third-party file needs a confirmed redistributable licence and a CREDITS row before it
+  is committed. *(Corrected 2026-11-13: the rule used to read "Downloaded or copied
+  assets of any kind. Everything stays generated"; `d051bc5` broke it, and the owner
+  chose to keep the CC0 models with credits.)*
 - Weakening or skipping a test to keep the gate green (`OVERHAUL.md` rule 2).
 - Splitting the 1000+-line scripts in one big refactor. They are cut down as tracks
   touch them, not as a project of their own.

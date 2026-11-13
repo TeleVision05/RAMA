@@ -1,7 +1,8 @@
 class_name HumanoidModel
 extends Node3D
-## Instantiates CC0 KayKit humanoid characters (King/Rama, Farmer/Villager, Woman/Sita, Adventurer/Lakshmana)
-## and retargets the humanoid animation library for fluid movement, combat and idle states.
+## Instantiates CC0 Quaternius humanoid characters (King/Rama, Farmer/Villager, Woman/Sita, Adventurer/Lakshmana)
+## and retargets the CC0 KayKit animation library for movement, combat and idle states.
+## Sources and licences: assets/CREDITS.md.
 
 const MODEL_PATHS := {
 	"king": "res://assets/models/characters/king.glb",

@@ -1,7 +1,9 @@
 # RAMA — Architecture
 
-Godot 4.7.2, Forward+ (Metal). GDScript. All assets are procedurally synthesised
-(Python for textures/audio, GDScript for meshes) so the project is license-clean.
+Godot 4.7.2, Forward+ (Metal). GDScript. Textures and audio are synthesised in Python
+and the world, creature and weapon meshes are generated in GDScript. The exceptions are
+the humanoid character meshes and animation clips in `assets/models/characters/`, which
+are CC0 third-party files credited in `assets/CREDITS.md`.
 
 ## The one rule
 
@@ -26,6 +28,7 @@ scripts/
   audio/    ...                   audio director
 shaders/    terrain, sky, water, foliage, grass ...
 assets/     textures/ audio/      generated PNG + WAV
+            models/characters/    CC0 third-party humanoid .glb (see CREDITS.md)
 tools/      gd.sh                 dev loop wrapper; gen_*.py asset synthesisers
 tests/      headless test scripts and render harnesses
 ```
