@@ -92,6 +92,8 @@ SUITES = [
     Suite("assets", "res://scenes/asset_test.tscn", "headless", 120, fast=True),
     # The world map bakes and its layout is sane (writes build/map_*.png).
     Suite("worldmap", "tests/bake_map_test.gd", "headless", 300),
+    # A rotated building's collider follows its footprint instead of an axis-aligned box.
+    Suite("solids", "tests/solid_basis_test.gd", "headless", 120, fast=True),
     # Terrain builds from the baked map with its shader.
     Suite("terrain", "tests/terrain_test.gd", "headless", 300),
     # Synthetic input drives the player: walk, sprint, jump, dodge, bow, melee.

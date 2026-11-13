@@ -107,9 +107,15 @@ func _collect_solids(n: Node, out: Array) -> void:
 			if size.y < 1.3 or minf(size.x, size.z) < 0.9:
 				continue
 			var centre: Vector3 = mi.global_transform * (ab.position + ab.size * 0.5)
-			# Shrink slightly: an axis-aligned box around a rotated building otherwise
-			# blocks the ground beside it.
-			out.append({"pos": centre, "box": Vector3(size.x * 0.82, size.y, size.z * 0.82)})
+			# The box keeps the mesh's full local footprint and turns with the building
+			# (SolidStreamer applies the basis), so a rotated hut blocks only its own ground.
+			out.append(
+				{
+					"pos": centre,
+					"box": size,
+					"basis": mi.global_transform.basis.orthonormalized()
+				}
+			)
 		if c.get_child_count() > 0:
 			_collect_solids(c, out)
 
