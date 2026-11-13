@@ -1,0 +1,66 @@
+name: CI
+
+# Runs the headless test suites on a Linux runner with the same Godot version the
+# project is built against (GODOT_VERSION below must match project.godot's
+# config/features and the engine the owner develops on).
+#
+# NOT run here: the suites that need a rendered frame (quests, perf, accept, ui).
+# They use Godot's embedded renderer, which needs a GPU the hosted runner does not
+# have, so they run on the owner's machine with `tools/run_tests.sh` (all suites).
+# `tools/run_tests.sh --headless-only` is exactly the subset this workflow runs.
+
+on:
+  push:
+    branches: [main, prod-ready]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  GODOT_VERSION: "4.7.2-stable"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install "gdtoolkit==4.*"
+      - name: gdlint every tracked script
+        run: git ls-files '*.gd' | xargs gdlint
+
+  headless-suites:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Godot ${{ env.GODOT_VERSION }}
+        run: |
+          set -euo pipefail
+          url="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          curl -fsSL -o "$RUNNER_TEMP/godot.zip" "$url"
+          unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP/godot"
+          chmod +x "$RUNNER_TEMP/godot/Godot_v${GODOT_VERSION}_linux.x86_64"
+          echo "GODOT=$RUNNER_TEMP/godot/Godot_v${GODOT_VERSION}_linux.x86_64" >> "$GITHUB_ENV"
+
+      - name: Godot version
+        run: '"$GODOT" --version'
+
+      - name: Import project resources
+        run: '"$GODOT" --headless --path . --import || true'
+
+      - name: Headless suites (rendered suites are skipped: no GPU on hosted runners)
+        run: python3 tools/run_tests.py --headless-only
+
+      - name: Upload failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs
+          path: build/test-logs
+          if-no-files-found: ignore

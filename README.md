@@ -15,17 +15,18 @@ characters (Rama, Sita, Lakshmana, sages, guards and villagers), from Quaternius
 *KayKit Character Animations*. Both are CC0 1.0. [assets/CREDITS.md](assets/CREDITS.md)
 lists each file with its source, author and licence.
 
-**Status (2026-11-05): working.** All 12 test suites + UI verification pass on `main`
-(`parse`, `input`, `assets`, `worldmap`, `terrain`, `playtest`, `audio`, `quests`,
-`saveload`, `leaks`, `perf`, `accept`, and `ui_test`). See [ROADMAP.md](ROADMAP.md) for
-what is next.
+**Status (2026-11-13): release candidate, draft.** The quiet test gate (`tools/run_tests.sh`)
+runs 14 suites. On the last full run 13 passed and the frame-time suite (`perf`) was
+**not measured** because the machine was too busy for a trustworthy figure (the gate
+reports that as BUSY, never as a pass). CI runs the 10 headless suites on every push;
+the 4 that need a renderer run on a Mac. See [ROADMAP.md](ROADMAP.md) for what is next.
 
 ---
 
 ## Install
 
 ```bash
-# 1. Godot 4.7.2 (any 4.7.x) at ~/tools/Godot.app — the scripts hard-code this path
+# 1. Godot 4.7.2 (any 4.7.x): set $GODOT, or put `godot` on PATH, or use ~/tools/Godot.app
 # 2. Commit gate: gdlint on staged .gd files + the fast test suites (run_tests.sh --fast)
 pip3 install "gdtoolkit==4.*"
 git config core.hooksPath .githooks
@@ -87,8 +88,9 @@ Ramayana companions), and 10 discoverable landmarks bring the valley to life.
 ## Test
 
 ```bash
-tools/run_tests.sh                              # the full 13-suite gate; quiet: no window, no focus, no sound
-tools/run_tests.sh --headless-only              # the 9 suites that need no renderer (CI)
+tools/run_tests.sh                              # the full 14-suite gate; quiet: no window, no focus, no sound
+tools/run_tests.sh --headless-only              # the 10 suites that need no renderer (what CI runs)
+tools/run_tests.sh --fast                       # the five few-second suites (the pre-commit hook)
 tools/run_tests.sh quests ui                    # just these suites; logs in build/test-logs/
 tools/gd.sh scene res://scenes/playtest.tscn    # drives the game, asserts movement + combat
 tools/gd.sh scene res://scenes/asset_test.tscn  # every texture, sound and shader loads
@@ -98,6 +100,17 @@ tools/gd.sh test tests/terrain_test.gd          # meshing, LODs, triangle budget
 
 Render harnesses write PNGs to `build/screenshots/` so results can be looked at rather
 than assumed.
+
+## Download
+
+A macOS build (unsigned release candidate) is attached to the draft release on GitHub.
+It is not notarized: after unzipping, right-click `RAMA.app` and choose Open, or run
+`xattr -dr com.apple.quarantine RAMA.app`.
+
+## License
+
+Code: MIT, see [LICENSE](LICENSE). The CC0 character models and animations are
+credited in [assets/CREDITS.md](assets/CREDITS.md).
 
 ## Documentation
 
