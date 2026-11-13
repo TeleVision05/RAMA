@@ -554,10 +554,18 @@ func _section_marker(qs: QuestSystem, _p: Player) -> void:
 	ok("the marker node exists and is shown", marker != null and marker.visible)
 	qs.process_mode = Node.PROCESS_MODE_DISABLED
 	await frames(2)
+	# Stop the clock for the pair. Freezing only the quest system was not enough: the
+	# wind in the foliage shaders, walking NPCs and the HUD's notification toasts all
+	# moved between the two frames, and whichever moved most became the "peak column"
+	# (x=801, 1243, 1335, 1383 of 1600 across four runs on 2026-11-13). time_scale 0
+	# also stops shader TIME and particles: main.cpp hands the renderer the scaled step.
+	var was_scale := Engine.time_scale
+	Engine.time_scale = 0.0
 	marker.visible = true
 	await free_shot("marker_on", eye, aim, 58.0)
 	marker.visible = false
 	await free_shot("marker_off", eye, aim, 58.0)
+	Engine.time_scale = was_scale
 	marker.visible = true
 	qs.process_mode = Node.PROCESS_MODE_INHERIT
 	var ab := _column_diff("marker_on", "marker_off")
