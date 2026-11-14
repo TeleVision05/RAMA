@@ -37,7 +37,9 @@ if [ -n "$STAGED_GD" ]; then
       fail=1
     fi
   else
-    echo "pre-commit: gdlint not installed (pip3 install 'gdtoolkit==4.*') — skipping" >&2
+    echo "pre-commit: gdlint is not installed, so GDScript style cannot be checked and the commit is stopped." >&2
+    echo "  Install it with:  pip3 install 'gdtoolkit==4.*'   (then check:  gdlint --version)" >&2
+    fail=1
   fi
 fi
 
