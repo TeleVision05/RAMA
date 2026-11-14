@@ -30,6 +30,10 @@ var _notice: Label
 
 
 func _ready() -> void:
+	# `-- --smoke` runs the end-to-end check from an exported build (scripts/core/smoke_check.gd).
+	if SmokeCheck.requested():
+		get_tree().change_scene_to_file.call_deferred(SmokeCheck.SCENE)
+		return
 	SettingsMenu.load_config()
 	QuietMode.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	get_tree().paused = false

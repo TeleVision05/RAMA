@@ -189,6 +189,7 @@ def parse_args(argv: list) -> argparse.Namespace:
     ap.add_argument("--fast", action="store_true", help="only the few-second suites (pre-commit)")
     ap.add_argument("--list", action="store_true", help="list the suites and exit")
     ap.add_argument("--no-import", action="store_true", help="skip refreshing the import cache")
+    ap.add_argument("--exported", metavar="APP", help="smoke-check an exported RAMA.app (headless) instead of running the suites")
     ap.add_argument(
         "--load-wait",
         type=int,
@@ -246,8 +247,26 @@ def run_all(chosen: list, godot: str, args, logdir: Path) -> list:
     return results
 
 
+def smoke_exported(app: str) -> int:
+    """Launch an exported build headless, in quiet mode, and read its RESULT line."""
+    exe = Path(app) / "Contents" / "MacOS" / "RAMA"
+    if not exe.exists():
+        print("No exported game at %s. Export it first (see README, 'Building the macOS app')." % app)
+        return 2
+    cmd = [str(exe), "--headless", "--audio-driver", "Dummy", "--", "--quiet-test", "--smoke"]
+    res = run_godot(cmd, ROOT, 240, False)
+    for ln in res["lines"]:
+        if ln.startswith(("[smoke]", "RESULT:", "  !")):
+            print(ln.rstrip())
+    ok = res["status"] == "DONE" and res["rc"] == 0 and any(ln.startswith("RESULT: PASS") for ln in res["lines"])
+    print("== exported build: %s ==" % ("PASS" if ok else "FAIL (%s)" % (res["note"] or "see lines above")))
+    return 0 if ok else 1
+
+
 def main(argv: list) -> int:
     args = parse_args(argv)
+    if args.exported:
+        return smoke_exported(args.exported)
     chosen = select(args)
     if args.list:
         for s in chosen:
