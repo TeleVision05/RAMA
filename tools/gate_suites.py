@@ -94,6 +94,8 @@ SUITES = [
     Suite("worldmap", "tests/bake_map_test.gd", "headless", 300),
     # A rotated building's collider follows its footprint instead of an axis-aligned box.
     Suite("solids", "tests/solid_basis_test.gd", "headless", 120, fast=True),
+    # Every MeshKit builder still makes the same geometry (golden file; guards the split).
+    Suite("meshkit", "tests/mesh_kit_golden_test.gd", "headless", 120, fast=True),
     # Villagers lose shadows, animation rate and then their draw with distance.
     Suite("npclod", "res://scenes/npc_lod_test.tscn", "headless", 120, fast=True),
     # A damaged save, a cut-off world cache and an unsupported renderer all end safely;
