@@ -5,6 +5,9 @@ extends Node3D
 ## are being built.
 
 signal ready_to_play
+## After the loading screen's shader warm-up, when the player may act. Only raised when
+## `show_loading` is on.
+signal warm_up_done
 
 var world: WorldRoot
 var player: Player
@@ -27,6 +30,12 @@ var quality_tier: int = Quality.Tier.HIGH
 ## harnesses that want the world without the interface can turn it off before the
 ## Game enters the tree.
 var spawn_hud: bool = true
+## Cover the boot with a loading screen and warm the shaders behind it. Off by default so
+## the test harnesses that build a Game directly see exactly what they always did;
+## `HUD.launch` turns it on for a real session.
+var show_loading: bool = false
+var loading: LoadingScreen
+var _renderer_message: String = ""
 var _spawn: Vector3 = Vector3.ZERO
 var _booted: bool = false
 
@@ -36,13 +45,49 @@ func _ready() -> void:
 
 
 func boot() -> void:
+	# A card that cannot run the full renderer plays at a lower tier, and says so.
+	var cap := RendererCheck.assess(RenderingServer.get_current_rendering_method())
+	quality_tier = mini(quality_tier, int(cap["max_tier"]))
+	if show_loading:
+		loading = LoadingScreen.open(self)
+		_renderer_message = String(cap["message"])
+	_step(0.0, 0.30, 0.0, "Surveying the vale")
 	world = WorldRoot.new()
 	world.name = "World"
 	add_child(world)
+	if loading != null:
+		WorldMap.progress = loading.report
 	world.build(true)
+	WorldMap.progress = Callable()
 
 	_spawn = _find_spawn()
+	_build_player_and_camera()
 
+	# Particle density must be set BEFORE the VFX system builds its emitters.
+	WorldVFX.density = Quality.particle_density(quality_tier)
+	_step(0.30, 0.70, 0.0, "Raising the village")
+	_spawn_content()
+
+	Quality.apply(quality_tier, get_viewport(), world.sky)
+	_step(0.70, 0.80, 0.0, "Setting the stones")
+	_build_solids_and_merge()
+	_bind_systems()
+
+	# Before `player_spawned`, so the interface is listening when it fires. The HUD
+	# re-applies the saved settings on top of the quality tier chosen above, which is
+	# the order the player expects: their own choices are the last word.
+	_step(0.80, 0.85, 0.0, "Preparing the journal")
+	_spawn_ui()
+
+	EventBus.player_died.connect(_on_player_died)
+	EventBus.player_spawned.emit(player)
+	_booted = true
+	ready_to_play.emit()
+	if loading != null:
+		_warm_up_then_reveal()
+
+
+func _build_player_and_camera() -> void:
 	player = Player.new()
 	player.name = "Rama"
 	add_child(player)
@@ -57,11 +102,8 @@ func boot() -> void:
 	player.cam_rig = cam
 	world.set_focus(player)
 
-	# Particle density must be set BEFORE the VFX system builds its emitters.
-	WorldVFX.density = Quality.particle_density(quality_tier)
-	_spawn_content()
 
-	Quality.apply(quality_tier, get_viewport(), world.sky)
+func _build_solids_and_merge() -> void:
 	# Static collision for trees and buildings. Nothing else in the world has any, so
 	# without this the player walks through trunks and huts and the camera's spring arm
 	# passes through a trunk that then hides Rama completely.
@@ -79,9 +121,11 @@ func boot() -> void:
 		var mg: Array = StaticMerge.merge(settlement)
 		print("[merge] settlement %d -> %d draws in %d ms" % [mg[0], mg[1], Time.get_ticks_msec() - t1])
 
-	# Quests need the player (for discovery zones and rewards) and the enemy director
-	# (to spawn an ambush when an objective calls for one). Interactables need the
-	# quest system to report what the player just used.
+
+## Quests need the player (for discovery zones and rewards) and the enemy director
+## (to spawn an ambush when an objective calls for one). Interactables need the
+## quest system to report what the player just used.
+func _bind_systems() -> void:
 	if quests and quests.has_method("bind"):
 		quests.bind(player, enemies)
 	if interactables and interactables.has_method("bind"):
@@ -93,15 +137,35 @@ func boot() -> void:
 	world.sky.set_time(GameState.time_of_day)
 	world.sky.phase_changed.connect(_on_phase)
 
-	# Before `player_spawned`, so the interface is listening when it fires. The HUD
-	# re-applies the saved settings on top of the quality tier chosen above, which is
-	# the order the player expects: their own choices are the last word.
-	_spawn_ui()
 
-	EventBus.player_died.connect(_on_player_died)
-	EventBus.player_spawned.emit(player)
-	_booted = true
-	ready_to_play.emit()
+func _step(lo: float, hi: float, fraction: float, text: String) -> void:
+	if loading != null:
+		loading.stage(lo, hi)
+		loading.report(fraction, text)
+
+
+## Keep the loading screen up while the renderer compiles every pipeline the first view
+## needs. Godot compiles a material's pipeline the first time something using it is
+## drawn, which is a visible hitch mid-game. The 3D view keeps rendering behind the
+## overlay, so looking around once now (all four ways, with the player in place) pays
+## that cost where nobody is watching.
+func _warm_up_then_reveal() -> void:
+	var ls := loading
+	loading = null
+	player.lock_input(true)
+	var yaw0: float = cam.yaw
+	for k in range(BootWarmup.VIEWS):
+		ls.stage(0.85, 1.0)
+		ls.report(float(k) / float(BootWarmup.VIEWS), "Warming the shaders")
+		cam.yaw = yaw0 + TAU * float(k) / float(BootWarmup.VIEWS)
+		for f in range(BootWarmup.FRAMES_PER_VIEW):
+			await get_tree().process_frame
+	cam.yaw = yaw0
+	player.lock_input(false)
+	ls.finish()
+	if _renderer_message != "":
+		EventBus.notify.emit("Graphics", _renderer_message, "warn")
+	warm_up_done.emit()
 
 
 ## Spawn on the village road, on solid dry ground, facing the square.
@@ -292,7 +356,7 @@ func save_game(slot: int) -> bool:
 ## Restore a slot into the LIVE world: position, time, and every system's state.
 func load_game(slot: int) -> bool:
 	if not GameState.load_from_slot(slot):
-		EventBus.notify.emit("No save", "Slot %d is empty." % (slot + 1), "warn")
+		EventBus.notify.emit("Could not load", GameState.last_load_message, "warn")
 		return false
 	# `load_from_slot` raises `game_loaded`; the interface owns the toast for it, the
 	# same way it owns the one for a save.

@@ -21,6 +21,8 @@ var _card_hi: StyleBoxFlat
 var _summaries: Array = []
 var _flash: float = 0.0
 var _flash_slot: int = -1
+## Plain-language line shown at the foot of the panel after a save or load fails.
+var notice: String = ""
 
 
 func _ready() -> void:
@@ -46,6 +48,7 @@ func _ready() -> void:
 
 func open_as(m: String) -> void:
 	mode = m
+	notice = ""
 	_hover = -1
 	refresh()
 	show()
@@ -67,7 +70,7 @@ func refresh() -> void:
 func filled_slots() -> int:
 	var n := 0
 	for s in _summaries:
-		if not (s as Dictionary).is_empty():
+		if not (s as Dictionary).is_empty() and not bool((s as Dictionary).get("damaged", false)):
 			n += 1
 	return n
 
@@ -137,16 +140,25 @@ func use_slot(i: int) -> bool:
 			slot_used.emit(i, "save")
 		else:
 			AudioDirector.play_ui("ui_close")
+			notice = "This save couldn't be written. Check that your disk has free space, then try again."
+			queue_redraw()
 		return ok
 	if (_summaries[i] as Dictionary).is_empty():
 		AudioDirector.play_ui("ui_close")
+		notice = SaveCheck.MSG_EMPTY
+		queue_redraw()
 		return false
 	var loaded := GameState.load_from_slot(i)
 	if loaded:
+		notice = ""
 		AudioDirector.play_2d("shrine_activate", -10.0)
 		_flash = 1.0
 		_flash_slot = i
 		slot_used.emit(i, "load")
+	else:
+		AudioDirector.play_ui("ui_close")
+		notice = GameState.last_load_message
+		refresh()
 	return loaded
 
 
@@ -192,6 +204,8 @@ func _draw() -> void:
 	for i in range(SLOTS):
 		_draw_card(i, _card_rect(i, pr), f_eyebrow, f_head, f_body)
 
+	if notice != "":
+		UITheme.draw_text(self, f_body, Vector2(pr.position.x + 30, pr.end.y - 24), notice, UITheme.FS_SMALL, UITheme.SAFFRON_PALE)
 	var hint := "ESC  BACK"
 	var hw := UITheme.text_width(f_eyebrow, hint, UITheme.FS_TINY)
 	UITheme.draw_text(self, f_eyebrow, Vector2(pr.end.x - 30 - hw, pr.end.y - 24), hint, UITheme.FS_TINY, UITheme.PARCHMENT_FAINT)
@@ -200,8 +214,9 @@ func _draw() -> void:
 func _draw_card(i: int, r: Rect2, f_eyebrow: Font, f_head: Font, f_body: Font) -> void:
 	var s: Dictionary = _summaries[i]
 	var empty: bool = s.is_empty()
+	var damaged: bool = bool(s.get("damaged", false))
 	var active: bool = (i == _hover) or (i == _sel and _hover < 0)
-	var usable: bool = mode == "save" or not empty
+	var usable: bool = mode == "save" or (not empty and not damaged)
 
 	var sb: StyleBoxFlat = _card
 	if active and usable:
@@ -231,6 +246,12 @@ func _draw_card(i: int, r: Rect2, f_eyebrow: Font, f_head: Font, f_body: Font) -
 			UITheme.draw_text(
 				self, f_body, r.position + Vector2(110, 64), "— write a new chapter here", UITheme.FS_SMALL, UITheme.PARCHMENT_FAINT
 			)
+		return
+
+	if damaged:
+		UITheme.draw_text(self, f_head, r.position + Vector2(20, 66), "Damaged save", UITheme.FS_HEAD, UITheme.PARCHMENT_FAINT)
+		var hint_txt := "— save over it to start fresh" if mode == "save" else "— can't be loaded; pick another slot"
+		UITheme.draw_text(self, f_body, r.position + Vector2(20, 90), hint_txt, UITheme.FS_SMALL, UITheme.PARCHMENT_FAINT)
 		return
 
 	var day: int = int(s.get("day", 1))

@@ -79,18 +79,34 @@ const CACHE_VERSION := 13
 
 
 # ---------------------------------------------------------------------------
-## Build the map, using the on-disk cache when it matches this generator.
-static func load_or_bake(verbose: bool = false) -> WorldMap:
+## Called as the map is prepared: progress(fraction 0..1, plain-language step). The
+## loading screen sets this; it stays empty in tests and tools.
+static var progress: Callable = Callable()
+
+
+static func _report(frac: float, text: String) -> void:
+	if progress.is_valid():
+		progress.call(clampf(frac, 0.0, 1.0), text)
+
+
+## Build the map, using the on-disk cache when it matches this generator. A missing,
+## truncated or stale cache is not an error: the map is simply baked again (about ten
+## seconds) and the cache rewritten. `cache_path` exists so a test can aim at a copy.
+static func load_or_bake(verbose: bool = false, cache_path: String = CACHE_PATH) -> WorldMap:
+	_report(0.0, "Surveying the vale")
 	var m := WorldMap.new()
-	if m._try_load_cache():
+	if m._try_load_cache(cache_path):
 		if verbose:
 			print("[worldmap] loaded cache")
+		_report(1.0, "Terrain ready")
 		return m
 	var t0 := Time.get_ticks_msec()
+	_report(0.12, "Shaping the land for the first time. This only happens once")
 	m._bake()
 	if verbose:
 		print("[worldmap] baked in %d ms" % (Time.get_ticks_msec() - t0))
-	m._save_cache()
+	m._save_cache(cache_path)
+	_report(1.0, "Terrain ready")
 	return m
 
 
@@ -99,15 +115,22 @@ static func _source_fingerprint() -> String:
 	return md5 if md5 != "" else "v%d" % CACHE_VERSION
 
 
-func _try_load_cache() -> bool:
-	var f := FileAccess.open(CACHE_PATH, FileAccess.READ)
+func _try_load_cache(path: String = CACHE_PATH) -> bool:
+	var f := FileAccess.open(path, FileAccess.READ)
 	if f == null:
+		return false
+	# Every field after the header has a known size, so a file of the wrong length is a
+	# truncated or foreign file: reject it before reading, rather than half-filling arrays.
+	var fingerprint := _source_fingerprint()
+	var n := GRID * GRID
+	var header := 4 + 4 + 4 + fingerprint.to_utf8_buffer().size()
+	if f.get_length() != header + n * 4 * 6 + n * 2 + n * 4:
+		push_warning("[worldmap] cache has an unexpected size; baking again")
 		return false
 	if f.get_32() != CACHE_MAGIC or f.get_32() != CACHE_VERSION:
 		return false
-	if f.get_pascal_string() != _source_fingerprint():
+	if f.get_pascal_string() != fingerprint:
 		return false
-	var n := GRID * GRID
 	heights = f.get_buffer(n * 4).to_float32_array()
 	path_mask = f.get_buffer(n * 4).to_float32_array()
 	wet_mask = f.get_buffer(n * 4).to_float32_array()
@@ -120,8 +143,8 @@ func _try_load_cache() -> bool:
 	return heights.size() == n and biomes.size() == n and ao.size() == n and layer.size() == n * 4
 
 
-func _save_cache() -> void:
-	var f := FileAccess.open(CACHE_PATH, FileAccess.WRITE)
+func _save_cache(path: String = CACHE_PATH) -> void:
+	var f := FileAccess.open(path, FileAccess.WRITE)
 	if f == null:
 		push_warning("[worldmap] could not write cache")
 		return
@@ -578,6 +601,8 @@ func _bake() -> void:
 
 	# Pass 1 — raw height, then carve the river valley and flatten the settlements.
 	for gz in range(GRID):
+		if gz % 16 == 0:
+			_report(0.12 + 0.60 * float(gz) / float(GRID), "Carving the river valley")
 		var z := -HALF + float(gz) * CELL
 		for gx in range(GRID):
 			var x := -HALF + float(gx) * CELL
@@ -639,9 +664,12 @@ func _bake() -> void:
 
 	# Pass 2 — smooth the path corridors so they are actually walkable, and
 	# soften the flatten seams.
+	_report(0.74, "Smoothing the roads")
 	_smooth_high_ground()
 	_carve_path_corridors()
+	_report(0.86, "Marking forest, field and bank")
 	_classify()
+	_report(0.93, "Shading the hollows")
 	_bake_shading()
 
 

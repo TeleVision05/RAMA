@@ -94,6 +94,11 @@ SUITES = [
     Suite("worldmap", "tests/bake_map_test.gd", "headless", 300),
     # A rotated building's collider follows its footprint instead of an axis-aligned box.
     Suite("solids", "tests/solid_basis_test.gd", "headless", 120, fast=True),
+    # Villagers lose shadows, animation rate and then their draw with distance.
+    Suite("npclod", "res://scenes/npc_lod_test.tscn", "headless", 120, fast=True),
+    # A damaged save, a cut-off world cache and an unsupported renderer all end safely;
+    # the loading screen's progress only moves forward.
+    Suite("failsafe", "res://scenes/failsafe_test.tscn", "headless", 300),
     # Terrain builds from the baked map with its shader.
     Suite("terrain", "tests/terrain_test.gd", "headless", 300),
     # Synthetic input drives the player: walk, sprint, jump, dodge, bow, melee.

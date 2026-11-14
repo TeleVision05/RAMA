@@ -503,10 +503,10 @@ func quick_load() -> void:
 		return
 	if game != null and is_instance_valid(game) and game.has_method("load_game"):
 		if not bool(game.call("load_game", QUICK_SLOT)):
-			notes.push("Could not load", "Slot %d could not be read." % (QUICK_SLOT + 1), "warn")
+			notes.push("Could not load", GameState.last_load_message, "warn")
 		return
 	if not GameState.load_from_slot(QUICK_SLOT):
-		notes.push("Could not load", "Slot %d could not be read." % (QUICK_SLOT + 1), "warn")
+		notes.push("Could not load", GameState.last_load_message, "warn")
 
 
 func _toggle(panel: Control) -> void:
@@ -624,6 +624,7 @@ static func launch(tree: SceneTree) -> Node:
 	session.add_child(hud)
 	var g := Game.new()
 	g.name = "Game"
+	g.show_loading = true
 	session.add_child(g)
 	var old := tree.current_scene
 	tree.root.add_child(session)

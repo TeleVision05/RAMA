@@ -26,6 +26,7 @@ var _fade: ColorRect
 var _settings: SettingsMenu
 var _loader: SaveMenu
 var _continue_btn: Button
+var _notice: Label
 
 
 func _ready() -> void:
@@ -43,10 +44,15 @@ func _ready() -> void:
 # the living backdrop
 # ==========================================================================
 func _build_world() -> void:
+	# The first launch bakes the world map (about ten seconds); say so, with a real bar.
+	var loading := LoadingScreen.open(self)
+	loading.stage(0.0, 0.55)
+	WorldMap.progress = loading.report
 	world = WorldRoot.new()
 	world.name = "World"
 	add_child(world)
 	world.build(false)
+	WorldMap.progress = Callable()
 	world.sky.set_time(GOLDEN_HOUR)
 	world.sky.paused = true
 
@@ -62,7 +68,11 @@ func _build_world() -> void:
 
 	# The same optional content systems the game builds, so the title screen shows
 	# the real village and the real trees rather than bare terrain.
+	var built := 0
 	for cls in ["RiverWater", "Vegetation", "Settlement", "WorldVFX"]:
+		loading.stage(0.55, 1.0)
+		loading.report(float(built) / 4.0, "Raising the village")
+		built += 1
 		var n := _make(cls)
 		if n == null:
 			continue
@@ -75,6 +85,7 @@ func _build_world() -> void:
 		_content.append(n)
 
 	AudioDirector.bind(world, world.sky, cam)
+	loading.finish(0.35)
 
 
 func _make(cls: String) -> Node3D:
@@ -149,9 +160,11 @@ func _build_ui() -> void:
 	ui.add_child(_buttons)
 
 	_continue_btn = _add_button("Continue", _on_continue)
-	_continue_btn.disabled = not _any_slot()
+	_continue_btn.disabled = _newest_slot() < 0
 	if _continue_btn.disabled:
-		_continue_btn.tooltip_text = "No journey has been set down yet."
+		_continue_btn.tooltip_text = (
+			"Your saved journeys can't be read. Start a new game." if _any_slot() else "No journey has been set down yet."
+		)
 	_add_button("New Game", _on_new_game)
 	_add_button("Load", _on_load)
 	_add_button("Settings", _on_settings)
@@ -214,12 +227,26 @@ func _any_slot() -> bool:
 	return false
 
 
+## Say something plain at the foot of the menu (a damaged save, an unsupported card).
+func show_notice(text: String) -> void:
+	if _notice == null:
+		_notice = Label.new()
+		_notice.name = "Notice"
+		_notice.theme = UITheme.get_theme()
+		_notice.position = Vector2(126, 770)
+		_notice.custom_minimum_size = Vector2(620, 0)
+		_notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_notice.add_theme_color_override("font_color", UITheme.SAFFRON_PALE)
+		ui.add_child(_notice)
+	_notice.text = text
+
+
 func _newest_slot() -> int:
 	var best := -1
 	var best_time := -1
 	for i in range(SaveMenu.SLOTS):
 		var s := GameState.slot_summary(i)
-		if s.is_empty():
+		if s.is_empty() or bool(s.get("damaged", false)):
 			continue
 		var m := int(s.get("modified", 0))
 		if m > best_time:
@@ -235,7 +262,11 @@ func _on_continue() -> void:
 		AudioDirector.play_ui("ui_close")
 		return
 	if not GameState.load_from_slot(slot):
+		# Safe fallback: stay on the title screen, say what happened, and leave New Game
+		# and Load one click away. Nothing half-loaded is carried into a session.
 		AudioDirector.play_ui("ui_close")
+		show_notice(GameState.last_load_message)
+		_continue_btn.disabled = _newest_slot() < 0
 		return
 	AudioDirector.play_ui("ui_click")
 	_start(true)

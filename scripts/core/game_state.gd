@@ -48,6 +48,10 @@ var flags: Dictionary = {}  # arbitrary world state
 var kills: int = 0
 var play_seconds: float = 0.0
 
+## Where slots live. Tests point this at a scratch folder so they never touch a real save.
+var save_dir: String = SAVE_DIR
+## Plain-language reason the last `load_from_slot` returned false ("" after a success).
+var last_load_message: String = ""
 var in_combat: bool = false
 var _combat_timer: float = 0.0
 
@@ -175,7 +179,7 @@ func get_flag(key: String, default_v: Variant = false) -> Variant:
 
 # --- save / load ----------------------------------------------------------
 func slot_path(slot: int) -> String:
-	return "%s/slot_%d.json" % [SAVE_DIR, slot]
+	return "%s/slot_%d.json" % [save_dir, slot]
 
 
 func to_dict() -> Dictionary:
@@ -203,7 +207,9 @@ func to_dict() -> Dictionary:
 
 
 func from_dict(d: Dictionary) -> bool:
-	if int(d.get("version", 0)) < 1:
+	# Nothing is assigned until the whole dictionary has been checked, so a bad file
+	# can never leave the game half-loaded.
+	if SaveCheck.problem_with(d) != "":
 		return false
 	health = float(d.get("health", MAX_HEALTH))
 	stamina = float(d.get("stamina", MAX_STAMINA))
@@ -228,49 +234,62 @@ func from_dict(d: Dictionary) -> bool:
 
 
 func save_to_slot(slot: int) -> bool:
-	var f := FileAccess.open(slot_path(slot), FileAccess.WRITE)
+	# Write beside the slot and rename over it, so a crash or a full disk mid-write
+	# leaves the previous save intact instead of a truncated file.
+	var path := slot_path(slot)
+	var tmp := path + ".tmp"
+	var f := FileAccess.open(tmp, FileAccess.WRITE)
 	if f == null:
 		push_error("[save] cannot write slot %d" % slot)
 		return false
 	f.store_string(JSON.stringify(to_dict(), "  "))
 	f.close()
+	if DirAccess.rename_absolute(ProjectSettings.globalize_path(tmp), ProjectSettings.globalize_path(path)) != OK:
+		push_error("[save] cannot replace slot %d" % slot)
+		return false
 	EventBus.game_saved.emit(slot)
 	return true
 
 
-func load_from_slot(slot: int) -> bool:
+## Read a slot without touching the game state. {"ok", "data", "message"}: the message
+## is plain language and is set whenever ok is false.
+func read_slot(slot: int) -> Dictionary:
 	var path := slot_path(slot)
 	if not FileAccess.file_exists(path):
-		return false
+		return {"ok": false, "data": {}, "message": SaveCheck.MSG_EMPTY}
 	var f := FileAccess.open(path, FileAccess.READ)
 	if f == null:
-		return false
-	var parsed: Variant = JSON.parse_string(f.get_as_text())
+		push_warning("[save] slot %d: open failed (error %d)" % [slot, FileAccess.get_open_error()])
+		return {"ok": false, "data": {}, "message": SaveCheck.MSG_UNREADABLE}
+	var text := f.get_as_text()
 	f.close()
-	if typeof(parsed) != TYPE_DICTIONARY:
-		push_error("[save] slot %d is corrupt" % slot)
+	return SaveCheck.parse_text(text, "slot %d" % slot)
+
+
+func load_from_slot(slot: int) -> bool:
+	var r := read_slot(slot)
+	last_load_message = String(r["message"])
+	if not bool(r["ok"]):
 		return false
-	if not from_dict(parsed):
+	if not from_dict(r["data"]):
+		last_load_message = SaveCheck.MSG_DAMAGED
 		return false
 	EventBus.game_loaded.emit(slot)
 	return true
 
 
 func slot_summary(slot: int) -> Dictionary:
-	var path := slot_path(slot)
-	if not FileAccess.file_exists(path):
+	if not FileAccess.file_exists(slot_path(slot)):
 		return {}
-	var f := FileAccess.open(path, FileAccess.READ)
-	if f == null:
-		return {}
-	var parsed: Variant = JSON.parse_string(f.get_as_text())
-	f.close()
-	if typeof(parsed) != TYPE_DICTIONARY:
-		return {}
-	var d: Dictionary = parsed
+	var r := read_slot(slot)
+	if not bool(r["ok"]):
+		# The file exists but cannot be used: say so, so the list can show it as damaged
+		# instead of pretending the slot is empty.
+		return {"damaged": true, "message": r["message"], "modified": FileAccess.get_modified_time(slot_path(slot))}
+	var d: Dictionary = r["data"]
 	var done := 0
 	for q in d.get("quests", {}).values():
-		if typeof(q) == TYPE_DICTIONARY and q.get("state", "") == "complete":
+		if q.get("state", "") == "complete":
 			done += 1
 	return {
 		"day": int(d.get("day", 1)),
@@ -278,7 +297,7 @@ func slot_summary(slot: int) -> Dictionary:
 		"quests_done": done,
 		"discovered": d.get("discovered", {}).size(),
 		"play_seconds": float(d.get("play_seconds", 0.0)),
-		"modified": FileAccess.get_modified_time(path),
+		"modified": FileAccess.get_modified_time(slot_path(slot)),
 	}
 
 
