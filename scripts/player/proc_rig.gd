@@ -2,12 +2,15 @@ class_name ProcRig
 extends ProcRigMotion
 ## A procedurally built, procedurally animated humanoid.
 ##
-## There are no imported character assets and no skinned meshes: the body is a
-## hierarchy of generated meshes, and every pose is computed in code. That buys full
-## control (any proportions, any species, no animation pipeline) at the cost of having
-## to write the locomotion by hand — which is done here with real two-bone IK on the
+## The body is a hierarchy of generated meshes, and every pose is computed in code. That
+## buys full control (any proportions, any species, no animation pipeline) at the cost of
+## having to write the locomotion by hand — which is done here with real two-bone IK on the
 ## legs so feet PLANT and do not slide, plus layered additive poses for aiming,
 ## attacking, flinching and dying.
+##
+## A config with a "model" key (Rama, villagers, guards) also loads a skinned glb character
+## (HumanoidModel), hides the generated meshes and plays retargeted animation clips on it;
+## the generated body keeps driving everything else (aim, IK targets, face metrics).
 ##
 ## The same class builds Rama, villagers, guards and rakshasas; only the config differs.
 ##

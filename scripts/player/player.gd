@@ -4,9 +4,9 @@ extends CharacterBody3D
 ## with coyote time and input buffering, a dodge roll with invulnerability frames,
 ## bow aiming with a draw charge, a melee combo, wading and swimming.
 ##
-## The visual is a ProcRig — no imported character, no animation clips. Everything the
-## body does is computed in code, which is why the state machine below also drives the
-## pose directly rather than triggering animation names.
+## The visual is a ProcRig carrying the skinned "king" glb character (HumanoidModel), whose
+## animation clips the rig picks from the state below; the state machine also drives the
+## procedural pose directly (aim, IK) rather than only triggering animation names.
 
 signal state_changed(state: String)
 
