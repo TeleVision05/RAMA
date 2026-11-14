@@ -64,6 +64,11 @@ static var debug_face: bool = false
 var map: WorldMap
 var sky: SkySystem
 var rig: ProcRig
+## Distance level of detail (NPCLod.Level); the director sets it from the player's distance.
+var lod: int = NPCLod.Level.NEAR
+var _lod_geoms: Array = []
+var _lod_acc: float = 0.0
+var _lod_tick: int = 0
 var prop: Node3D
 var bark: Label3D
 
@@ -784,6 +789,18 @@ func is_active() -> bool:
 	return _active
 
 
+## Called by the director a few times a second with the distance to the player.
+func update_lod(distance: float) -> void:
+	var want := NPCLod.level_for(distance, lod)
+	if want == lod:
+		return
+	if _lod_geoms.is_empty():
+		_lod_geoms = NPCLod.collect(rig)
+	lod = want
+	_lod_acc = 0.0
+	NPCLod.apply(rig, _lod_geoms, lod)
+
+
 ## Teleport onto the current schedule anchor, grounded.
 func snap_to_schedule() -> void:
 	if map == null:
@@ -1143,6 +1160,15 @@ static func _approach_angle(cur: float, target: float, max_step: float) -> float
 
 # --- presentation ----------------------------------------------------------
 func _drive_rig(delta: float) -> void:
+	if lod != NPCLod.Level.NEAR:
+		# Far villagers are a few pixels tall: skip the pose entirely when hidden, and
+		# update it every few ticks (with the time that passed) when merely distant.
+		_lod_acc += delta
+		_lod_tick += 1
+		if lod == NPCLod.Level.FAR or _lod_tick % NPCLod.MID_EVERY != 0:
+			return
+		delta = _lod_acc
+		_lod_acc = 0.0
 	var sp := Vector2(velocity.x, velocity.z).length()
 
 	# Head tracking: they notice you well before you are close enough to talk.

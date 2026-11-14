@@ -698,6 +698,8 @@ func _process(delta: float) -> void:
 		if n.is_active():
 			if d > STREAM_OUT:
 				n.set_active(false)
+			else:
+				n.update_lod(d)
 		elif d < STREAM_IN:
 			n.set_active(true)
 
