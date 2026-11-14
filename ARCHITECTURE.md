@@ -1,7 +1,9 @@
 # RAMA — Architecture
 
-Godot 4.7.2, Forward+ (Metal). GDScript. All assets are procedurally synthesised
-(Python for textures/audio, GDScript for meshes) so the project is license-clean.
+Godot 4.7.2, Forward+ (Metal). GDScript. Textures and audio are synthesised in Python
+and the world, creature and weapon meshes are generated in GDScript. The exceptions are
+the humanoid character meshes and animation clips in `assets/models/characters/`, which
+are CC0 third-party files credited in `assets/CREDITS.md`.
 
 ## The one rule
 
@@ -26,8 +28,9 @@ scripts/
   audio/    ...                   audio director
 shaders/    terrain, sky, water, foliage, grass ...
 assets/     textures/ audio/      generated PNG + WAV
+            models/characters/    CC0 third-party humanoid .glb (see CREDITS.md)
 tools/      gd.sh                 dev loop wrapper; gen_*.py asset synthesisers
-tests/      headless test scripts and render harnesses
+tests/      the gate suites (see tools/gate_suites.py); tests/probes/ holds one-off probes and shot scripts
 ```
 
 ## WorldMap API (scripts/world/world_map.gd)
@@ -89,7 +92,7 @@ as the `alt` argument to `Mats.pbr`.
 tools/gd.sh import                 refresh the class cache
 tools/gd.sh test tests/foo.gd      headless test
 tools/gd.sh play                   run the game
-~/tools/Godot.app/Contents/MacOS/Godot --path . --script tests/flythrough.gd
+~/tools/Godot.app/Contents/MacOS/Godot --path . --script tests/probes/flythrough.gd
                                    render viewpoints to build/screenshots/
 ```
 Every render harness writes PNGs under `build/screenshots/`; read them to judge the
@@ -234,13 +237,13 @@ else is on the machine — and comparing across them once "showed" that a HUD wh
 not drawing at all cost 4 ms more than one that was. Alternate the two conditions
 inside one process and take the **median of the paired differences**; a mean is still
 dragged around by a single streaming hitch, which is how the same harness reported the
-same HUD at +1.5 ms and then at -1.8 ms. `tests/ui_qa_perf.gd` is the worked example.
+same HUD at +1.5 ms and then at -1.8 ms. `tests/probes/ui_qa_perf.gd` is the worked example.
 | `tools/gd.sh scene res://scenes/acceptance_test.tscn` | the full checklist, menu to gameplay |
 | `tools/gd.sh scene res://scenes/save_test.tscn` | save/load round-trips the live world |
 | `tools/gd.sh scene res://scenes/leak_test.tscn` | streaming frees what it replaces |
 | `tools/gd.sh scene res://scenes/perf_test.tscn` | honest frame times (vsync off, warmed up) |
-| `tools/run_tests.sh` | runs the whole suite |
-| `~/tools/.../Godot --path . --script tests/flythrough.gd` | renders 10 viewpoints to `build/screenshots/` |
+| `tools/run_tests.sh` | runs the whole gate quietly (see "The test gate" below) |
+| `~/tools/.../Godot --path . --script tests/probes/flythrough.gd` | renders 10 viewpoints to `build/screenshots/` |
 
 **Writing a test that boots the game:** `HUD.launch()` replaces and frees
 `tree.current_scene`. A test node loaded as the current scene therefore frees ITSELF
@@ -273,7 +276,7 @@ representation, and it must not pop.
 
 Budgets, so this stays playable: near-field foliage may add ~350k triangles; a single
 near tree ~6k; a grass tuft ~60. Use LODs and instancing aggressively, and measure with
-`tests/draw_audit.gd` and `tests/perf_test.gd`.
+`tests/probes/draw_audit.gd` and `tests/perf_test.gd`.
 
 ## Git and the commit gate
 
@@ -281,13 +284,35 @@ The repo enforces linting before commits land, per house policy. `git config
 core.hooksPath` points at `.githooks/`, which is committed, so the gate travels with
 the repo rather than living in one machine's `.git/`.
 
-`.githooks/pre-commit` runs two checks on staged `.gd` files:
+`.githooks/pre-commit` runs two checks when a `.gd`, `.tscn`, `.tres`, `.gdshader` or
+`project.godot` is staged:
 
-1. **`gdlint`** against `.gdlintrc` — style and naming.
-2. **Godot's own parser** (`--check-only`) — this is the important one. A GDScript
-   parse error does not stop the game booting; the script simply fails to load and the
-   node it backs silently never appears. That is how the wildlife system went missing
-   for an hour with no error anyone noticed.
+1. **`gdlint`** against `.gdlintrc` on the staged `.gd` files — style and naming.
+2. **The fast test suites** (`tools/run_tests.sh --fast`: parse, input, assets, solids, meshkit, npclod, audio;
+   about 10 s, headless). `parse` loads every script — this is the important one. A
+   GDScript parse error does not stop the game booting; the script simply fails to load
+   and the node it backs silently never appears. That is how the wildlife system went
+   missing for an hour with no error anyone noticed.
+
+### The test gate
+
+`tools/run_tests.sh` (runner: `tools/run_tests.py`, suite table: `tools/gate_suites.py`)
+can run while someone is using the computer. Measured 2026-11-13:
+
+| suite kind | how it launches | what you see |
+|---|---|---|
+| logic (parse, input, assets, worldmap, terrain, playtest, audio, saveload, leaks) | `--headless --audio-driver Dummy` | nothing |
+| needs pixels or GPU timing (quests, perf, accept, ui) | `--embedded -d --ignore-error-breaks`: Godot's embedded display server renders with Metal into an off-screen layer; macOS lists the process as `BackgroundOnly` | nothing; the frontmost app never changes |
+| a plain windowed launch, even through `open -g -j` | not used | Godot calls `activateIgnoringOtherApps` when it shows its main window and becomes the frontmost app within 0.4 s |
+
+Every launch passes `-- --quiet-test`; `scripts/core/quiet_mode.gd` is the one place that
+decides whether the game may capture the mouse, come to the front or make a sound. The
+runner kills a render suite at once if its process ever becomes the frontmost app
+(status `FOCUS`), kills any suite that outlives its timeout (`TIMEOUT`), stamps every
+perf figure with the 1-minute load average, and writes full logs, `failures.txt` and
+`summary.json` to `build/test-logs/<run>/`. The headless renderer never emits
+`RenderingServer.frame_post_draw`, so a suite that awaits it must be a render suite or
+it hangs until its timeout.
 
 Never commit with `--no-verify`. If a rule is wrong for this codebase, change
 `.gdlintrc` and say why in its header — several rules there are already widened with

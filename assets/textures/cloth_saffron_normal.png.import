@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dpd812rtb6u76"
 path.s3tc="res://.godot/imported/cloth_saffron_normal.png-e169f42d4b14ff1c9732c934b5d2d18c.s3tc.ctex"
+path.etc2="res://.godot/imported/cloth_saffron_normal.png-e169f42d4b14ff1c9732c934b5d2d18c.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/cloth_saffron_normal.png"
-dest_files=["res://.godot/imported/cloth_saffron_normal.png-e169f42d4b14ff1c9732c934b5d2d18c.s3tc.ctex"]
+dest_files=["res://.godot/imported/cloth_saffron_normal.png-e169f42d4b14ff1c9732c934b5d2d18c.s3tc.ctex", "res://.godot/imported/cloth_saffron_normal.png-e169f42d4b14ff1c9732c934b5d2d18c.etc2.ctex"]
 
 [params]
 

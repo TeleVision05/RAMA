@@ -1,12 +1,16 @@
 #!/bin/bash
 # RAMA pre-commit gate.
 #
-# Two checks on staged GDScript, both cheap enough to run every commit:
-#   1. gdlint against .gdlintrc — style and naming.
-#   2. Godot's own parser — the important half. A GDScript parse error does NOT stop
-#      the game booting; the script simply fails to load and the node it backs silently
-#      never appears. That is how the wildlife system went missing for an hour, and how
-#      gdformat's corruption of one file in 130 was caught.
+# Two checks, both cheap enough to run every commit:
+#   1. gdlint against .gdlintrc on staged GDScript — style and naming.
+#   2. The fast suites of the test gate (tools/run_tests.sh --fast): every script
+#      parses and loads, every input binding works, every asset and shader loads,
+#      the audio beds play. A GDScript parse error does NOT stop the game booting;
+#      the script simply fails to load and the node it backs silently never appears.
+#      That is how the wildlife system went missing for an hour.
+#
+# The gate runs quietly (headless: no window, no focus, no sound), so committing
+# never takes over the screen. Run the full gate with tools/run_tests.sh.
 #
 # Do NOT bypass with --no-verify. If a rule is wrong for this repo, change .gdlintrc
 # and record why in its header.
@@ -15,54 +19,33 @@
 set -u
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT" || exit 1
-GODOT="$HOME/tools/Godot.app/Contents/MacOS/Godot"
 
-STAGED="$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.gd$' || true)"
-if [ -z "$STAGED" ]; then
+STAGED_GD="$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.gd$' || true)"
+STAGED_GODOT="$(git diff --cached --name-only --diff-filter=ACMD | grep -E '\.(gd|tscn|tres|gdshader)$|^project\.godot$' || true)"
+if [ -z "$STAGED_GODOT" ]; then
   exit 0
 fi
 
-COUNT="$(printf '%s\n' "$STAGED" | wc -l | tr -d ' ')"
 fail=0
 
-if command -v gdlint >/dev/null 2>&1; then
-  echo "pre-commit: gdlint on $COUNT file(s)"
-  # shellcheck disable=SC2086
-  if ! printf '%s\n' "$STAGED" | xargs gdlint; then
-    fail=1
-  fi
-else
-  echo "pre-commit: gdlint not installed (pip3 install 'gdtoolkit==4.*') — skipping" >&2
-fi
-
-if [ -x "$GODOT" ]; then
-  # One Godot process per file costs ~1.5 s each. Past a handful of files it is far
-  # cheaper to run the whole-project parse scene once, which loads every script.
-  if [ "$COUNT" -gt 8 ]; then
-    echo "pre-commit: Godot parse check (whole project, $COUNT files staged)"
-    "$GODOT" --headless --path . --import >/dev/null 2>&1
-    out="$("$GODOT" --path . res://scenes/parse_test.tscn 2>&1)"
-    if ! printf '%s' "$out" | grep -q "^RESULT: PASS"; then
-      echo "  PARSE FAILURES:"
-      printf '%s\n' "$out" | grep -E "^  !|Parse Error" | head -10
+if [ -n "$STAGED_GD" ]; then
+  COUNT="$(printf '%s\n' "$STAGED_GD" | wc -l | tr -d ' ')"
+  if command -v gdlint >/dev/null 2>&1; then
+    echo "pre-commit: gdlint on $COUNT file(s)"
+    # shellcheck disable=SC2086
+    if ! printf '%s\n' "$STAGED_GD" | xargs gdlint; then
       fail=1
     fi
   else
-    echo "pre-commit: Godot parse check on $COUNT file(s)"
-    while IFS= read -r f; do
-      [ -z "$f" ] && continue
-      out="$("$GODOT" --headless --path . --check-only --script "$f" 2>&1)"
-      if printf '%s' "$out" | grep -q "Parse Error"; then
-        echo "  PARSE ERROR in $f"
-        printf '%s\n' "$out" | grep -A1 "Parse Error" | head -4
-        fail=1
-      fi
-    done <<EOF
-$STAGED
-EOF
+    echo "pre-commit: gdlint is not installed, so GDScript style cannot be checked and the commit is stopped." >&2
+    echo "  Install it with:  pip3 install 'gdtoolkit==4.*'   (then check:  gdlint --version)" >&2
+    fail=1
   fi
-else
-  echo "pre-commit: Godot not found at $GODOT — skipping parse check" >&2
+fi
+
+echo "pre-commit: fast test suites (tools/run_tests.sh --fast)"
+if ! tools/run_tests.sh --fast; then
+  fail=1
 fi
 
 if [ "$fail" -ne 0 ]; then

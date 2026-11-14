@@ -30,6 +30,15 @@ const BINDINGS := {
 	"dev_screenshot": {"keys": [KEY_F7]},
 	"dev_time": {"keys": [KEY_T]},
 	"ui_confirm_alt": {"keys": [KEY_ENTER, KEY_KP_ENTER]},
+	"parry": {"keys": [KEY_F], "pad": [JOY_BUTTON_RIGHT_SHOULDER]},
+	"crouch": {"keys": [KEY_V, KEY_Z]},
+	"quick_heal": {"keys": [KEY_H]},
+	"cycle_astra": {"keys": [KEY_R]},
+	"astra_1": {"keys": [KEY_1]},
+	"astra_2": {"keys": [KEY_2]},
+	"astra_3": {"keys": [KEY_3]},
+	"astra_4": {"keys": [KEY_4]},
+	"astra_5": {"keys": [KEY_5]},
 }
 
 
@@ -53,6 +62,7 @@ static func install() -> void:
 			var e := InputEventKey.new()
 			# Physical keycode: position on the keyboard, so WASD stays WASD on AZERTY.
 			e.physical_keycode = kc
+			e.keycode = kc
 			InputMap.action_add_event(name, e)
 
 		for mb in spec.get("mouse", []):

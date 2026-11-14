@@ -56,7 +56,7 @@ func _ready() -> void:
 	cam.current = true
 
 	EventBus.hit_feedback.connect(_on_hit_feedback)
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	QuietMode.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 
 func setup(t: Node3D, w: WorldRoot) -> void:
@@ -74,7 +74,7 @@ func set_enabled(on: bool) -> void:
 func _unhandled_input(e: InputEvent) -> void:
 	if not _enabled:
 		return
-	if e is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+	if e is InputEventMouseMotion and QuietMode.is_mouse_look():
 		var mm := e as InputEventMouseMotion
 		yaw -= mm.relative.x * mouse_sensitivity
 		pitch += mm.relative.y * mouse_sensitivity * (1.0 if invert_y else -1.0)

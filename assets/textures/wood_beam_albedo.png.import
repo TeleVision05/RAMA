@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cmh45f55u7r82"
 path.s3tc="res://.godot/imported/wood_beam_albedo.png-f4f81fa04479aab2ebab3cb5b38bee6d.s3tc.ctex"
+path.etc2="res://.godot/imported/wood_beam_albedo.png-f4f81fa04479aab2ebab3cb5b38bee6d.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/wood_beam_albedo.png"
-dest_files=["res://.godot/imported/wood_beam_albedo.png-f4f81fa04479aab2ebab3cb5b38bee6d.s3tc.ctex"]
+dest_files=["res://.godot/imported/wood_beam_albedo.png-f4f81fa04479aab2ebab3cb5b38bee6d.s3tc.ctex", "res://.godot/imported/wood_beam_albedo.png-f4f81fa04479aab2ebab3cb5b38bee6d.etc2.ctex"]
 
 [params]
 

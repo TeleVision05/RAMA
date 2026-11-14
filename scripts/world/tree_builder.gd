@@ -1382,7 +1382,7 @@ static func _build_far(bark: Surf, leaf: Surf, rng: RandomNumberGenerator, speci
 		# These numbers were chosen against a canopy of OPAQUE cards. A canopy of real
 		# leaves is more open, so the same billboard covered up to 2.9x the silhouette
 		# of the MID mesh it takes over from and the tree would have visibly fattened at
-		# 76 m. The factors are not a guess: tests/veg3d_lod.gd renders all three LODs
+		# 76 m. The factors are not a guess: tests/probes/veg3d_lod.gd renders all three LODs
 		# of a species at one framing and reports the covered fraction, and these are
 		# what bring every MID -> FAR ratio inside 0.65 .. 1.45. The palm goes UP —
 		# its MID crown of nine real fronds is BROADER than the billboard was.

@@ -343,7 +343,7 @@ func _shore(p: Vector2, dir: Vector2, wy: float, hw: float) -> float:
 	# The budget has to cover the widest submerged section, not the nominal channel. At
 	# +9 m the march ran out in the south-west estuary, where the ground stays 4 m under
 	# the water line for ~25 m: the ribbon stopped short and its rim hung over 4.2 m of
-	# open channel. Measured with tests/water_ground_test.gd, which counts exactly that.
+	# open channel. Measured with tests/probes/water_ground_test.gd, which counts exactly that.
 	# In a gorge the march still stops at the first rise, so the extra budget is only
 	# spent where it is needed.
 	var limit: float = hw + 26.0
@@ -439,7 +439,7 @@ func _score_flow() -> void:
 ## copied per transparent draw, so the nearer chunk refracted a frame that already had
 ## the farther chunk's water composited into it while the farther chunk refracted one
 ## that did not. Two different images, meeting along a chunk boundary. Proved by
-## tests/probe_water_seam.gd - with `use_refraction` off the seam disappears and the
+## tests/probes/probe_water_seam.gd - with `use_refraction` off the seam disappears and the
 ## surface is continuous; with only one chunk drawn, the seam IS that chunk's own edge.
 ##
 ## Merging costs nothing here: 5.6 k triangles and 3.3 k vertices for 700 m of river, and
@@ -737,7 +737,7 @@ func _add_pool(nm: String, around: Vector2, search: float, rise: float, max_r: f
 ## Settlement. Note the ordering: Game builds the water BEFORE the settlement, so in the
 ## real game this finds nothing and the constant is what is used - the lookup earns its
 ## keep only if that order ever changes. The constant is therefore the thing that has to
-## be right, and it is checked by tests/water_ground_test.gd against the built well.
+## be right, and it is checked by tests/probes/water_ground_test.gd against the built well.
 func _find_well() -> Vector2:
 	var parent := get_parent()
 	if parent == null:

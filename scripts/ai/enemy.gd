@@ -49,11 +49,15 @@ var world: WorldRoot
 var sky: SkySystem
 var director: Node = null
 var group_id: String = ""
+var boss_title: String = ""
+var ten_heads: bool = false
 
 # --- vitals ----------------------------------------------------------------
 var health: float = 90.0
 var max_health: float = 90.0
 var _alive: bool = true
+var _burn_t: float = 0.0
+var _slow_t: float = 0.0
 
 # --- brain -----------------------------------------------------------------
 var perc := Perception.new()
@@ -104,7 +108,7 @@ var _grounded: bool = true
 ## time the body moves. On a frame slow enough to run three physics ticks that is
 ## three times the work for one drawn frame.
 ##
-## Measured 2026-08-28 with `tests/enemy_prof.gd` (25 enemies fighting, median of
+## Measured 2026-08-28 with `tests/probes/enemy_prof.gd` (25 enemies fighting, median of
 ## paired in-process differences): `_physics_process` cost 11.60 ms/frame while the
 ## GDScript inside it accounted for only ~5.5 ms. The rest was this.
 ##
@@ -311,6 +315,14 @@ func _physics_process(delta: float) -> void:
 	if not _alive:
 		_tick_dead(delta)
 		return
+	if _burn_t > 0.0:
+		_burn_t = maxf(0.0, _burn_t - delta)
+		health -= 6.0 * delta
+		if health <= 0.0:
+			_die()
+			return
+	if _slow_t > 0.0:
+		_slow_t = maxf(0.0, _slow_t - delta)
 	if _focus_d > AI_DIST:
 		_tick_dormant()
 		return
@@ -336,7 +348,7 @@ func _physics_process(delta: float) -> void:
 	# away does not need its position integrated sixty times a second — the pose it is
 	# drawn with is only recomputed half that often anyway.
 	#
-	# Measured with `tests/enemy_prof.gd`, 25 enemies fighting, median of paired
+	# Measured with `tests/probes/enemy_prof.gd`, 25 enemies fighting, median of paired
 	# in-process differences (ARCHITECTURE.md's rule for frame cost): moving the back
 	# ranks to 30 Hz is the single largest saving in this loop, because `_motion` was
 	# the only thing in the file still running at the full tick rate for everybody.
@@ -960,7 +972,7 @@ const GROUND_GLUE := 0.10  # tolerance before it counts as airborne
 
 
 ## `global_position` is read ONCE into a local, integrated entirely in that local, and
-## written back ONCE. Measured 2026-08-28 with `tests/enemy_prof.gd`: the previous
+## written back ONCE. Measured 2026-08-28 with `tests/probes/enemy_prof.gd`: the previous
 ## version touched `global_position.x`, `.z` and `.y` as three separate property
 ## writes, and every one of them is a full `set_global_transform` that dirties the
 ## physics server AND every one of the ~30 mesh instances hanging off the rig. Three
@@ -982,7 +994,8 @@ func _motion(dt: float) -> void:
 	elif _grounded:
 		var h := Vector3(velocity.x, 0.0, velocity.z)
 		var accel: float = float(def.accel) * (0.55 if state == St.HURT else 1.0)
-		h = h.move_toward(_desired, accel * dt)
+		var target_vel := _desired * (0.5 if _slow_t > 0.0 else 1.0)
+		h = h.move_toward(target_vel, accel * dt)
 		velocity.x = h.x
 		velocity.z = h.z
 	else:
@@ -1166,7 +1179,7 @@ func _steer(dt: float, want: Vector3) -> Vector3:
 		repel.append(dv.normalized() * (1.0 - dl / 2.4))
 
 	# Score the fan against the terrain first, WITHOUT touching the physics server.
-	# Three economies, all measured with `tests/enemy_prof.gd` on 2026-08-28 (25
+	# Three economies, all measured with `tests/probes/enemy_prof.gd` on 2026-08-28 (25
 	# enemies fighting, median of paired in-process differences):
 	#
 	#  * `slope_at` is four `height_at` calls behind a `normalized()`, and this loop
@@ -1431,7 +1444,19 @@ func health_fraction() -> float:
 	return clampf(health / maxf(max_health, 0.001), 0.0, 1.0)
 
 
+func apply_status(status_kind: String, duration: float) -> void:
+	if not _alive:
+		return
+	match status_kind:
+		"burn":
+			_burn_t = maxf(_burn_t, duration)
+		"slow":
+			_slow_t = maxf(_slow_t, duration)
+
+
 func display_name() -> String:
+	if boss_title != "":
+		return boss_title
 	return EnemyTypes.display_name(kind)
 
 

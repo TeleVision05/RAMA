@@ -4,13 +4,35 @@ extends Node
 
 const MAX_HEALTH := 100.0
 const MAX_STAMINA := 100.0
+const MAX_PRANA := 100.0
 const SAVE_DIR := "user://saves"
 const SAVE_VERSION := 3
 
+const ASTRA_NAMES := ["Shara", "Agneyastra", "Varunastra", "Vayavyastra", "Brahmastra"]
+const ASTRA_SUBTITLES := [
+	"Sacred Shaft of Akshaya Tunira",
+	"Fire of Agni — Explosive Burn",
+	"Torrent of Varuna — Healing Mist & Slow",
+	"Gale of Vayu — Piercing Wind",
+	"Supreme Solar Weapon of Brahma",
+]
+const ASTRA_MANTRAS := [
+	"Om Ramaya Namah",
+	"Om Agnaye Swaha",
+	"Om Varunaya Namah",
+	"Om Vayave Namah",
+	"Om Aditya Hridayam Punyam",
+]
+const ASTRA_COSTS := [0.0, 18.0, 18.0, 20.0, 40.0]
+
 var health: float = MAX_HEALTH
 var stamina: float = MAX_STAMINA
+var prana: float = MAX_PRANA
 var max_health: float = MAX_HEALTH
 var max_stamina: float = MAX_STAMINA
+var max_prana: float = MAX_PRANA
+var active_astra: int = 0
+var unlocked_astras: Array = [0, 1, 2, 3, 4]
 var arrows: int = 24
 var max_arrows: int = 40
 
@@ -26,6 +48,10 @@ var flags: Dictionary = {}  # arbitrary world state
 var kills: int = 0
 var play_seconds: float = 0.0
 
+## Where slots live. Tests point this at a scratch folder so they never touch a real save.
+var save_dir: String = SAVE_DIR
+## Plain-language reason the last `load_from_slot` returned false ("" after a success).
+var last_load_message: String = ""
 var in_combat: bool = false
 var _combat_timer: float = 0.0
 
@@ -79,6 +105,61 @@ func has_item(id: String, count: int = 1) -> bool:
 	return item_count(id) >= count
 
 
+func use_item(id: String) -> bool:
+	if not has_item(id):
+		return false
+	match id:
+		"healing_salve":
+			health = minf(max_health, health + 45.0)
+			prana = minf(max_prana, prana + 15.0)
+			remove_item(id, 1)
+			AudioDirector.play_2d("heal", -4.0)
+			EventBus.player_healed.emit(45.0)
+			EventBus.notify.emit("Healing Salve used", "Restored 45 Health and 15 Prana.", "info")
+		"healing_herb", "herb":
+			health = minf(max_health, health + 28.0)
+			remove_item(id, 1)
+			AudioDirector.play_2d("heal", -4.0)
+			EventBus.player_healed.emit(28.0)
+			EventBus.notify.emit("Healing Herb used", "Restored 28 Health.", "info")
+		"mango", "rice", "honey", "ghee", "water_skin":
+			health = minf(max_health, health + 18.0)
+			stamina = minf(max_stamina, stamina + 40.0)
+			prana = minf(max_prana, prana + 15.0)
+			remove_item(id, 1)
+			AudioDirector.play_2d("heal", -4.0)
+			EventBus.player_healed.emit(18.0)
+			EventBus.notify.emit("Sacred Provision used", "Restored vitality and stamina.", "info")
+		"shabari_berries", "soma_tulsi", "lotus", "blue_lotus":
+			health = minf(max_health, health + 40.0)
+			prana = minf(max_prana, prana + 60.0)
+			stamina = minf(max_stamina, stamina + 40.0)
+			remove_item(id, 1)
+			AudioDirector.play_2d("heal", -3.0)
+			EventBus.player_healed.emit(40.0)
+			EventBus.notify.emit("Sacred Offering consumed", "Shabari's devotion fills you with Prana.", "quest")
+		"arrow_bundle", "arrows":
+			arrows = mini(max_arrows, arrows + 12)
+			remove_item(id, 1)
+			AudioDirector.play_2d("arrow_pickup", -4.0)
+			EventBus.notify.emit("Arrows replenished", "+12 Arrows added to your quiver.", "info")
+		"amulet", "chudamani", "grove_seed", "rama_paduka":
+			if bool(get_flag("blessed_" + id, false)):
+				return false
+			set_flag("blessed_" + id, true)
+			max_health += 15.0
+			max_prana += 15.0
+			health = max_health
+			prana = max_prana
+			AudioDirector.play_2d("objective_complete", -3.0)
+			EventBus.player_healed.emit(15.0)
+			EventBus.notify.emit("Sacred Relic Attuned", "Permanent +15 Max Health & +15 Max Prana!", "quest")
+		_:
+			return false
+	EventBus.player_stat_changed.emit(health, max_health, stamina, max_stamina)
+	return true
+
+
 # --- discovery ------------------------------------------------------------
 func discover(id: String, display_name: String) -> bool:
 	if discovered.has(id):
@@ -98,7 +179,7 @@ func get_flag(key: String, default_v: Variant = false) -> Variant:
 
 # --- save / load ----------------------------------------------------------
 func slot_path(slot: int) -> String:
-	return "%s/slot_%d.json" % [SAVE_DIR, slot]
+	return "%s/slot_%d.json" % [save_dir, slot]
 
 
 func to_dict() -> Dictionary:
@@ -106,8 +187,11 @@ func to_dict() -> Dictionary:
 		"version": SAVE_VERSION,
 		"health": health,
 		"stamina": stamina,
+		"prana": prana,
 		"max_health": max_health,
 		"max_stamina": max_stamina,
+		"max_prana": max_prana,
+		"active_astra": active_astra,
 		"arrows": arrows,
 		"pos": [player_position.x, player_position.y, player_position.z],
 		"yaw": player_yaw,
@@ -123,12 +207,17 @@ func to_dict() -> Dictionary:
 
 
 func from_dict(d: Dictionary) -> bool:
-	if int(d.get("version", 0)) < 1:
+	# Nothing is assigned until the whole dictionary has been checked, so a bad file
+	# can never leave the game half-loaded.
+	if SaveCheck.problem_with(d) != "":
 		return false
 	health = float(d.get("health", MAX_HEALTH))
 	stamina = float(d.get("stamina", MAX_STAMINA))
+	prana = float(d.get("prana", MAX_PRANA))
 	max_health = float(d.get("max_health", MAX_HEALTH))
 	max_stamina = float(d.get("max_stamina", MAX_STAMINA))
+	max_prana = float(d.get("max_prana", MAX_PRANA))
+	active_astra = int(d.get("active_astra", 0))
 	arrows = int(d.get("arrows", 24))
 	var p: Array = d.get("pos", [0, 0, 0])
 	player_position = Vector3(p[0], p[1], p[2])
@@ -145,49 +234,62 @@ func from_dict(d: Dictionary) -> bool:
 
 
 func save_to_slot(slot: int) -> bool:
-	var f := FileAccess.open(slot_path(slot), FileAccess.WRITE)
+	# Write beside the slot and rename over it, so a crash or a full disk mid-write
+	# leaves the previous save intact instead of a truncated file.
+	var path := slot_path(slot)
+	var tmp := path + ".tmp"
+	var f := FileAccess.open(tmp, FileAccess.WRITE)
 	if f == null:
 		push_error("[save] cannot write slot %d" % slot)
 		return false
 	f.store_string(JSON.stringify(to_dict(), "  "))
 	f.close()
+	if DirAccess.rename_absolute(ProjectSettings.globalize_path(tmp), ProjectSettings.globalize_path(path)) != OK:
+		push_error("[save] cannot replace slot %d" % slot)
+		return false
 	EventBus.game_saved.emit(slot)
 	return true
 
 
-func load_from_slot(slot: int) -> bool:
+## Read a slot without touching the game state. {"ok", "data", "message"}: the message
+## is plain language and is set whenever ok is false.
+func read_slot(slot: int) -> Dictionary:
 	var path := slot_path(slot)
 	if not FileAccess.file_exists(path):
-		return false
+		return {"ok": false, "data": {}, "message": SaveCheck.MSG_EMPTY}
 	var f := FileAccess.open(path, FileAccess.READ)
 	if f == null:
-		return false
-	var parsed: Variant = JSON.parse_string(f.get_as_text())
+		push_warning("[save] slot %d: open failed (error %d)" % [slot, FileAccess.get_open_error()])
+		return {"ok": false, "data": {}, "message": SaveCheck.MSG_UNREADABLE}
+	var text := f.get_as_text()
 	f.close()
-	if typeof(parsed) != TYPE_DICTIONARY:
-		push_error("[save] slot %d is corrupt" % slot)
+	return SaveCheck.parse_text(text, "slot %d" % slot)
+
+
+func load_from_slot(slot: int) -> bool:
+	var r := read_slot(slot)
+	last_load_message = String(r["message"])
+	if not bool(r["ok"]):
 		return false
-	if not from_dict(parsed):
+	if not from_dict(r["data"]):
+		last_load_message = SaveCheck.MSG_DAMAGED
 		return false
 	EventBus.game_loaded.emit(slot)
 	return true
 
 
 func slot_summary(slot: int) -> Dictionary:
-	var path := slot_path(slot)
-	if not FileAccess.file_exists(path):
+	if not FileAccess.file_exists(slot_path(slot)):
 		return {}
-	var f := FileAccess.open(path, FileAccess.READ)
-	if f == null:
-		return {}
-	var parsed: Variant = JSON.parse_string(f.get_as_text())
-	f.close()
-	if typeof(parsed) != TYPE_DICTIONARY:
-		return {}
-	var d: Dictionary = parsed
+	var r := read_slot(slot)
+	if not bool(r["ok"]):
+		# The file exists but cannot be used: say so, so the list can show it as damaged
+		# instead of pretending the slot is empty.
+		return {"damaged": true, "message": r["message"], "modified": FileAccess.get_modified_time(slot_path(slot))}
+	var d: Dictionary = r["data"]
 	var done := 0
 	for q in d.get("quests", {}).values():
-		if typeof(q) == TYPE_DICTIONARY and q.get("state", "") == "complete":
+		if q.get("state", "") == "complete":
 			done += 1
 	return {
 		"day": int(d.get("day", 1)),
@@ -195,7 +297,7 @@ func slot_summary(slot: int) -> Dictionary:
 		"quests_done": done,
 		"discovered": d.get("discovered", {}).size(),
 		"play_seconds": float(d.get("play_seconds", 0.0)),
-		"modified": FileAccess.get_modified_time(path),
+		"modified": FileAccess.get_modified_time(slot_path(slot)),
 	}
 
 
@@ -206,8 +308,11 @@ func has_slot(slot: int) -> bool:
 func reset() -> void:
 	health = MAX_HEALTH
 	stamina = MAX_STAMINA
+	prana = MAX_PRANA
 	max_health = MAX_HEALTH
 	max_stamina = MAX_STAMINA
+	max_prana = MAX_PRANA
+	active_astra = 0
 	arrows = 24
 	inventory = {}
 	quests = {}

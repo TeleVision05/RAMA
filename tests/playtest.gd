@@ -12,15 +12,18 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	QuietMode.bring_to_front()
+	for i in range(10):
+		await get_tree().process_frame
 	game = Game.new()
 	add_child(game)
-	await get_tree().process_frame
-	await get_tree().process_frame
+	for i in range(10):
+		await get_tree().process_frame
 	var p := game.player
 	print("spawn: %s  ground=%.2f" % [p.global_position, game.world.map.height_at(p.global_position.x, p.global_position.z)])
 
 	# --- settle -----------------------------------------------------------
-	await steps(60)
+	await steps(90)
 	var settled := p.global_position
 	var g := game.world.map.height_at(settled.x, settled.z)
 	print("after settle: y=%.3f ground=%.3f delta=%.3f on_floor=%s" % [settled.y, g, settled.y - g, p.is_on_floor()])
@@ -139,6 +142,15 @@ func _run() -> void:
 	if worst > 1.2:
 		fails.append("player sank %.2f m below the terrain during a long run" % worst)
 
+	# A paused tree still emits physics_frame, so this suite keeps stepping while the
+	# game stands still and every later check fails with a misleading reason. That is
+	# exactly what the 2026-11-13 audit saw in a windowed run (a pause key reached the
+	# window): dodge 0 m, draw 0.00, no arrow, no swap, while take_damage still worked.
+	if get_tree().paused:
+		fails.append(
+			"the game was paused during the run, so the checks after that tested nothing"
+			+ " (did a pause, inventory or journal key reach the window?)"
+		)
 	print("\nfinal pos %s  fps-equivalent frames simulated" % p.global_position)
 	print("RESULT: " + ("PASS" if fails.is_empty() else "FAIL"))
 	for f in fails:

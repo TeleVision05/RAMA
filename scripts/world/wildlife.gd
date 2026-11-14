@@ -10,7 +10,7 @@ extends Node3D
 ##   * Animals past `VISIBLE_DIST` are hidden and skipped entirely.
 ##   * Animals past `NEAR_ANIM` still think, but only on the 2.5 Hz slow tick, and
 ##     their limbs do not move.
-##   * Measured 2026-08-28 by `tests/vfx_wildlife_headless.gd`: 156 animals,
+##   * Measured 2026-08-28 by `tests/probes/vfx_wildlife_headless.gd`: 156 animals,
 ##     10,336 triangles, 153 draw calls with EVERY group awake at once. In play only
 ##     a herd or two and a flock or two are inside VISIBLE_DIST, so the real figure is
 ##     a third of that. `stats()` re-measures it; do not trust this line, re-run it.

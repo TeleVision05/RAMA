@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://biorirylexn4q"
 path.s3tc="res://.godot/imported/forest_floor_normal.png-337dfe4c0eceaecd08deb928cd485b0f.s3tc.ctex"
+path.etc2="res://.godot/imported/forest_floor_normal.png-337dfe4c0eceaecd08deb928cd485b0f.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/forest_floor_normal.png"
-dest_files=["res://.godot/imported/forest_floor_normal.png-337dfe4c0eceaecd08deb928cd485b0f.s3tc.ctex"]
+dest_files=["res://.godot/imported/forest_floor_normal.png-337dfe4c0eceaecd08deb928cd485b0f.s3tc.ctex", "res://.godot/imported/forest_floor_normal.png-337dfe4c0eceaecd08deb928cd485b0f.etc2.ctex"]
 
 [params]
 

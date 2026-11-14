@@ -160,6 +160,7 @@ func _run() -> void:
 	await _section_persistence(qs)
 	await _section_failure(qs)
 	await _section_dialogue(qs, p)
+	await _section_kandas(qs, p)
 
 	print("\nsignal order (%d): %s" % [log_order.size(), ", ".join(log_order)])
 	print("screenshots written: %d" % shots)
@@ -169,7 +170,7 @@ func _run() -> void:
 # ---------------------------------------------------------------------------
 func _section_model(qs: QuestSystem) -> void:
 	print("\n-- the model --")
-	ok("three quests are authored", QuestData.quest_ids().size() == 3, str(QuestData.quest_ids()))
+	ok("eight quests are authored (3 village + 5 Kandas)", QuestData.quest_ids().size() == 8, str(QuestData.quest_ids()))
 	var kinds: Dictionary = {}
 	for qid in QuestData.quest_ids():
 		for o in QuestData.objective_list(String(qid)):
@@ -553,10 +554,18 @@ func _section_marker(qs: QuestSystem, _p: Player) -> void:
 	ok("the marker node exists and is shown", marker != null and marker.visible)
 	qs.process_mode = Node.PROCESS_MODE_DISABLED
 	await frames(2)
+	# Stop the clock for the pair. Freezing only the quest system was not enough: the
+	# wind in the foliage shaders, walking NPCs and the HUD's notification toasts all
+	# moved between the two frames, and whichever moved most became the "peak column"
+	# (x=801, 1243, 1335, 1383 of 1600 across four runs on 2026-11-13). time_scale 0
+	# also stops shader TIME and particles: main.cpp hands the renderer the scaled step.
+	var was_scale := Engine.time_scale
+	Engine.time_scale = 0.0
 	marker.visible = true
 	await free_shot("marker_on", eye, aim, 58.0)
 	marker.visible = false
 	await free_shot("marker_off", eye, aim, 58.0)
+	Engine.time_scale = was_scale
 	marker.visible = true
 	qs.process_mode = Node.PROCESS_MODE_INHERIT
 	var ab := _column_diff("marker_on", "marker_off")
@@ -787,6 +796,83 @@ func _section_dialogue(qs: QuestSystem, p: Player) -> void:
 	ok("but a dialogue action can advance one of its steps", qs.objective_done("q_shrine", "lamp"))
 
 
+# ---------------------------------------------------------------------------
+func _section_kandas(qs: QuestSystem, _p: Player) -> void:
+	print("\n-- The Five Kandas of Rama's Life --")
+	GameState.reset()
+	await frames(4)
+
+	# 1. Bala Kanda
+	ok("q_bala_kanda starts", qs.start_quest("q_bala_kanda"))
+	qs.notify_talk("vishvamitra")
+	await frames(3)
+	ok("Vishvamitra counsel completes", qs.objective_done("q_bala_kanda", "counsel"))
+	ok("Shiva Dhanush monument exists and can be strung", await use("ShivaDhanush"))
+	ok("Pinaka objective completes", qs.objective_done("q_bala_kanda", "pinaka"))
+	await teleport(Vector2(-172.0, 12.0))
+	await frames(10)
+	await _kill(3)
+	await until(func(): return qs.is_complete("q_bala_kanda"), 4.0)
+	ok("Bala Kanda completes", qs.is_complete("q_bala_kanda") and bool(GameState.get_flag("kanda_bala_done", false)))
+
+	# 2. Ayodhya Kanda
+	ok("q_ayodhya_kanda starts", qs.start_quest("q_ayodhya_kanda"))
+	qs.notify_talk("kevat")
+	await frames(3)
+	ok("Guha/Kevat river talk completes", qs.objective_done("q_ayodhya_kanda", "guha"))
+	ok("Chitrakoot Paduka altar exists and can be consecrated", await use("ChitrakootPaduka"))
+	ok("Paduka objective completes", qs.objective_done("q_ayodhya_kanda", "paduka"))
+	qs.notify_talk("bharata")
+	await until(func(): return qs.is_complete("q_ayodhya_kanda"), 3.0)
+	ok("Ayodhya Kanda completes", qs.is_complete("q_ayodhya_kanda") and GameState.has_item("rama_paduka"))
+
+	# 3. Aranya Kanda
+	ok("q_aranya_kanda starts", qs.start_quest("q_aranya_kanda"))
+	qs.notify_talk("sita")
+	await frames(3)
+	ok("Sita Parnashala talk completes", qs.objective_done("q_aranya_kanda", "parnashala"))
+	ok("Maricha's Golden Deer exists and can be unmasked", await use("GoldenDeer"))
+	ok("Mayamrig objective completes", qs.objective_done("q_aranya_kanda", "mayamrig"))
+	await teleport(Vector2(-208.0, 18.0))
+	await frames(10)
+	await _kill(4)
+	await until(func(): return qs.objective_done("q_aranya_kanda", "khara"), 4.0)
+	ok("Jatayu Memorial exists and can be blessed", await use("JatayuMemorial"))
+	await until(func(): return qs.is_complete("q_aranya_kanda"), 3.0)
+	ok(
+		"Aranya Kanda completes and grants Akshaya Tunira",
+		qs.is_complete("q_aranya_kanda") and bool(GameState.get_flag("akshaya_tunira", false))
+	)
+
+	# 4. Kishkindha & Sundara Kanda
+	ok("q_kishkindha_kanda starts", qs.start_quest("q_kishkindha_kanda"))
+	qs.notify_talk("hanuman")
+	await frames(3)
+	ok("Hanuman alliance talk completes", qs.objective_done("q_kishkindha_kanda", "meet_hanuman"))
+	ok("Sapta Tala (Seven Sala Trees) trial exists and can be pierced", await use("SaptaTalaTrial"))
+	ok("Sapta Tala objective completes", qs.objective_done("q_kishkindha_kanda", "sapta_tala"))
+	await teleport(Vector2(-290.0, 96.0))
+	await frames(10)
+	await _kill(3)
+	await until(func(): return qs.is_complete("q_kishkindha_kanda"), 4.0)
+	ok("Kishkindha Kanda completes and grants Sita's Chudamani", qs.is_complete("q_kishkindha_kanda") and GameState.has_item("chudamani"))
+
+	# 5. Yuddha Kanda
+	ok("q_yuddha_kanda starts", qs.start_quest("q_yuddha_kanda"))
+	qs.notify_talk("agastya")
+	await frames(3)
+	ok("Agastya counsel completes", qs.objective_done("q_yuddha_kanda", "agastya"))
+	ok("Aditya Hridayam Surya Altar exists and can be chanted at", await use("SuryaAltar"))
+	ok("Aditya Hridayam objective completes", qs.objective_done("q_yuddha_kanda", "aditya"))
+	ok("Rama Setu floating stones exist and can be inscribed", await use("RamaSetuStone"))
+	ok("Rama Setu objective completes", qs.objective_done("q_yuddha_kanda", "setu"))
+	await teleport(WorldMap.P_BADLANDS)
+	await frames(10)
+	await _kill(4)
+	await until(func(): return qs.is_complete("q_yuddha_kanda"), 4.0)
+	ok("Yuddha Kanda completes and establishes Rama Rajya", qs.is_complete("q_yuddha_kanda") and bool(GameState.get_flag("rama_rajya", false)))
+
+
 func _reload_state(slot: int) -> String:
 	GameState.reset()
 	GameState.load_from_slot(slot)
@@ -884,6 +970,15 @@ func shot(name: String) -> void:
 
 
 func _finish() -> void:
+	# A paused tree stops discovery, position objectives and ambush spawns (all in
+	# QuestSystem._process) while this suite keeps stepping on physics_frame. The
+	# 2026-11-13 audit's six quest failures in a windowed run are reproduced exactly by
+	# pausing the tree; say so instead of reporting six unrelated-looking failures.
+	if get_tree().paused:
+		fails.append(
+			"the game was paused during the run, so quest progress could not happen"
+			+ " (did a pause, inventory or journal key reach the window?)"
+		)
 	print("\nRESULT: " + ("PASS" if fails.is_empty() else "FAIL"))
 	for f in fails:
 		print("  ! " + f)

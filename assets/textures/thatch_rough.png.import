@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://bvwo3m70v8l2k"
 path.s3tc="res://.godot/imported/thatch_rough.png-22f7d5954f2203be02a551fa58ef0f7b.s3tc.ctex"
+path.etc2="res://.godot/imported/thatch_rough.png-22f7d5954f2203be02a551fa58ef0f7b.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/thatch_rough.png"
-dest_files=["res://.godot/imported/thatch_rough.png-22f7d5954f2203be02a551fa58ef0f7b.s3tc.ctex"]
+dest_files=["res://.godot/imported/thatch_rough.png-22f7d5954f2203be02a551fa58ef0f7b.s3tc.ctex", "res://.godot/imported/thatch_rough.png-22f7d5954f2203be02a551fa58ef0f7b.etc2.ctex"]
 
 [params]
 

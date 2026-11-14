@@ -20,7 +20,7 @@ import time
 import numpy as np
 from PIL import Image
 
-ROOT = "/Users/tarunvadapalli/Documents/Git/UltraOpen"
+ROOT = "/Users/tarunvadapalli/Documents/Git/RAMA"
 OUT = os.path.join(ROOT, "assets", "textures")
 SHEETS = "/private/tmp/claude-501/-Users-tarunvadapalli-Documents-Git-UltraOpen/0cc70f8e-97e8-4264-a2ce-ba6d8721cbdc/scratchpad"
 os.makedirs(OUT, exist_ok=True)

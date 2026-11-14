@@ -375,6 +375,162 @@ func _populate() -> void:
 			"greetings_met": ["The steps are still loose.", "Sit, archer."],
 			"alarm_lines": ["Down the steps, quickly!"],
 		},
+		{
+			"id": "sita",
+			"display_name": "Sita (Janaki)",
+			"role": NPC.Role.ELDER,
+			"work_kind": NPC.Work.BLESS,
+			"dialogue_id": "sita",
+			"prop_kind": "none",
+			"home": _settle(WorldMap.P_VILLAGE + Vector2(-8.0, 4.0), 14.0),
+			"work": _settle(WorldMap.P_VILLAGE + Vector2(-8.0, 4.0), 14.0),
+			"wander_radius": 2.8,
+			"look":
+			{
+				"height": 1.65,
+				"build": 0.90,
+				"garment": "sari",
+				"cloth": "cloth_saffron",
+				"cloth2": "cloth_saffron",
+				"jewellery": true,
+				"hair_color": HAIR_BLACK,
+				"skin_tint": SKIN_A,
+				"cloth_tint": Color(1.0, 0.92, 0.72)
+			},
+			"greetings": ["Peace be upon this Parnashala.", "Walk with Dharma, my Lord."],
+			"greetings_met": ["The Tulsi is fresh with dew.", "Did you see the golden deer in the glade?"],
+		},
+		{
+			"id": "lakshmana",
+			"display_name": "Lakshmana (Saumitri)",
+			"role": NPC.Role.GUARD,
+			"work_kind": NPC.Work.WATCH,
+			"dialogue_id": "lakshmana",
+			"prop_kind": "bow",
+			"home": _settle(WorldMap.P_VILLAGE + Vector2(-6.0, 6.0), 14.0),
+			"work": _settle(WorldMap.P_VILLAGE + Vector2(-6.0, 6.0), 14.0),
+			"night": _settle(WorldMap.P_VILLAGE + Vector2(-6.0, 6.0), 14.0),
+			"wander_radius": 2.6,
+			"nocturnal": true,
+			"look":
+			{
+				"height": 1.78,
+				"build": 1.06,
+				"cloth": "cloth_saffron",
+				"cloth2": "cloth_saffron",
+				"channavira": true,
+				"topknot": true,
+				"jewellery": true,
+				"hair_color": HAIR_BLACK,
+				"skin_tint": Color(1.04, 0.92, 0.74),
+				"cloth_tint": Color(0.98, 0.86, 0.62)
+			},
+			"greetings": ["The Parnashala perimeter is clear, brother.", "My bow is strung and ready."],
+			"greetings_met": ["Not a leaf stirs unseen, Raghava.", "Command me, elder brother."],
+		},
+		{
+			"id": "vishvamitra",
+			"display_name": "Sage Vishvamitra",
+			"role": NPC.Role.HERMIT,
+			"work_kind": NPC.Work.BLESS,
+			"dialogue_id": "vishvamitra",
+			"prop_kind": "staff",
+			"home": _settle(Vector2(-136.0, 32.0), 16.0),
+			"work": _settle(Vector2(-136.0, 32.0), 16.0),
+			"wander_radius": 3.0,
+			"nocturnal": true,
+			"look":
+			{
+				"height": 1.76,
+				"build": 0.92,
+				"cloth": "cloth_white",
+				"cloth2": "cloth_saffron",
+				"beard": true,
+				"topknot": true,
+				"jewellery": false,
+				"hair_color": HAIR_SILVER,
+				"skin_tint": SKIN_B
+			},
+			"greetings": ["Come forward, scion of Raghu.", "Siddhashrama's fire awaits."],
+			"greetings_met": ["Remember the Bala and Atibala mantras.", "Pinaka awaits your hand."],
+		},
+		{
+			"id": "bharata",
+			"display_name": "Prince Bharata",
+			"role": NPC.Role.ELDER,
+			"work_kind": NPC.Work.BLESS,
+			"dialogue_id": "bharata",
+			"prop_kind": "none",
+			"home": _settle(WorldMap.P_SHRINE + Vector2(-2.0, 2.0), 18.0),
+			"work": _settle(WorldMap.P_SHRINE + Vector2(-2.0, 2.0), 18.0),
+			"wander_radius": 2.8,
+			"nocturnal": true,
+			"look":
+			{
+				"height": 1.76,
+				"build": 1.0,
+				"cloth": "cloth_indigo",
+				"cloth2": "cloth_saffron",
+				"topknot": true,
+				"jewellery": true,
+				"hair_color": HAIR_BLACK,
+				"skin_tint": SKIN_B
+			},
+			"greetings": ["Arya! Kosala awaits your return.", "Let your Paduka rule Ayodhya."],
+			"greetings_met": ["I keep watch for your sandals at Chitrakoot.", "Dharma alone is king."],
+		},
+		{
+			"id": "hanuman",
+			"display_name": "Hanuman (Anjaneya)",
+			"role": NPC.Role.GUARD,
+			"work_kind": NPC.Work.WATCH,
+			"dialogue_id": "hanuman",
+			"prop_kind": "gada",
+			"home": _settle(Vector2(-276.0, 88.0), 18.0),
+			"work": _settle(Vector2(-276.0, 88.0), 18.0),
+			"wander_radius": 3.2,
+			"nocturnal": true,
+			"look":
+			{
+				"height": 1.84,
+				"build": 1.18,
+				"vanara": true,
+				"cloth": "cloth_saffron",
+				"cloth2": "cloth_saffron",
+				"topknot": true,
+				"jewellery": true,
+				"hair_color": Color(0.58, 0.34, 0.14),
+				"skin_tint": Color(0.92, 0.68, 0.36)
+			},
+			"greetings": ["Jai Sri Ram!", "The son of Vayu bows at your feet."],
+			"greetings_met": ["Point the way, my Lord, and I shall leap the sea.", "The Seven Sala Trees await your arrow!"],
+		},
+		{
+			"id": "agastya",
+			"display_name": "Maharshi Agastya",
+			"role": NPC.Role.HERMIT,
+			"work_kind": NPC.Work.BLESS,
+			"dialogue_id": "agastya",
+			"prop_kind": "staff",
+			"home": _settle(WorldMap.P_LOOKOUT + Vector2(-2.0, 4.0), 18.0),
+			"work": _settle(WorldMap.P_LOOKOUT + Vector2(-2.0, 4.0), 18.0),
+			"wander_radius": 3.0,
+			"nocturnal": true,
+			"look":
+			{
+				"height": 1.68,
+				"build": 0.94,
+				"cloth": "cloth_saffron",
+				"cloth2": "cloth_white",
+				"beard": true,
+				"topknot": true,
+				"jewellery": false,
+				"hair_color": HAIR_SILVER,
+				"skin_tint": SKIN_C
+			},
+			"greetings": ["Welcome to the high Lookout, Raghava.", "Hear the hymn of Surya."],
+			"greetings_met": ["Recite the Aditya Hridayam thrice in your heart.", "The Akshaya Tunira is inexhaustible."],
+		},
 	]
 
 	for r in roster:
@@ -384,8 +540,9 @@ func _populate() -> void:
 func _spawn(r: Dictionary, square: Vector2) -> void:
 	var home2: Vector2 = r["home"]
 	var work2: Vector2 = r["work"]
-	var social2: Vector2 = square if r["id"] != "vamadeva" else work2
-	var refuge2: Vector2 = square if r["id"] != "vamadeva" else work2
+	var is_local: bool = work2.distance_to(square) < 40.0 and r["id"] != "vamadeva"
+	var social2: Vector2 = square if is_local else work2
+	var refuge2: Vector2 = square if is_local else work2
 	# Where the ones who do not sleep spend the dark hours.
 	var night2: Vector2 = r.get("night", work2)
 
@@ -541,6 +698,8 @@ func _process(delta: float) -> void:
 		if n.is_active():
 			if d > STREAM_OUT:
 				n.set_active(false)
+			else:
+				n.update_lod(d)
 		elif d < STREAM_IN:
 			n.set_active(true)
 

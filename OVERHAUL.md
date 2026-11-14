@@ -51,5 +51,5 @@ weather, richer combat (block, parry, hit reactions), more villagers and barks.
 2. **`tools/run_tests.sh` must stay green.** 12 suites. Do not weaken a test to pass.
 3. **Commit gate is real.** `gdlint` + Godot parse check run pre-commit. Never
    `--no-verify`.
-4. **Measure performance** with `tests/perf_test.gd` and `tests/draw_audit.gd`. The
+4. **Measure performance** with `tests/perf_test.gd` and `tests/probes/draw_audit.gd`. The
    gate is 20 fps; the target is 60. Do not silently trade the whole frame for leaves.

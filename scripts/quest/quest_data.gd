@@ -229,6 +229,265 @@ const QUESTS := {
 			"notify": "You will not forget the way back. Nobody who has stood here does.",
 		},
 	},
+	# =======================================================================
+	"q_bala_kanda":
+	{
+		"title": "Bala Kanda: The Bow of Shiva & The Sacred Fire",
+		"summary":
+		(
+			"Brahmarshi Vishvamitra calls upon young Rama to string Shiva's celestial bow "
+			+ "Pinaka and defend the Siddhashrama Yajna from the cursed yakshini Tataka."
+		),
+		"opens_on_talk": ["vishvamitra"],
+		"objectives":
+		[
+			{
+				"id": "counsel",
+				"kind": "talk_to",
+				"target": "vishvamitra",
+				"description": "Receive the Bala & Atibala mantras from Sage Vishvamitra",
+				"where": Vector2(-136.0, 32.0),
+				"radius": 24.0
+			},
+			{
+				"id": "pinaka",
+				"kind": "interact",
+				"target": "shiva_dhanush",
+				"after": ["counsel"],
+				"description": "Lift and string Pinaka, the great Bow of Shiva, in the Mithila Mandapa",
+				"where": Vector2(-108.0, 38.0),
+				"radius": 18.0
+			},
+			{
+				"id": "tataka",
+				"kind": "kill",
+				"count": 3,
+				"after": ["pinaka"],
+				"description": "Vanquish Tataka and her Yajna-defilement raiders in the western clearing",
+				"where": Vector2(-172.0, 12.0),
+				"radius": 55.0,
+				"spawn": {"kind": 2, "at": Vector2(-172.0, 12.0), "count": 3}
+			},
+		],
+		"rewards":
+		{
+			"max_stamina": 20.0,
+			"items": {"soma_tulsi": 2},
+			"flag": {"kanda_bala_done": true},
+			"notify": "Bala Kanda complete: Pinaka is broken, Sita's hand is won, and Agneyastra burns at your command.",
+		},
+	},
+	# =======================================================================
+	"q_ayodhya_kanda":
+	{
+		"title": "Ayodhya Kanda: The Sandals of Dharma",
+		"summary":
+		(
+			"Having renounced the throne of Kosala to uphold Dasharatha's word, cross the "
+			+ "river with Guha and bestow your golden Paduka upon Bharata at Chitrakoot."
+		),
+		"opens_on_talk": ["bharata", "kevat"],
+		"objectives":
+		[
+			{
+				"id": "guha",
+				"kind": "talk_to",
+				"target": "kevat",
+				"description": "Speak with Guha (Kevat) by the river crossing",
+				"where": WorldMap.P_FORD,
+				"radius": 28.0
+			},
+			{
+				"id": "paduka",
+				"kind": "interact",
+				"target": "chitrakoot_paduka",
+				"after": ["guha"],
+				"description": "Consecrate the Golden Paduka sandals on the Chitrakoot shrine pedestal",
+				"where": Vector2(154.0, -64.0),
+				"radius": 20.0
+			},
+			{
+				"id": "bharata",
+				"kind": "talk_to",
+				"target": "bharata",
+				"after": ["paduka"],
+				"description": "Give the Paduka to Prince Bharata to rule Ayodhya in Dharma's name",
+				"where": Vector2(156.0, -66.0),
+				"radius": 24.0
+			},
+		],
+		"rewards":
+		{
+			"max_health": 20.0,
+			"items": {"rama_paduka": 1},
+			"flag": {"kanda_ayodhya_done": true},
+			"notify": "Ayodhya Kanda complete: Bharata carries your Paduka upon his head back to Kosala.",
+		},
+	},
+	# =======================================================================
+	"q_aranya_kanda":
+	{
+		"title": "Aranya Kanda: The Golden Deer & Jatayu's Vigil",
+		"summary":
+		(
+			"At Panchavati Parnashala, Sita spots a wondrous Golden Deer. Unmask Maricha's "
+			+ "illusion, receive Agastya's Akshaya Tunira, and find fallen Jatayu."
+		),
+		"opens_on_talk": ["sita", "lakshmana"],
+		"objectives":
+		[
+			{
+				"id": "parnashala",
+				"kind": "talk_to",
+				"target": "sita",
+				"description": "Speak with Sita and Lakshmana at the Panchavati Parnashala",
+				"where": Vector2(-128.0, 48.0),
+				"radius": 20.0
+			},
+			{
+				"id": "mayamrig",
+				"kind": "interact",
+				"target": "golden_deer",
+				"after": ["parnashala"],
+				"description": "Pursue and unmask Maricha's Golden Deer (Kanchana Mriga) in the forest glade",
+				"where": Vector2(-208.0, 18.0),
+				"radius": 24.0
+			},
+			{
+				"id": "khara",
+				"kind": "kill",
+				"count": 4,
+				"after": ["mayamrig"],
+				"description": "Defeat Maricha and Khara's Janasthana vanguard",
+				"where": Vector2(-208.0, 18.0),
+				"radius": 60.0,
+				"spawn": {"kind": 0, "at": Vector2(-208.0, 18.0), "count": 4}
+			},
+			{
+				"id": "jatayu",
+				"kind": "interact",
+				"target": "jatayu_memorial",
+				"after": ["khara"],
+				"description": "Find the noble vulture-king Jatayu near the northern falls and hear his dying words",
+				"where": Vector2(42.0, -182.0),
+				"radius": 28.0
+			},
+		],
+		"rewards":
+		{
+			"arrows": 40,
+			"items": {"shabari_berries": 2},
+			"flag": {"kanda_aranya_done": true, "akshaya_tunira": true},
+			"notify": "Aranya Kanda complete: Jatayu ascends in light, and the inexhaustible Akshaya Tunira is yours.",
+		},
+	},
+	# =======================================================================
+	"q_kishkindha_kanda":
+	{
+		"title": "Kishkindha Kanda: Hanuman & The Seven Sala Trees",
+		"summary":
+		(
+			"Forge an alliance with Hanuman on the western ridge and pierce the Sapta Tala "
+			+ "(Seven Sala Trees) to prove your might and recover Sita's Chudamani."
+		),
+		"opens_on_talk": ["hanuman"],
+		"objectives":
+		[
+			{
+				"id": "meet_hanuman",
+				"kind": "talk_to",
+				"target": "hanuman",
+				"description": "Meet Hanuman, son of Vayu, on the Rishyamukha ridge",
+				"where": Vector2(-276.0, 88.0),
+				"radius": 26.0
+			},
+			{
+				"id": "sapta_tala",
+				"kind": "interact",
+				"target": "sapta_tala",
+				"after": ["meet_hanuman"],
+				"description": "Pierce the Seven Sacred Sala Trees (Sapta Tala) at the trial stone",
+				"where": Vector2(-284.0, 92.0),
+				"radius": 24.0
+			},
+			{
+				"id": "vali_guard",
+				"kind": "kill",
+				"count": 3,
+				"after": ["sapta_tala"],
+				"description": "Overcome the shadows of Kishkindha",
+				"where": Vector2(-290.0, 96.0),
+				"radius": 55.0,
+				"spawn": {"kind": 2, "at": Vector2(-290.0, 96.0), "count": 3}
+			},
+		],
+		"rewards":
+		{
+			"items": {"chudamani": 1, "healing_salve": 2},
+			"max_stamina": 25.0,
+			"flag": {"kanda_kishkindha_done": true},
+			"notify": "Kishkindha & Sundara Kanda complete: Hanuman places Sita's Chudamani jewel in your hand.",
+		},
+	},
+	# =======================================================================
+	"q_yuddha_kanda":
+	{
+		"title": "Yuddha Kanda: Aditya Hridayam & The Fall of Ravana",
+		"summary":
+		(
+			"Cross the floating stones of Rama Setu, chant the Aditya Hridayam with Sage "
+			+ "Agastya at the Lookout, and vanquish Kumbhakarna and Ten-Headed Ravana."
+		),
+		"opens_on_talk": ["agastya"],
+		"objectives":
+		[
+			{
+				"id": "agastya",
+				"kind": "talk_to",
+				"target": "agastya",
+				"description": "Seek Sage Agastya at the eastern Lookout above the valley",
+				"where": Vector2(94.0, -146.0),
+				"radius": 26.0
+			},
+			{
+				"id": "aditya",
+				"kind": "interact",
+				"target": "surya_altar",
+				"after": ["agastya"],
+				"description": "Chant the Aditya Hridayam hymn at the Surya Altar to awaken the Brahmastra",
+				"where": Vector2(96.0, -150.0),
+				"radius": 20.0
+			},
+			{
+				"id": "setu",
+				"kind": "interact",
+				"target": "rama_setu_stone",
+				"after": ["aditya"],
+				"description": "Inscribe RAMA upon the floating Setu stones at the crossing",
+				"where": Vector2(-32.0, 12.0),
+				"radius": 24.0
+			},
+			{
+				"id": "ravana",
+				"kind": "kill",
+				"count": 4,
+				"after": ["setu"],
+				"description": "Storm the Lanka Bastion in the south-east and slay Kumbhakarna & Ten-Headed Ravana",
+				"where": WorldMap.P_BADLANDS,
+				"radius": 65.0,
+				"spawn": {"kind": 2, "at": WorldMap.P_BADLANDS, "count": 4}
+			},
+		],
+		"rewards":
+		{
+			"max_health": 40.0,
+			"max_stamina": 30.0,
+			"heal": 999.0,
+			"flag": {"kanda_yuddha_done": true, "rama_rajya": true},
+			"welcome": "Victory to Sri Ramachandra! Dharma is restored!",
+			"notify": "Yuddha Kanda complete: Ravana has fallen, Sita is rescued, and Rama Rajya dawns!",
+		},
+	},
 }
 
 ## Places the player can discover, with the name shown when they do.
@@ -254,6 +513,17 @@ const ITEMS := {
 	"healing_salve": {"name": "Healing Salve", "desc": "Turmeric and neem, ground fine and kept in a leaf."},
 	"lamp_oil": {"name": "Til Oil", "desc": "A traveller's flask, kept for a road that had no light on it."},
 	"amulet": {"name": "Amulet", "desc": "Kaustubha glass on a knotted cord. Warm to hold."},
+	"shabari_berries": {"name": "Shabari's Berries", "desc": "Sweet jujube fruits tasted with pure devotion in the forest ashram."},
+	"soma_tulsi": {"name": "Soma Tulsi Leaf", "desc": "Sacred basil from the Panchavati Vrindavan that restores Prana."},
+	"chudamani": {"name": "Sita's Chudamani", "desc": "The crest-jewel of Janaki, carried back across the ocean by Hanuman."},
+	"rama_paduka": {"name": "Golden Paduka", "desc": "Sacred sandals consecrated at Chitrakoot, symbol of righteous rule."},
+	"healing_herb": {"name": "Sanjeevani Herb", "desc": "Luminescent mountain herb from Dronagiri, fragrant with life."},
+	"mango": {"name": "Ripe Forest Mango", "desc": "Golden-fleshed fruit from the Dandaka groves."},
+	"rice": {"name": "Sheaf of Paddy Rice", "desc": "Freshly harvested grain from the southern terraces."},
+	"beast_claw": {"name": "Curved Beast Claw", "desc": "Heavy keratin talon shed in the deep sal wood."},
+	"beast_pelt": {"name": "Spotted Forest Pelt", "desc": "Thick hide taken from a prowler of the western track."},
+	"rakshasa_horn": {"name": "Rakshasa Horn", "desc": "Dark, iron-hard horn from a night-stalker of Janasthana."},
+	"iron_scrap": {"name": "Forged Iron Scrap", "desc": "Dark tempered iron salvaged from a broken war-blade."},
 }
 
 ## The order the shrine inscription names the lamps in. The lamps carry these

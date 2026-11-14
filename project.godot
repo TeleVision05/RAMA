@@ -12,6 +12,7 @@ boot_splash/show_image=false
 
 [autoload]
 
+QuietMode="*res://scripts/core/quiet_mode.gd"
 InputSetup="*res://scripts/core/input_setup.gd"
 EventBus="*res://scripts/core/event_bus.gd"
 GameState="*res://scripts/core/game_state.gd"
@@ -25,6 +26,7 @@ window/stretch/mode="viewport"
 window/stretch/aspect="expand"
 
 [rendering]
+textures/vram_compression/import_etc2_astc=true
 renderer/rendering_method="forward_plus"
 anti_aliasing/quality/msaa_3d=1
 anti_aliasing/quality/screen_space_aa=1

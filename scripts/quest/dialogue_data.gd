@@ -50,10 +50,18 @@ static func _build() -> void:
 		"fisherman": _fisherman(),
 		"mother": _mother(),
 		"child_ila": _ila(),
+		"child_f": _ila(),
 		"child_puru": _puru(),
+		"child_m": _puru(),
 		"guard": _guard(),
 		"traveller": _traveller(),
 		"hermit": _hermit(),
+		"vishvamitra": _vishvamitra(),
+		"sita": _sita(),
+		"lakshmana": _lakshmana(),
+		"bharata": _bharata(),
+		"hanuman": _hanuman(),
+		"agastya": _agastya(),
 	}
 
 
@@ -452,6 +460,8 @@ static func _herder() -> Dictionary:
 static func _fisherman() -> Dictionary:
 	var hub: Array = [
 		{"text": "Have you seen anything strange on the water?", "next": "kv_strange"},
+		{"text": "Guha's boat carried us across the river.", "condition": "quest:q_ayodhya_kanda:inactive", "next": "kv_guha"},
+		{"text": "Where does Bharata wait for the sandals?", "condition": "quest:q_ayodhya_kanda:active", "next": "kv_chitrakoot"},
 		{"text": "Could you spare a fish?", "condition": "!flag:kevat_gift", "next": "kv_fish"},
 		{"text": "Good fishing to you.", "next": ""},
 	]
@@ -471,6 +481,7 @@ static func _fisherman() -> Dictionary:
 				[
 					{"text": "My apologies. I will tread lighter.", "next": "kv_ok"},
 					{"text": "Is the river falling?", "next": "kv_river"},
+					{"text": "You are Guha's ferryman of the crossing.", "next": "kv_guha"},
 				],
 			},
 			"kv_ok":
@@ -487,6 +498,32 @@ static func _fisherman() -> Dictionary:
 			{
 				"text": "Lights on the far bank, two nights back, moving south. No boat carries a light that colour.",
 				"action": "flag:heard_river_lights=true",
+				"next": "kv_hub",
+			},
+			"kv_guha":
+			{
+				"text":
+				(
+					"I washed the dust of Kosala from your feet before I let you step into my boat, "
+					+ "Lord. Now Prince Bharata waits in bark-cloth at Chitrakoot, weeping for your return."
+				),
+				"choices":
+				[
+					{
+						"text": "I will consecrate the Golden Paduka for Bharata at Chitrakoot.",
+						"action": ["quest_start:q_ayodhya_kanda", "flag:guha_blessed=true"],
+						"next": "kv_chitrakoot"
+					},
+					{"text": "Thank you for keeping the crossing, Kevat.", "next": "kv_hub"},
+				],
+			},
+			"kv_chitrakoot":
+			{
+				"text":
+				(
+					"Climb the eastern hill to the Chitrakoot shrine pedestal. Consecrate your "
+					+ "Golden Paduka there, then place them in Prince Bharata's hands."
+				),
 				"next": "kv_hub",
 			},
 			"kv_fish":
@@ -1005,6 +1042,574 @@ static func _hermit() -> Dictionary:
 				[
 					{"text": "What was this shrine?", "next": "h_shrine"},
 					{"text": "Peace to you, rishi.", "next": ""},
+				],
+			},
+		},
+	}
+
+
+# ===========================================================================
+#  Sage Vishvamitra — Brahmarshi of Siddhashrama. Opens Bala Kanda.
+# ===========================================================================
+static func _vishvamitra() -> Dictionary:
+	return {
+		"speaker": "Sage Vishvamitra",
+		"entries":
+		[
+			{"node": "v_done", "condition": "quest:q_bala_kanda:complete"},
+			{"node": "v_active", "condition": "quest:q_bala_kanda:active"},
+			{"node": "v_intro", "condition": "!seen:v_intro"},
+			{"node": "v_idle"},
+		],
+		"nodes":
+		{
+			"v_intro":
+			{
+				"text":
+				(
+					"Come forward, scion of Raghu. At Siddhashrama the sacrificial fire is "
+					+ "threatened by Tataka's raiders, and in Mithila's Mandapa the great bow "
+					+ "Pinaka awaits the hand that can lift it."
+				),
+				"choices":
+				[
+					{"text": "Bestow the Bala and Atibala mantras upon me, Gurudeva.", "next": "v_mantra"},
+					{"text": "Tell me of Shiva's bow Pinaka.", "next": "v_pinaka"},
+				],
+			},
+			"v_mantra":
+			{
+				"action": ["quest_start:q_bala_kanda", "flag:bala_mantra=true"],
+				"text":
+				(
+					"Receive Bala and Atibala, born of Dawn herself. While these mantras dwell "
+					+ "on your breath, neither hunger nor fatigue shall dim your bow-arm."
+				),
+				"next": "v_pinaka",
+			},
+			"v_pinaka":
+			{
+				"text":
+				(
+					"Eight iron wheels barely carry Pinaka, the bow of Rudra. String it at the "
+					+ "Mithila plinth to the east of the square, then purge Tataka and her three "
+					+ "raiders in the western clearing."
+				),
+				"choices":
+				[
+					{
+						"text": "I will string Pinaka and defend the Yajna.",
+						"action": ["quest_start:q_bala_kanda", "flag:bala_mantra=true"],
+						"next": "v_start"
+					},
+					{"text": "Your blessing is my strength, Maharshi.", "next": ""},
+				],
+			},
+			"v_start":
+			{
+				"text":
+				"Go with the fire of Agneyastra at your fingertips, Rama. Let the sound of Pinaka's stringing shake both forest and sky.",
+				"next": "",
+			},
+			"v_active":
+			{
+				"text":
+				[
+					(
+						"First lift and string Pinaka upon its eight-wheeled carriage near the "
+						+ "village, then strike down Tataka's raiders in the western clearing."
+					),
+					"Remember the Bala and Atibala mantras, son of Dasharatha. Neither night nor demon can stand before a steady mind.",
+				],
+				"choices":
+				[
+					{"text": "Speak again of Pinaka and Tataka.", "next": "v_pinaka"},
+					{"text": "I go to fulfill my vow.", "next": ""},
+				],
+			},
+			"v_done":
+			{
+				"text":
+				[
+					"Pinaka is broken like dry reed, Sita's hand is won, and Siddhashrama's fire rises unlaboured to the heavens.",
+					"You have mastered the first Kanda of your destiny, Rama. Keep the Agneyastra bright.",
+				],
+				"choices": [{"text": "Pranams, Brahmarshi Vishvamitra.", "next": ""}],
+			},
+			"v_idle":
+			{
+				"text":
+				[
+					"A king's bow exists so that the quiet smoke of the hermitage may rise straight.",
+					"Even the stars pause to watch what walks through Dandaka.",
+				],
+				"choices":
+				[
+					{"text": "Bestow your counsel for the Bala Kanda.", "next": "v_mantra"},
+					{"text": "Peace to your contemplation, Maharshi.", "next": ""},
+				],
+			},
+		},
+	}
+
+
+# ===========================================================================
+#  Sita (Janaki) — Princess of Mithila at Panchavati Parnashala.
+# ===========================================================================
+static func _sita() -> Dictionary:
+	return {
+		"speaker": "Sita",
+		"entries":
+		[
+			{"node": "s_done", "condition": "quest:q_aranya_kanda:complete"},
+			{"node": "s_active", "condition": "quest:q_aranya_kanda:active"},
+			{"node": "s_intro", "condition": "!seen:s_intro"},
+			{"node": "s_idle"},
+		],
+		"nodes":
+		{
+			"s_intro":
+			{
+				"text":
+				(
+					"The Tulsi before our Parnashala is fresh with morning dew, my Lord, and "
+					+ "Anasuya's silk still holds the fragrance of Chitrakoot. Yet something "
+					+ "wondrous just crossed the western glade."
+				),
+				"choices":
+				[
+					{"text": "What did you see among the trees, Janaki?", "next": "s_deer"},
+					{"text": "Does this leaf-hut remind you of Mithila?", "next": "s_mithila"},
+				],
+			},
+			"s_mithila":
+			{
+				"text":
+				(
+					"In my father Janaka's court the pillars were marble; here they are sal wood "
+					+ "and river reed. Where you stand with your bow is Ayodhya and Mithila both to me."
+				),
+				"next": "s_deer",
+			},
+			"s_deer":
+			{
+				"text":
+				(
+					"A deer of beaten gold, its flanks studded with silver and its eyes like "
+					+ "blue sapphires! It bounded west toward the forest glade — oh, if it is "
+					+ "true beast and not illusion, see where it runs!"
+				),
+				"choices":
+				[
+					{
+						"text": "I will pursue the Golden Deer and unmask its truth.",
+						"action": ["quest_start:q_aranya_kanda", "flag:sita_spoke_deer=true"],
+						"next": "s_pursue"
+					},
+					{"text": "Stay within Lakshmana's watch, Vaidehi.", "next": ""},
+				],
+			},
+			"s_pursue":
+			{
+				"text":
+				(
+					"Lakshmana says it is Maricha's sorcery in disguise. Walk warily in the "
+					+ "western glade, my Lord, and listen for old Jatayu's wings by the northern falls."
+				),
+				"next": "",
+			},
+			"s_active":
+			{
+				"text":
+				[
+					"The Golden Deer fled west into the glade, and beyond it Khara's vanguard stirs in Janasthana.",
+					"If noble Jatayu has kept watch toward the northern falls, do not leave his side unblessed.",
+				],
+				"choices":
+				[
+					{"text": "Tell me again of Mithila and our Parnashala.", "next": "s_mithila"},
+					{"text": "I will return soon, Janaki.", "next": ""},
+				],
+			},
+			"s_done":
+			{
+				"text":
+				[
+					"Maricha's golden falsehood is shattered, and noble Jatayu has ascended in light.",
+					"Even in the deep forest, Dharma keeps its lamp lit around our Parnashala.",
+				],
+				"choices": [{"text": "Peace be with you, Vaidehi.", "next": ""}],
+			},
+			"s_idle":
+			{
+				"text":
+				[
+					"Take a leaf from the Tulsi Vrindavan before you walk the west road.",
+					"The river birds sing the same ragas here as they did by the Sarayu.",
+				],
+				"choices":
+				[
+					{"text": "Speak of the Golden Deer in the western glade.", "next": "s_deer"},
+					{"text": "Rest well at the Parnashala.", "next": ""},
+				],
+			},
+		},
+	}
+
+
+# ===========================================================================
+#  Lakshmana (Saumitri) — Devoted younger brother standing guard.
+# ===========================================================================
+static func _lakshmana() -> Dictionary:
+	var hub: Array = [
+		{"text": "How stands the watch around Panchavati?", "next": "l_watch"},
+		{"text": "Can you spare a bundle of arrows, brother?", "condition": "!flag:lakshmana_arrows", "next": "l_arrows"},
+		{"text": "What do you make of the Golden Deer?", "condition": "quest:q_aranya_kanda:inactive", "next": "l_aranya"},
+		{"text": "Keep your bow ready, Saumitri.", "next": ""},
+	]
+	return {
+		"speaker": "Lakshmana",
+		"entries":
+		[
+			{"node": "l_intro", "condition": "!seen:l_intro"},
+			{"node": "l_idle"},
+		],
+		"nodes":
+		{
+			"l_intro":
+			{
+				"text":
+				(
+					"Brother! My bowstring is taut and the perimeter around the Parnashala is "
+					+ "clear. Not a leaf falls between the river and the western ridge without my counting it."
+				),
+				"choices":
+				[
+					{"text": "You never rest, Saumitri.", "next": "l_watch"},
+					{"text": "Can you spare a bundle of arrows?", "next": "l_arrows"},
+					{"text": "Sita spoke of a Golden Deer in the glade.", "next": "l_aranya"},
+				],
+			},
+			"l_watch":
+			{
+				"text":
+				"Fourteen years is a short watch when I stand behind you and Mother Sita. Let Nidra sleep elsewhere until we return to Ayodhya.",
+				"next": "l_hub",
+			},
+			"l_arrows":
+			{
+				"action": ["give:arrow_bundle:1", "flag:lakshmana_arrows=true"],
+				"text":
+				"Take this sheaf, brother — straight cane shafts, iron-tipped and fletched at dawn. May every one find a Rakshasa heart.",
+				"next": "l_hub",
+			},
+			"l_aranya":
+			{
+				"action": ["quest_start:q_aranya_kanda"],
+				"text":
+				(
+					"No mortal stag wears hide of molten gold and sapphire eyes! That is "
+					+ "Maricha's illusion, sent to draw us out before Khara's Janasthana vanguard strikes."
+				),
+				"next": "l_hub",
+			},
+			"l_hub":
+			{
+				"text": ["Command me, elder brother.", "My bow is yours, Raghava."],
+				"choices": hub.duplicate(true),
+			},
+			"l_idle":
+			{
+				"text":
+				[
+					"I have drawn a line of protective mantra around the Parnashala threshold.",
+					"Khara's scouts prowled the western sal trees at dusk; they did not cross my bow-shot.",
+					"When you loose Vayavyastra, the very wind of Dandaka fights beside us.",
+				],
+				"choices": hub.duplicate(true),
+			},
+		},
+	}
+
+
+# ===========================================================================
+#  Prince Bharata — Regent in ascetic garb at Chitrakoot Shrine.
+# ===========================================================================
+static func _bharata() -> Dictionary:
+	return {
+		"speaker": "Prince Bharata",
+		"entries":
+		[
+			{"node": "bh_done", "condition": "quest:q_ayodhya_kanda:complete"},
+			{"node": "bh_active", "condition": "quest:q_ayodhya_kanda:active"},
+			{"node": "bh_intro", "condition": "!seen:bh_intro"},
+			{"node": "bh_idle"},
+		],
+		"nodes":
+		{
+			"bh_intro":
+			{
+				"text":
+				(
+					"Arya! I walked barefoot from Ayodhya through dust and thorn to lay a "
+					+ "kingdom at your feet. Kosala has no king while Ramachandra walks the forest."
+				),
+				"choices":
+				[
+					{"text": "Rise, Bharata. Father Dasharatha's word must stand.", "next": "bh_dharma"},
+					{"text": "How shall Ayodhya be ruled while I keep my vow?", "next": "bh_paduka"},
+				],
+			},
+			"bh_dharma":
+			{
+				"text":
+				(
+					"Your Dharma is immovable as Mount Meru. If you will not sit upon the throne "
+					+ "of Kosala, then let your sandals sit upon it, and I shall serve as their watchman at Nandigrama."
+				),
+				"next": "bh_paduka",
+			},
+			"bh_paduka":
+			{
+				"action": ["quest_start:q_ayodhya_kanda", "flag:met_bharata=true"],
+				"text":
+				(
+					"First speak with Guha's ferryman Kevat at the river ford, then step upon "
+					+ "the Golden Paduka pedestal here at Chitrakoot to consecrate them before "
+					+ "placing them in my hands."
+				),
+				"next": "",
+			},
+			"bh_active":
+			{
+				"text":
+				[
+					"Have you spoken with Kevat at the ford and consecrated the Golden Paduka upon the lotus pedestal beside me?",
+					"Place your consecrated sandals in my hands, Arya, and I shall carry them upon my head to Nandigrama.",
+				],
+				"choices":
+				[
+					{
+						"text": "Receive these Golden Paduka and rule Ayodhya in Dharma's name.",
+						"action": ["flag:bharata_paduka_received=true"],
+						"next": "bh_receive"
+					},
+					{"text": "Wait a moment longer, brother.", "next": ""},
+				],
+			},
+			"bh_receive":
+			{
+				"text":
+				(
+					"Upon my head I set the Paduka of Sri Rama! Under their golden seal the "
+					+ "treasury, the courts, and the four quarters of Kosala shall know unbroken righteousness."
+				),
+				"next": "",
+			},
+			"bh_done":
+			{
+				"text":
+				[
+					"Every morning at Nandigrama I shall lay the kingdom's accounts before your Golden Paduka.",
+					"Return on the fourteenth year to the day, Arya, or Bharata will walk into the sacred fire.",
+				],
+				"choices": [{"text": "Guard Kosala well, beloved brother.", "next": ""}],
+			},
+			"bh_idle":
+			{
+				"text":
+				[
+					"A throne without Dharma is only gilded stone.",
+					"Even the birds of Chitrakoot chant the name of Raghu.",
+				],
+				"choices":
+				[
+					{"text": "Speak of the Golden Paduka of Ayodhya.", "next": "bh_dharma"},
+					{"text": "Peace to you, Bharata.", "next": ""},
+				],
+			},
+		},
+	}
+
+
+# ===========================================================================
+#  Hanuman (Anjaneya) — Son of Vayu on the western Rishyamukha ridge.
+# ===========================================================================
+static func _hanuman() -> Dictionary:
+	return {
+		"speaker": "Hanuman",
+		"entries":
+		[
+			{"node": "hn_done", "condition": "quest:q_kishkindha_kanda:complete"},
+			{"node": "hn_active", "condition": "quest:q_kishkindha_kanda:active"},
+			{"node": "hn_intro", "condition": "!seen:hn_intro"},
+			{"node": "hn_idle"},
+		],
+		"nodes":
+		{
+			"hn_intro":
+			{
+				"text":
+				(
+					"Jai Sri Ram! Long have the winds of Rishyamukha whispered that the "
+					+ "lotus-eyed Lord would walk this western ridge. I am Hanuman, son of Vayu, "
+					+ "and your servant in every breath."
+				),
+				"choices":
+				[
+					{"text": "Your speech has the grace of the Vedas, Anjaneya.", "next": "hn_bhakti"},
+					{"text": "How shall we seal the alliance of Kishkindha?", "next": "hn_trial"},
+				],
+			},
+			"hn_bhakti":
+			{
+				"text":
+				(
+					"With your name upon my lips I could leap a hundred yojanas across the "
+					+ "southern sea to Lanka and return with Mother Sita's token before the sun sets."
+				),
+				"next": "hn_trial",
+			},
+			"hn_trial":
+			{
+				"action": ["quest_start:q_kishkindha_kanda", "flag:met_hanuman=true"],
+				"text":
+				(
+					"Behold the Sapta Tala — the Seven Sacred Sala Trees standing in a line "
+					+ "beside the trial stone. Pierce all seven with a single shaft, and scatter "
+					+ "the three dark shadows of Kishkindha!"
+				),
+				"next": "",
+			},
+			"hn_active":
+			{
+				"text":
+				[
+					(
+						"Stand at the Sapta Tala trial stone just west of here — loose an arrow "
+						+ "or strike the stone to pierce all seven Sala trunks, then vanquish "
+						+ "the three shadows of Kishkindha!"
+					),
+					"When the seven Sala trees ring with your bow-twang, all Kishkindha will know no power equals Raghu's!",
+				],
+				"choices":
+				[
+					{"text": "Tell me again of your leap across the ocean.", "next": "hn_bhakti"},
+					{"text": "I go to the Sapta Tala trial stone.", "next": ""},
+				],
+			},
+			"hn_done":
+			{
+				"text":
+				[
+					"All seven Sala trees were pierced by one arrow, and from across the sea I bring Mother Sita's Chudamani jewel to your hand!",
+					"Where Rama's arrow flies, Hanuman carries it on his shoulders. Jai Sri Ram!",
+				],
+				"choices": [{"text": "You are dear to me as Lakshmana himself, Hanuman.", "next": ""}],
+			},
+			"hn_idle":
+			{
+				"text":
+				[
+					"Tear open my chest and you will find only Janaki and Rama written there.",
+					"My golden Gada is light as a lotus stalk when wielded in your service.",
+				],
+				"choices":
+				[
+					{"text": "Speak of the Sapta Tala trial on Rishyamukha.", "next": "hn_trial"},
+					{"text": "Stay ever near, son of Vayu.", "next": ""},
+				],
+			},
+		},
+	}
+
+
+# ===========================================================================
+#  Maharshi Agastya — Great Sage at the eastern Lookout. Opens Yuddha Kanda.
+# ===========================================================================
+static func _agastya() -> Dictionary:
+	return {
+		"speaker": "Maharshi Agastya",
+		"entries":
+		[
+			{"node": "ag_done", "condition": "quest:q_yuddha_kanda:complete"},
+			{"node": "ag_active", "condition": "quest:q_yuddha_kanda:active"},
+			{"node": "ag_intro", "condition": "!seen:ag_intro"},
+			{"node": "ag_idle"},
+		],
+		"nodes":
+		{
+			"ag_intro":
+			{
+				"text":
+				(
+					"Welcome to the high Lookout, Raghava. Below us lies the river crossing, and "
+					+ "far to the south-east smokes the Lanka Bastion where Kumbhakarna and "
+					+ "Ten-Headed Ravana marshal their host."
+				),
+				"choices":
+				[
+					{"text": "Teach me the ancient hymn of victory, Maharshi.", "next": "ag_aditya"},
+					{"text": "Speak of the celestial weapons you guarded.", "next": "ag_tunira"},
+				],
+			},
+			"ag_tunira":
+			{
+				"text":
+				(
+					"The Akshaya Tunira never empties, and the Brahmastra sleeps until awakened "
+					+ "by the sun's own mantra. Behold the golden Surya Altar upon this crest."
+				),
+				"next": "ag_aditya",
+			},
+			"ag_aditya":
+			{
+				"action": ["quest_start:q_yuddha_kanda", "flag:aditya_hridayam_taught=true"],
+				"text":
+				(
+					"Hear the Aditya Hridayam, sacred hymn of Surya Who scatters all darkness! "
+					+ "Chant it at the Surya Altar beside me, inscribe RAMA upon the floating "
+					+ "Setu stones at the crossing, and storm the south-east Badlands to fell Ravana!"
+				),
+				"next": "",
+			},
+			"ag_active":
+			{
+				"text":
+				[
+					(
+						"First venerate the golden Surya Altar here on the Lookout, then inscribe "
+						+ "RAMA on the floating Setu stones at the ford, and march south-east to "
+						+ "the Badlands to slay Ravana's host."
+					),
+					"Thrice recite the Aditya Hridayam in your heart, Rama, and Ten-Headed Dasagriva shall fall before your Brahmastra.",
+				],
+				"choices":
+				[
+					{"text": "Remind me of the Surya Altar and the Setu stones.", "next": "ag_tunira"},
+					{"text": "I go to awaken the sun's mantra.", "next": ""},
+				],
+			},
+			"ag_done":
+			{
+				"text":
+				[
+					"Ten-Headed Ravana has fallen, Kumbhakarna sleeps forever, and the sun of Rama Rajya shines over every creature.",
+					"Long may the bow of Ikshvaku keep the three worlds in peace.",
+				],
+				"choices": [{"text": "Pranams, Maharshi Agastya.", "next": ""}],
+			},
+			"ag_idle":
+			{
+				"text":
+				[
+					"Once I bowed the Vindhya mountains so the sun could keep its path; today the sun itself bows to your Dharma.",
+					"Look out over the valley: every lamp lit below is an answer to darkness.",
+				],
+				"choices":
+				[
+					{"text": "Impart the Aditya Hridayam for the Yuddha Kanda.", "next": "ag_aditya"},
+					{"text": "Your blessing guides my arrows, Maharshi.", "next": ""},
 				],
 			},
 		},

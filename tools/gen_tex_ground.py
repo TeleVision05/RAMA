@@ -37,7 +37,7 @@ from PIL import Image
 # config
 # --------------------------------------------------------------------------------------
 
-ROOT = "/Users/tarunvadapalli/Documents/Git/UltraOpen"
+ROOT = "/Users/tarunvadapalli/Documents/Git/RAMA"
 OUT = os.path.join(ROOT, "assets", "textures")
 PREVIEW_DIR = os.environ.get("RAMA_PREVIEW_DIR", os.path.join(ROOT, "build", "texpreview"))
 N = 1024

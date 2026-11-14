@@ -27,6 +27,7 @@ var prompt: InteractPrompt
 var vignette: DamageVignette
 var compass: Compass
 var notes: Notifications
+var combat_overlay: CombatOverlay
 var death: DeathOverlay
 
 var pause_menu: PauseMenu
@@ -102,6 +103,11 @@ func _ready() -> void:
 	notes.position = Vector2(-396, 78)
 	_root.add_child(notes)
 
+	combat_overlay = CombatOverlay.new()
+	combat_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	combat_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(combat_overlay)
+
 	# The death overlay is a sibling of the diegetic layer, not a child: everything
 	# else fades out when Rama falls, and this is what is left.
 	death = DeathOverlay.new()
@@ -163,6 +169,7 @@ func _connect_bus() -> void:
 	EventBus.player_damaged.connect(_on_damaged)
 	EventBus.player_healed.connect(func(a: float): vignette.heal_flash(a))
 	EventBus.player_died.connect(_on_died)
+	EventBus.enemy_damaged.connect(_on_enemy_damaged)
 	EventBus.interact_target_changed.connect(_on_interact_target)
 	EventBus.location_discovered.connect(_on_location)
 	EventBus.item_gained.connect(_on_item)
@@ -194,6 +201,13 @@ func _on_player_spawned(p: Node) -> void:
 	cam_rig = p.get("cam_rig") if p else null
 	SettingsMenu.apply(get_tree())
 	_refresh_from_state()
+	if not bool(GameState.get_flag("welcomed", false)):
+		GameState.set_flag("welcomed", true)
+		notes.push(
+			"॥ श्री रामचन्द्राय नमः ॥",
+			"You are Rama, Prince of Ayodhya. Armed with the divine Kodanda, seek Sage Vishvamitra at Siddhashrama to fulfill your destiny.",
+			"quest"
+		)
 
 
 func _refresh_from_state() -> void:
@@ -285,6 +299,11 @@ func _on_died() -> void:
 	_dead = true
 	notes.clear_all()
 	death.begin(GameState.has_slot(0) or GameState.has_slot(1) or GameState.has_slot(2))
+
+
+func _on_enemy_damaged(enemy: Node, amount: float, crit: bool, hit_pos: Vector3) -> void:
+	if combat_overlay != null:
+		combat_overlay.on_enemy_damaged(enemy, amount, crit, hit_pos)
 
 
 func _on_interact_target(target: Node, text: String) -> void:
@@ -418,7 +437,8 @@ func _pick_objective() -> void:
 			return
 		objective.set_line(_quest_title(String(id)))
 		return
-	objective.set_line("")
+	objective.set_line("Bala Kanda: Seek Sage Vishvamitra at Siddhashrama")
+	compass.set_objective(Vector3(-136.0, 10.0, 32.0), "Sage Vishvamitra", true)
 
 
 ## Content systems that know where a thing is can point the compass at it.
@@ -483,10 +503,10 @@ func quick_load() -> void:
 		return
 	if game != null and is_instance_valid(game) and game.has_method("load_game"):
 		if not bool(game.call("load_game", QUICK_SLOT)):
-			notes.push("Could not load", "Slot %d could not be read." % (QUICK_SLOT + 1), "warn")
+			notes.push("Could not load", GameState.last_load_message, "warn")
 		return
 	if not GameState.load_from_slot(QUICK_SLOT):
-		notes.push("Could not load", "Slot %d could not be read." % (QUICK_SLOT + 1), "warn")
+		notes.push("Could not load", GameState.last_load_message, "warn")
 
 
 func _toggle(panel: Control) -> void:
@@ -572,7 +592,7 @@ func set_paused(p: bool) -> void:
 func _apply_menu_state() -> void:
 	var open := not _stack.is_empty()
 	get_tree().paused = open
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if open else Input.MOUSE_MODE_CAPTURED
+	QuietMode.set_mouse_mode(Input.MOUSE_MODE_VISIBLE if open else Input.MOUSE_MODE_CAPTURED)
 	if cam_rig != null and is_instance_valid(cam_rig) and cam_rig.has_method("set_enabled"):
 		cam_rig.set_enabled(not open)
 	if player != null and is_instance_valid(player) and player.has_method("lock_input"):
@@ -582,7 +602,7 @@ func _apply_menu_state() -> void:
 
 func _to_main_menu() -> void:
 	get_tree().paused = false
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	QuietMode.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	AudioDirector.stop_music(0.8)
 	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
 
@@ -604,6 +624,7 @@ static func launch(tree: SceneTree) -> Node:
 	session.add_child(hud)
 	var g := Game.new()
 	g.name = "Game"
+	g.show_loading = true
 	session.add_child(g)
 	var old := tree.current_scene
 	tree.root.add_child(session)
@@ -619,26 +640,44 @@ static func launch(tree: SceneTree) -> Node:
 # ==========================================================================
 
 
-## Health and stamina. Slim, shallowly arced, and quiet until they matter.
+## Health, stamina, and Prana (Celestial Energy). Slim, shallowly arced, and quiet until they matter.
 class StatBars:
 	extends Control
 	const W := 268.0
 	const CURVE := 5.0
+	const PRANA_COLOR := Color(0.24, 0.62, 0.92, 1.0)
 
 	var health: float = 100.0
 	var max_health: float = 100.0
 	var stamina: float = 100.0
 	var max_stamina: float = 100.0
+	var prana: float = 100.0
+	var max_prana: float = 100.0
 	var _shown_health: float = 1.0
 	var _shown_stamina: float = 1.0
+	var _shown_prana: float = 1.0
 	var _flash: float = 0.0
 	var _attention: float = 0.0
 	var _last_h: float = -1.0
 	var _last_s: float = -1.0
+	var _last_p: float = -1.0
 	var _t: float = 0.0
 
 	func _ready() -> void:
 		set_process(true)
+
+	func _sync_prana(snap: bool) -> void:
+		var raw_p: Variant = GameState.get("prana")
+		var raw_mp: Variant = GameState.get("max_prana")
+		var p_val: float = float(raw_p) if raw_p != null else 100.0
+		var mp_val: float = maxf(float(raw_mp) if raw_mp != null else 100.0, 1.0)
+		if _last_p >= 0.0 and absf(p_val - _last_p) > 0.5:
+			_attention = 1.0
+		_last_p = p_val
+		prana = p_val
+		max_prana = mp_val
+		if snap:
+			_shown_prana = prana / max_prana
 
 	func set_stats(h: float, mh: float, s: float, ms: float, snap: bool) -> void:
 		if _last_h >= 0.0 and (absf(h - _last_h) > 0.01 or absf(s - _last_s) > 0.9):
@@ -652,6 +691,7 @@ class StatBars:
 		if snap:
 			_shown_health = health / max_health
 			_shown_stamina = stamina / max_stamina
+		_sync_prana(snap)
 
 	func flash_health() -> void:
 		_flash = 1.0
@@ -659,10 +699,12 @@ class StatBars:
 
 	func _process(delta: float) -> void:
 		_t += delta
+		_sync_prana(false)
 		_flash = maxf(0.0, _flash - delta * 2.2)
 		_attention = maxf(0.0, _attention - delta * 0.45)
 		_shown_health = lerpf(_shown_health, health / max_health, clampf(delta * 7.0, 0.0, 1.0))
 		_shown_stamina = lerpf(_shown_stamina, stamina / max_stamina, clampf(delta * 11.0, 0.0, 1.0))
+		_shown_prana = lerpf(_shown_prana, prana / max_prana, clampf(delta * 9.0, 0.0, 1.0))
 		queue_redraw()
 
 	## Draw a bar along a shallow arc, so it reads as carved rather than as a widget.
@@ -702,8 +744,9 @@ class StatBars:
 	func _draw() -> void:
 		var hf: float = clampf(_shown_health, 0.0, 1.0)
 		var sf: float = clampf(_shown_stamina, 0.0, 1.0)
-		# Quiet when full and rested; loud when either has something to say.
-		var urgency: float = maxf(1.0 - hf, (1.0 - sf) * 0.8)
+		var pf: float = clampf(_shown_prana, 0.0, 1.0)
+		# Quiet when full and rested; loud when any bar has something to say.
+		var urgency: float = maxf(maxf(1.0 - hf, (1.0 - sf) * 0.8), (1.0 - pf) * 0.65)
 		var a: float = clampf(0.30 + urgency * 0.70 + _attention * 0.55, 0.0, 1.0)
 
 		var o := Vector2(46.0, size.y - 74.0)
@@ -722,13 +765,22 @@ class StatBars:
 			scol = scol.lerp(UITheme.PARCHMENT_FAINT, 0.6)
 		_arc_bar(so, sw, 4.0, sf, Color(scol.r, scol.g, scol.b, s_alpha), Color(0.031, 0.024, 0.020, 0.62 * a), a)
 
-		# Brass serifs that bracket the bars: a spine down the left, and a stop at the
-		# far end of each channel. The right-hand stops are what tell you where "full"
-		# is when the fill has fallen well short of it.
-		var tick := Color(UITheme.BRASS.r, UITheme.BRASS.g, UITheme.BRASS.b, a * 0.8)
-		draw_line(o + Vector2(-9, -4), o + Vector2(-9, 21), tick, 1.0, true)
+		var pw: float = W - 64.0
+		var po := o + Vector2(8.0, 27.0)
+		var pcol := PRANA_COLOR
+		var p_alpha: float = a * (0.55 if pf > 0.995 else 1.0)
+		_arc_bar(po, pw, 3.8, pf, Color(pcol.r, pcol.g, pcol.b, p_alpha), Color(0.024, 0.038, 0.058, 0.65 * a), a)
+
+		# Brass serifs and golden filigree that bracket the three bars (Jiva, Bala, Prana).
+		var tick := Color(UITheme.BRASS.r, UITheme.BRASS.g, UITheme.BRASS.b, a * 0.82)
+		draw_line(o + Vector2(-9, -4), o + Vector2(-9, 32), tick, 1.0, true)
 		draw_line(o + Vector2(W + 1, -4), o + Vector2(W + 1, 4), tick, 1.0, true)
 		draw_line(so + Vector2(sw + 1, -3), so + Vector2(sw + 1, 3), Color(tick.r, tick.g, tick.b, a * 0.55), 1.0, true)
+		draw_line(po + Vector2(pw + 1, -3), po + Vector2(pw + 1, 3), Color(tick.r, tick.g, tick.b, a * 0.68), 1.2, true)
+		draw_colored_polygon(
+			PackedVector2Array([po + Vector2(-5, 0), po + Vector2(-2, -3), po + Vector2(1, 0), po + Vector2(-2, 3)]),
+			Color(UITheme.BRASS.r, UITheme.BRASS.g, UITheme.BRASS.b, a * 0.75)
+		)
 
 
 ## The bow reticle. It only exists while aiming, and it opens outward as the draw
@@ -796,16 +848,25 @@ class Crosshair:
 			draw_arc(c, 38.0 + pulse * 2.0, 0.0, TAU, 48, Color(hot.r, hot.g, hot.b, _a * _full * 0.55), 1.2, true)
 
 
-## Arrows remaining, set just off the crosshair where the eye already is.
+## Arrows remaining & Divya Astra attunement (bottom-right), plus crosshair-adjacent count when aiming.
 class AmmoReadout:
 	extends Control
 	const AFTERGLOW := 2.4
+	const ASTRAS := [
+		{"name": "[1] Shara — Sacred Shaft", "col": Color(0.784, 0.635, 0.290, 1.0)},
+		{"name": "[2] Agneyastra — Fire of Agni", "col": Color(0.96, 0.48, 0.16, 1.0)},
+		{"name": "[3] Varunastra — Torrent of Varuna", "col": Color(0.26, 0.72, 0.94, 1.0)},
+		{"name": "[4] Vayavyastra — Gale of Vayu", "col": Color(0.38, 0.88, 0.62, 1.0)},
+		{"name": "[5] Brahmastra — Solar Disk of Brahma", "col": Color(1.0, 0.86, 0.32, 1.0)},
+	]
 
 	var count: int = 0
 	var _a: float = 0.0
 	var _bump: float = 0.0
 	var _hold: float = 0.0
 	var _last: int = -1
+	var _last_astra: int = 0
+	var _astra_flash: float = 0.0
 
 	func _ready() -> void:
 		set_process(true)
@@ -818,6 +879,13 @@ class AmmoReadout:
 			_hold = AFTERGLOW
 		_last = arrows
 		count = arrows
+		var raw_astra: Variant = GameState.get("active_astra")
+		var cur_astra: int = clampi(int(raw_astra) if raw_astra != null else 0, 0, 4)
+		if cur_astra != _last_astra:
+			_last_astra = cur_astra
+			_astra_flash = 1.0
+			_hold = AFTERGLOW
+		_astra_flash = maxf(0.0, _astra_flash - delta * 2.2)
 		_hold = maxf(0.0, _hold - delta)
 		var target: float = 0.0
 		if using_bow:
@@ -832,20 +900,62 @@ class AmmoReadout:
 		queue_redraw()
 
 	func _draw() -> void:
-		if _a <= 0.01:
-			return
-		var c := size * 0.5 + Vector2(46.0, 34.0)
-		var low: bool = count <= 3
-		var col: Color = UITheme.PARCHMENT if not low else UITheme.CRIMSON_PALE
-		var a: float = _a * (0.85 + _bump * 0.15)
-		# A small arrow glyph, then the number.
-		var g := c + Vector2(0, -5)
-		draw_line(g + Vector2(0, 8), g + Vector2(0, -6), Color(UITheme.BRASS.r, UITheme.BRASS.g, UITheme.BRASS.b, a), 1.4, true)
-		draw_colored_polygon(
-			PackedVector2Array([g + Vector2(0, -10), g + Vector2(3.4, -4.4), g + Vector2(-3.4, -4.4)]),
-			Color(UITheme.BRASS.r, UITheme.BRASS.g, UITheme.BRASS.b, a)
+		var f_label := UITheme.label_font()
+		var f_eye := UITheme.eyebrow_font()
+		var f_body := UITheme.body_font()
+
+		# 1. Crosshair-adjacent arrow count when drawing the bow.
+		if _a > 0.01:
+			var c := size * 0.5 + Vector2(46.0, 34.0)
+			var low: bool = count <= 3
+			var col: Color = UITheme.PARCHMENT if not low else UITheme.CRIMSON_PALE
+			var a: float = _a * (0.85 + _bump * 0.15)
+			var g := c + Vector2(0, -5)
+			draw_line(g + Vector2(0, 8), g + Vector2(0, -6), Color(UITheme.BRASS.r, UITheme.BRASS.g, UITheme.BRASS.b, a), 1.4, true)
+			draw_colored_polygon(
+				PackedVector2Array([g + Vector2(0, -10), g + Vector2(3.4, -4.4), g + Vector2(-3.4, -4.4)]),
+				Color(UITheme.BRASS.r, UITheme.BRASS.g, UITheme.BRASS.b, a)
+			)
+			UITheme.draw_text(self, f_label, c + Vector2(12, 5), str(count), UITheme.FS_LABEL, Color(col.r, col.g, col.b, a))
+
+		# 2. Bottom-right Kodanda Quiver & Divya Astra Attunement Readout.
+		var raw_astra: Variant = GameState.get("active_astra")
+		var astra_idx: int = clampi(int(raw_astra) if raw_astra != null else 0, 0, ASTRAS.size() - 1)
+		var astra: Dictionary = ASTRAS[astra_idx]
+		var acol: Color = astra["col"]
+		var aname := String(astra["name"])
+		var raw_max: Variant = GameState.get("max_arrows")
+		var max_arr: int = int(raw_max) if raw_max != null else 40
+		var base_a: float = clampf(0.68 + _a * 0.32 + _astra_flash * 0.30, 0.0, 1.0)
+
+		var rx: float = size.x - 46.0
+		var ry: float = size.y - 76.0
+		var arr_str := "Arrows  %d / %d" % [count, max_arr]
+		var aw := UITheme.text_width(f_body, arr_str, UITheme.FS_SMALL)
+		var arr_col: Color = UITheme.PARCHMENT if count > 3 else UITheme.CRIMSON_PALE
+		UITheme.draw_text(
+			self, f_body, Vector2(rx - aw, ry), arr_str, UITheme.FS_SMALL, Color(arr_col.r, arr_col.g, arr_col.b, base_a * 0.92)
 		)
-		UITheme.draw_text(self, UITheme.label_font(), c + Vector2(12, 5), str(count), UITheme.FS_LABEL, Color(col.r, col.g, col.b, a))
+
+		var as_w := UITheme.text_width(f_label, aname, UITheme.FS_SMALL)
+		var as_pos := Vector2(rx - as_w, ry + 22.0)
+		var d_pos := as_pos + Vector2(-12.0, -5.0)
+		draw_colored_polygon(
+			PackedVector2Array([d_pos + Vector2(0, -4.5), d_pos + Vector2(4.5, 0), d_pos + Vector2(0, 4.5), d_pos + Vector2(-4.5, 0)]),
+			Color(acol.r, acol.g, acol.b, base_a)
+		)
+		UITheme.draw_text(self, f_label, as_pos, aname, UITheme.FS_SMALL, Color(acol.r, acol.g, acol.b, base_a))
+
+		var hint := "[WASD] Move  ·  [Hold RMB] Draw Kodanda  ·  [Q] Sword  ·  [F] Parry  ·  [1-5/R] Astras  ·  [J] Kandas"
+		var hw := UITheme.text_width(f_eye, hint, UITheme.FS_TINY)
+		UITheme.draw_text(
+			self,
+			f_eye,
+			Vector2(rx - hw, ry + 42.0),
+			hint,
+			UITheme.FS_TINY,
+			Color(UITheme.PARCHMENT_FAINT.r, UITheme.PARCHMENT_FAINT.g, UITheme.PARCHMENT_FAINT.b, base_a * 0.78)
+		)
 
 
 ## The single line of "what am I doing", top left, with a carved tick when it changes.
@@ -1114,3 +1224,168 @@ class DeathOverlay:
 			UITheme.FS_SMALL,
 			Color(UITheme.PARCHMENT_FAINT.r, UITheme.PARCHMENT_FAINT.g, UITheme.PARCHMENT_FAINT.b, _a)
 		)
+
+
+## Floating 2D damage numbers projected from 3D world hit positions, plus an ornate
+## top-center Boss Health Bar below the compass when fighting a titled Rakshasa lord.
+class CombatOverlay:
+	extends Control
+	const POP_LIFE := 0.85
+	const BOSS_RANGE := 28.0
+
+	var _pops: Array = []  # [{world_pos, text, crit, age, jitter}]
+	var _boss: Node = null
+	var _boss_title: String = ""
+	var _boss_hp: float = 0.0
+	var _boss_max: float = 100.0
+	var _boss_shown: float = 1.0
+	var _boss_alpha: float = 0.0
+	var _boss_hold: float = 0.0
+	var _scan_t: float = 0.0
+
+	func _ready() -> void:
+		set_process(true)
+
+	func on_enemy_damaged(enemy: Node, amount: float, crit: bool, hit_pos: Vector3) -> void:
+		var dmg_val: int = maxi(1, int(round(amount)))
+		_pops.append(
+			{
+				"world_pos": hit_pos,
+				"text": ("%d!" % dmg_val) if crit else str(dmg_val),
+				"crit": crit,
+				"age": 0.0,
+				"jitter": randf_range(-14.0, 14.0),
+			}
+		)
+		if enemy != null and is_instance_valid(enemy):
+			var bt: Variant = enemy.get("boss_title")
+			if bt != null and String(bt) != "":
+				_boss = enemy
+				_boss_title = String(bt)
+				_boss_hold = 6.0
+				_sync_boss_stats(enemy, false)
+		queue_redraw()
+
+	func _sync_boss_stats(e: Node, snap: bool) -> void:
+		var raw_h: Variant = e.get("health")
+		var raw_mh: Variant = e.get("max_health")
+		_boss_hp = maxf(0.0, float(raw_h) if raw_h != null else 0.0)
+		_boss_max = maxf(1.0, float(raw_mh) if raw_mh != null else 100.0)
+		if snap:
+			_boss_shown = _boss_hp / _boss_max
+
+	func _scan_nearby_boss() -> void:
+		var tree := get_tree()
+		if tree == null:
+			return
+		var cam := get_viewport().get_camera_3d()
+		var ref_pos := cam.global_position if cam != null else GameState.player_position
+		for n in tree.get_nodes_in_group("enemy"):
+			if not is_instance_valid(n) or not (n is Node3D):
+				continue
+			if n.has_method("is_alive") and not bool(n.call("is_alive")):
+				continue
+			var bt: Variant = n.get("boss_title")
+			if bt == null or String(bt) == "":
+				continue
+			var d: float = (n as Node3D).global_position.distance_to(ref_pos)
+			if d <= BOSS_RANGE:
+				var snap := _boss != n
+				_boss = n
+				_boss_title = String(bt)
+				_boss_hold = maxf(_boss_hold, 1.5)
+				_sync_boss_stats(n, snap)
+				return
+
+	func _process(delta: float) -> void:
+		var i := _pops.size() - 1
+		while i >= 0:
+			var p: Dictionary = _pops[i]
+			p["age"] = float(p["age"]) + delta
+			if float(p["age"]) >= POP_LIFE:
+				_pops.remove_at(i)
+			i -= 1
+
+		_scan_t -= delta
+		if _scan_t <= 0.0:
+			_scan_t = 0.25
+			_scan_nearby_boss()
+
+		var boss_alive := false
+		if _boss != null and is_instance_valid(_boss):
+			var alive := true
+			if _boss.has_method("is_alive"):
+				alive = bool(_boss.call("is_alive"))
+			_sync_boss_stats(_boss, false)
+			if alive and _boss_hp > 0.0:
+				boss_alive = true
+		if boss_alive and _boss_hold > 0.0:
+			_boss_hold = maxf(0.0, _boss_hold - delta)
+			_boss_alpha = move_toward(_boss_alpha, 1.0, delta * 4.5)
+		else:
+			_boss_alpha = move_toward(_boss_alpha, 0.0, delta * 3.0)
+		_boss_shown = lerpf(_boss_shown, clampf(_boss_hp / maxf(_boss_max, 1.0), 0.0, 1.0), clampf(delta * 8.0, 0.0, 1.0))
+
+		if not _pops.is_empty() or _boss_alpha > 0.004:
+			queue_redraw()
+
+	func _draw() -> void:
+		var cam := get_viewport().get_camera_3d()
+		var f_head := UITheme.label_font()
+		var f_eye := UITheme.eyebrow_font()
+
+		# 1. Floating 2D Combat Damage Numbers
+		for p in _pops:
+			var age: float = float(p["age"])
+			var t: float = clampf(age / POP_LIFE, 0.0, 1.0)
+			var wpos: Vector3 = p["world_pos"]
+			var spos := size * 0.5
+			if cam != null:
+				if cam.is_position_behind(wpos):
+					continue
+				spos = cam.unproject_position(wpos)
+			var rise: float = (1.0 - pow(1.0 - t, 2.2)) * 46.0
+			var alpha: float = clampf(1.0 - pow(t, 1.8), 0.0, 1.0)
+			var is_crit: bool = bool(p["crit"])
+			var fsize: int = UITheme.FS_HEAD if is_crit else UITheme.FS_LABEL
+			var col: Color = Color(1.0, 0.86, 0.32, alpha) if is_crit else Color(0.95, 0.90, 0.80, alpha)
+			var txt := String(p["text"])
+			var tw := UITheme.text_width(f_head, txt, fsize)
+			var draw_pos := Vector2(spos.x + float(p["jitter"]) - tw * 0.5, spos.y - rise)
+			UITheme.draw_text(self, f_head, draw_pos, txt, fsize, col)
+
+		# 2. Ornate Top-Center Boss Health Bar below the Compass
+		if _boss_alpha > 0.01 and _boss_title != "":
+			var bw := 460.0
+			var bh := 10.0
+			var bx: float = (size.x - bw) * 0.5
+			var by := 112.0
+			var ba := _boss_alpha
+
+			var title_str := _boss_title.to_upper()
+			var tw := UITheme.text_width(f_eye, title_str, UITheme.FS_TINY)
+			UITheme.draw_text(
+				self,
+				f_eye,
+				Vector2((size.x - tw) * 0.5, by - 10.0),
+				title_str,
+				UITheme.FS_TINY,
+				Color(UITheme.SAFFRON_PALE.r, UITheme.SAFFRON_PALE.g, UITheme.SAFFRON_PALE.b, ba)
+			)
+
+			var bar_r := Rect2(Vector2(bx, by), Vector2(bw, bh))
+			draw_rect(bar_r.grow(2.0), Color(0.03, 0.02, 0.02, 0.82 * ba), true)
+			draw_rect(bar_r, Color(0.14, 0.05, 0.04, 0.88 * ba), true)
+			var fill_w: float = bw * clampf(_boss_shown, 0.0, 1.0)
+			if fill_w > 1.0:
+				draw_rect(Rect2(bar_r.position, Vector2(fill_w, bh)), Color(0.78, 0.18, 0.14, 0.95 * ba), true)
+				draw_rect(Rect2(bar_r.position, Vector2(fill_w, 3.0)), Color(0.96, 0.42, 0.28, 0.65 * ba), true)
+			draw_rect(bar_r.grow(1.0), Color(UITheme.BRASS.r, UITheme.BRASS.g, UITheme.BRASS.b, 0.88 * ba), false, 1.2)
+
+			for side in [-1.0, 1.0]:
+				var cx: float = bx if side < 0.0 else (bx + bw)
+				var cy: float = by + bh * 0.5
+				draw_colored_polygon(
+					PackedVector2Array([Vector2(cx, cy - 5), Vector2(cx + 5, cy), Vector2(cx, cy + 5), Vector2(cx - 5, cy)]),
+					Color(UITheme.BRASS.r, UITheme.BRASS.g, UITheme.BRASS.b, ba)
+				)

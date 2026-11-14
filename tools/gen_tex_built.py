@@ -26,7 +26,7 @@ import numpy as np
 from PIL import Image
 
 N = 1024
-ROOT = "/Users/tarunvadapalli/Documents/Git/UltraOpen"
+ROOT = "/Users/tarunvadapalli/Documents/Git/RAMA"
 OUT = os.path.join(ROOT, "assets", "textures")
 PREVIEW = os.environ.get("RAMA_PREVIEW_DIR", "")
 

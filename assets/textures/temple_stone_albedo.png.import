@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://cpwyeul40qrnk"
 path.s3tc="res://.godot/imported/temple_stone_albedo.png-9bc8ef33fd0d3466af3ea7c3837412df.s3tc.ctex"
+path.etc2="res://.godot/imported/temple_stone_albedo.png-9bc8ef33fd0d3466af3ea7c3837412df.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/temple_stone_albedo.png"
-dest_files=["res://.godot/imported/temple_stone_albedo.png-9bc8ef33fd0d3466af3ea7c3837412df.s3tc.ctex"]
+dest_files=["res://.godot/imported/temple_stone_albedo.png-9bc8ef33fd0d3466af3ea7c3837412df.s3tc.ctex", "res://.godot/imported/temple_stone_albedo.png-9bc8ef33fd0d3466af3ea7c3837412df.etc2.ctex"]
 
 [params]
 

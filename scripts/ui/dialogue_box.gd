@@ -66,6 +66,7 @@ var _line_h: float = 30.0
 var _row_h: float = 36.0
 var _frame_w: float = 10.0
 var _name_rect := Rect2()
+var _choice_rects: Array[Rect2] = []
 
 
 func _ready() -> void:
@@ -95,9 +96,11 @@ func open() -> void:
 	_open = true
 	_appear = 0.0
 	visible = true
+	mouse_filter = Control.MOUSE_FILTER_STOP
 	_speaker = ""
 	_full = ""
 	_choices = []
+	_choice_rects.clear()
 	box_opened.emit()
 
 
@@ -106,11 +109,13 @@ func open() -> void:
 func show_line(speaker: String, text: String, choices: Array = []) -> int:
 	_open = true
 	visible = true
+	mouse_filter = Control.MOUSE_FILTER_STOP
 	_speaker = speaker
 	_full = text
 	_choices = []
 	for c in choices:
 		_choices.append(String(c))
+	_choice_rects.clear()
 	_sel = 0
 	_reveal = 0.0
 	_cool = 0.13
@@ -127,6 +132,8 @@ func show_line(speaker: String, text: String, choices: Array = []) -> int:
 ## Resolve any pending `show_line` with -1 and hide.
 func close() -> void:
 	_open = false
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_choice_rects.clear()
 	if _waiting:
 		_waiting = false
 		_result = -1
@@ -271,6 +278,53 @@ func _relayout() -> void:
 	_total = 0
 	for l in _lines:
 		_total += l.length()
+	_rebuild_choice_rects()
+
+
+func _rebuild_choice_rects() -> void:
+	_choice_rects.clear()
+	if _choices.is_empty():
+		return
+	var x: float = _rect.position.x + _pad
+	var w: float = _rect.size.x - _pad * 2.0
+	var y: float = _choices_top()
+	for _i in range(_choices.size()):
+		var row := Rect2(x - round(10.0 * _ui), y, w + round(20.0 * _ui), _row_h - round(4.0 * _ui))
+		_choice_rects.append(row)
+		y += _row_h
+
+
+func _gui_input(e: InputEvent) -> void:
+	if not _open or not _waiting:
+		return
+	if e is InputEventMouseMotion:
+		if _reveal >= float(_total) and not _choices.is_empty():
+			var mp: Vector2 = (e as InputEventMouseMotion).position
+			for i in range(_choice_rects.size()):
+				if _choice_rects[i].has_point(mp):
+					if _sel != i:
+						_sel = i
+						AudioDirector.play_2d("ui_hover", -14.0)
+						queue_redraw()
+					break
+		return
+	if e is InputEventMouseButton:
+		var mb := e as InputEventMouseButton
+		if mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
+			if _reveal < float(_total):
+				skip_typing()
+				accept_event()
+				return
+			if _choices.is_empty():
+				press_confirm()
+				accept_event()
+				return
+			for i in range(_choice_rects.size()):
+				if _choice_rects[i].has_point(mb.position):
+					_sel = i
+					press_confirm()
+					accept_event()
+					return
 
 
 ## Wrap once, by hand, so the reveal cannot reflow the paragraph under itself.
@@ -460,6 +514,7 @@ func _choices_top() -> float:
 
 
 func _draw_choices(_inner: Rect2) -> void:
+	_choice_rects.clear()
 	var font := _font()
 	var asc: float = font.get_ascent(_fs_choice)
 	var x: float = _rect.position.x + _pad
@@ -468,6 +523,7 @@ func _draw_choices(_inner: Rect2) -> void:
 	var pulse: float = 0.5 + 0.5 * sin(_hint_t * 3.4)
 	for i in range(_choices.size()):
 		var row := Rect2(x - round(10.0 * _ui), y, w + round(20.0 * _ui), _row_h - round(4.0 * _ui))
+		_choice_rects.append(row)
 		if i == _sel:
 			draw_rect(row, Color(SAFFRON.r, SAFFRON.g, SAFFRON.b, 0.13), true)
 			draw_rect(Rect2(row.position, Vector2(round(3.0 * _ui), row.size.y)), SAFFRON.lerp(BRASS, 0.35), true)

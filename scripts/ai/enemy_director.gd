@@ -32,7 +32,7 @@ var _active: Array = []
 ## for every enemy: reading `global_position` off twenty-five nodes twenty-five times
 ## is 625 `get_global_transform` calls a pass, each of which can walk a dirty parent
 ## chain. Gathering them ONCE here makes that O(n) instead of O(n*n) and turns the
-## inner loops into flat array reads. Measured 2026-08-28 with `tests/enemy_prof.gd`.
+## inner loops into flat array reads. Measured 2026-08-28 with `tests/probes/enemy_prof.gd`.
 var _active_pos := PackedVector3Array()
 var _active_rad := PackedFloat32Array()
 var _ranked: Array = []
@@ -164,6 +164,7 @@ func populate() -> void:
 	_forest_patrols()
 	_wild_beasts()
 	_ruins_garrison(WorldMap.P_RUINS)
+	_ramayana_bosses()
 
 
 ## The forest camp: a standing patrol group that circles the clearing, with two
@@ -263,6 +264,52 @@ func _ruins_garrison(centre: Vector2) -> void:
 		var e := _spawn_one(EnemyTypes.Kind.ARCHER, p, gid)
 		if e:
 			e.set_patrol(make_patrol(Vector2(p.x, p.z), 12.0, 3))
+
+
+## Named Ramayana Bosses placed at key Kanda story sites across the valley.
+func _ramayana_bosses() -> void:
+	var bosses := [
+		{
+			"at": Vector2(-172.0, 12.0),
+			"title": "Tataka — Cursed Yakshini of the Wood",
+			"scale": 1.35,
+			"ten_heads": false,
+			"gid": "boss_tataka",
+		},
+		{
+			"at": WorldMap.P_FOREST_CAMP + Vector2(-6.0, -6.0),
+			"title": "Khara — Warlord of Janasthana",
+			"scale": 1.22,
+			"ten_heads": false,
+			"gid": "boss_khara",
+		},
+		{
+			"at": WorldMap.P_BADLANDS + Vector2(-10.0, -8.0),
+			"title": "Kumbhakarna — The Sleeping Mountain",
+			"scale": 1.65,
+			"ten_heads": false,
+			"gid": "boss_kumbhakarna",
+		},
+		{
+			"at": WorldMap.P_BADLANDS,
+			"title": "Dasagriva Ravana — Lord of Lanka",
+			"scale": 1.45,
+			"ten_heads": true,
+			"gid": "boss_ravana",
+		},
+	]
+	for b in bosses:
+		var centre: Vector2 = b["at"]
+		var p := find_ground_spot(centre, 8.0)
+		if not is_finite(p.x):
+			p = Vector3(centre.x, map.height_at(centre.x, centre.y), centre.y)
+		var e := _spawn_one(EnemyTypes.Kind.ELITE, p, String(b["gid"]))
+		if e == null:
+			continue
+		e.boss_title = String(b["title"])
+		e.ten_heads = bool(b["ten_heads"])
+		e.scale = Vector3.ONE * float(b["scale"])
+		e.set_patrol(make_patrol(centre, 10.0, 3))
 
 
 # ===========================================================================

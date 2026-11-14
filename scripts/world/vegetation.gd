@@ -76,7 +76,7 @@ const BAND_MID := 26.0
 ## drawing 8.6% of the near band's blade area. Raised here because it is cheap in the
 ## far tiers — a band-1 tuft is 16 triangles and a band-2 one 6, against 58 in band 0.
 ##
-## Measured 2026-08-28 (tests/qa3d_cover.gd, tests/qa3d_ab.gd): together with the blade
+## Measured 2026-08-28 (tests/probes/qa3d_cover.gd, tests/probes/qa3d_ab.gd): together with the blade
 ## widening this moved cover from 8.9% to 10.3% of a mid-field meadow frame for +39%
 ## instances and +13% triangles, at no measurable frame cost (the paired in-process
 ## delta stayed inside -0.26..+1.16 ms, the same band as before the change). It is a
@@ -629,7 +629,7 @@ func _build_far_static() -> void:
 
 # --- Ground cover ----------------------------------------------------------
 ## Hide or show every ground-cover node. Exists so the cost of this layer can be
-## measured as a PAIRED DIFFERENCE inside one process (tests/ground3d_ab.gd) — two runs
+## measured as a PAIRED DIFFERENCE inside one process (tests/probes/ground3d_ab.gd) — two runs
 ## on this project disagree by more than the thing being measured.
 func set_cover_visible(on: bool) -> void:
 	for cell in _grass_cells:

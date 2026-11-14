@@ -85,6 +85,7 @@ func _place() -> void:
 	_place_ruins()
 	_place_village()
 	_place_grove()
+	_place_ramayana()
 
 
 ## The shrine forecourt, east of the temple, laid out along the processional.
@@ -169,6 +170,18 @@ func _place_grove() -> void:
 	_add(Pickup.new("amulet", "Take the amulet", "amulet"), _g(c.x, c.y) + Vector3(0, 1.86, 0), "GroveGift")
 
 
+## Sacred Ramayana 3D monuments and trial sites across the Five Kandas.
+func _place_ramayana() -> void:
+	_add(ShivaDhanush.new(), _g(-108.0, 38.0), "ShivaDhanush")
+	_add(ChitrakootPaduka.new(), _g(154.0, -64.0), "ChitrakootPaduka")
+	_add(TulsiVrindavan.new(), _g(-128.0, 48.0), "TulsiVrindavan")
+	_add(GoldenDeer.new(), _g(-208.0, 18.0), "GoldenDeer")
+	_add(JatayuMemorial.new(), _g(42.0, -182.0), "JatayuMemorial")
+	_add(SaptaTalaTrial.new(), _g(-284.0, 92.0), "SaptaTalaTrial")
+	_add(SuryaAltar.new(), _g(96.0, -150.0), "SuryaAltar")
+	_add(RamaSetuStone.new(), _g(-32.0, 12.0), "RamaSetuStone")
+
+
 func _add(n: Node3D, pos: Vector3, nm: String) -> void:
 	n.name = nm
 	if n is Base:
@@ -248,6 +261,13 @@ class Base:
 		var q := quests()
 		if q != null and q.has_method("notify_interact"):
 			q.call("notify_interact", tag)
+
+	func _add_prana(amount: float) -> void:
+		if GameState.has_method("add_prana"):
+			GameState.call("add_prana", amount)
+		elif "prana" in GameState:
+			var max_p: float = float(GameState.get("max_prana")) if "max_prana" in GameState else 100.0
+			GameState.set("prana", clampf(float(GameState.get("prana")) + amount, 0.0, max_p))
 
 	func _light(colour: Color, energy: float, rng: float, at: Vector3) -> OmniLight3D:
 		var l := OmniLight3D.new()
@@ -498,6 +518,14 @@ class ShrineLamp:
 		if host != null and host.lamp_puzzle != null:
 			host.lamp_puzzle.light(self)
 
+	func ignite_from_astra() -> void:
+		if lit:
+			return
+		if host != null and host.lamp_puzzle != null:
+			host.lamp_puzzle.light(self)
+		else:
+			set_lit(true)
+
 	func set_lit(v: bool, quiet: bool = false) -> void:
 		if lit == v:
 			return
@@ -656,6 +684,14 @@ class ThresholdLamp:
 		_set_lit(true)
 		AudioDirector.play_3d("torch_light", global_position, -3.0)
 		EventBus.notify.emit("The threshold lamp", "Small, and orange, and visible from the ford.", "quest")
+		_notify_quest("threshold_lamp")
+
+	func ignite_from_astra() -> void:
+		if lit:
+			return
+		_set_lit(true)
+		AudioDirector.play_3d("torch_light", global_position, -3.0)
+		EventBus.notify.emit("The threshold lamp", "Kindled from afar by Agneyastra's sacred flame.", "quest")
 		_notify_quest("threshold_lamp")
 
 	func _set_lit(v: bool) -> void:
@@ -1539,6 +1575,12 @@ class Campfire:
 		AudioDirector.play_3d("fire_crackle", global_position, -6.0)
 		EventBus.notify.emit("You rest", "The hours pass, and the fire keeps its own counsel.", "info")
 
+	func ignite_from_astra() -> void:
+		if _glow != null:
+			_glow.light_energy = 4.2
+		AudioDirector.play_3d("torch_light", global_position, -3.0)
+		EventBus.notify.emit("Sacred Fire", "Agneyastra roars through the hearth-embers.", "info")
+
 	func _process(_d: float) -> void:
 		if _glow != null:
 			var e := Base.t()
@@ -1816,3 +1858,688 @@ class GroveStone:
 		EventBus.notify.emit(
 			"The %s stone" % ["first", "second", "third", "fourth", "fifth", "sixth"][idx % 6], String(LINES[idx % LINES.size()]), "info"
 		)
+
+
+# ===========================================================================
+#  Sacred Ramayana Monuments & Trial Sites (The Five Kandas)
+# ===========================================================================
+## 1. Shiva Dhanush (Pinaka) — Bala Kanda: 8-wheeled iron-and-gold carriage holding
+## the colossal 2.8m bow of Rudra upon a carved Mithila stone plinth.
+class ShivaDhanush:
+	extends Base
+	var strung: bool = false
+	var _bow_left: MeshInstance3D
+	var _bow_right: MeshInstance3D
+	var _string_mesh: MeshInstance3D
+	var _glow: OmniLight3D
+
+	func post_place() -> void:
+		interact_range = 4.2
+		var stone := Mats.pbr("carved_stone", 1.2)
+		var iron := Mats.flat(Color(0.24, 0.25, 0.27), 0.38, 0.86)
+		var gold := Mats.brass()
+		# Carved stone plinth
+		var plinth := MeshInstance3D.new()
+		plinth.mesh = MeshKit.box(Vector3(3.40, 0.36, 1.56), 1.4)
+		plinth.material_override = stone
+		plinth.position = Vector3(0.0, 0.18, 0.0)
+		add_child(plinth)
+		# Iron-and-gold carriage bed
+		var carriage := MeshInstance3D.new()
+		carriage.mesh = MeshKit.box(Vector3(3.00, 0.22, 1.12), 1.2)
+		carriage.material_override = iron
+		carriage.position = Vector3(0.0, 0.56, 0.0)
+		add_child(carriage)
+		# 8 iron-and-gold wheels (4 on each side)
+		for ix in [-1.15, -0.38, 0.38, 1.15]:
+			for sz in [-0.62, 0.62]:
+				var w := MeshInstance3D.new()
+				w.mesh = MeshKit.tube(0.08, [[0.0, 0.26], [1.0, 0.26]], 14)
+				w.material_override = gold
+				w.rotation = Vector3(PI * 0.5, 0.0, 0.0)
+				w.position = Vector3(ix, 0.52, sz)
+				add_child(w)
+		# Colossal 2.8m celestial bow Pinaka in two halves so it can crack when strung
+		_bow_left = MeshInstance3D.new()
+		_bow_left.mesh = MeshKit.tube(1.42, [[0.0, 0.075], [0.55, 0.058], [1.0, 0.028]], 12, 0.32, Vector3(0.0, 0.0, 0.24))
+		_bow_left.material_override = gold
+		_bow_left.position = Vector3(0.0, 1.12, 0.0)
+		_bow_left.rotation = Vector3(0.0, 0.0, PI * 0.5 - 0.18)
+		add_child(_bow_left)
+		_bow_right = MeshInstance3D.new()
+		_bow_right.mesh = MeshKit.tube(1.42, [[0.0, 0.075], [0.55, 0.058], [1.0, 0.028]], 12, 0.32, Vector3(0.0, 0.0, -0.24))
+		_bow_right.material_override = gold
+		_bow_right.position = Vector3(0.0, 1.12, 0.0)
+		_bow_right.rotation = Vector3(0.0, 0.0, -PI * 0.5 + 0.18)
+		add_child(_bow_right)
+		_string_mesh = MeshInstance3D.new()
+		_string_mesh.mesh = MeshKit.tube(2.68, [[0.0, 0.008], [1.0, 0.008]], 6)
+		_string_mesh.material_override = Mats.flat(Color(1.0, 0.92, 0.66), 0.25, 0.90)
+		_string_mesh.position = Vector3(-1.34, 0.88, 0.0)
+		_string_mesh.rotation = Vector3(0.0, 0.0, -PI * 0.5)
+		add_child(_string_mesh)
+		_glow = _light(Color(1.0, 0.78, 0.34), 1.8, 10.0, Vector3(0.0, 1.35, 0.0))
+
+	func interact_prompt() -> String:
+		if strung:
+			return "Contemplate the broken halves of Pinaka (Shiva Dhanush)"
+		return "Lift and string Pinaka, the great Bow of Shiva"
+
+	func interact(_player) -> void:
+		strung = true
+		GameState.set_flag("pinaka_strung", true)
+		_apply_broken()
+		AudioDirector.play_3d("bell_temple", global_position, 2.0)
+		AudioDirector.play_3d("land_hard", global_position, 2.0)
+		EventBus.hit_feedback.emit(global_position, 0.9, "crit")
+		_add_prana(15.0)
+		_notify_quest("shiva_dhanush")
+		EventBus.notify.emit(
+			"Pinaka — The Bow of Shiva",
+			"With a thunderclap that shakes Mithila and Dandaka alike, the great bow bends and snaps in twain! (+15 Prana)",
+			"quest"
+		)
+
+	func _apply_broken() -> void:
+		if _bow_left != null:
+			_bow_left.rotation = Vector3(0.0, 0.08, PI * 0.5 + 0.22)
+		if _bow_right != null:
+			_bow_right.rotation = Vector3(0.0, -0.08, -PI * 0.5 - 0.22)
+		if _string_mesh != null:
+			_string_mesh.visible = false
+		if _glow != null:
+			_glow.light_energy = 2.8
+
+	func sync_from_state() -> void:
+		strung = bool(GameState.get_flag("pinaka_strung", false))
+		if strung:
+			_apply_broken()
+
+
+# ---------------------------------------------------------------------------
+## 2. Chitrakoot Paduka — Ayodhya Kanda: Carved lotus stone pedestal with Rama's
+## twin golden sandals gleaming under a warm golden light.
+class ChitrakootPaduka:
+	extends Base
+	var consecrated: bool = false
+	var _glow: OmniLight3D
+
+	func post_place() -> void:
+		interact_range = 3.6
+		var stone := Mats.pbr("carved_stone", 1.1)
+		var gold := StandardMaterial3D.new()
+		gold.albedo_color = Color(0.98, 0.82, 0.28)
+		gold.metallic = 0.88
+		gold.roughness = 0.20
+		gold.emission_enabled = true
+		gold.emission = Color(0.95, 0.72, 0.20)
+		gold.emission_energy_multiplier = 0.45
+		# Stepped lotus pedestal
+		var base := MeshInstance3D.new()
+		base.mesh = MeshKit.profile_loft(0.76, [[0.0, 0.68, 0.68], [0.40, 0.54, 0.54], [0.75, 0.44, 0.44], [1.0, 0.58, 0.58]], 16)
+		base.material_override = stone
+		add_child(base)
+		var lotus := MeshInstance3D.new()
+		lotus.mesh = MeshKit.profile_loft(0.18, [[0.0, 0.48, 0.48], [0.6, 0.62, 0.62], [1.0, 0.52, 0.52]], 16)
+		lotus.material_override = Mats.pbr("terracotta", 1.2)
+		lotus.position = Vector3(0.0, 0.76, 0.0)
+		add_child(lotus)
+		# Twin golden sandals (Rama Paduka)
+		for sx in [-0.14, 0.14]:
+			var sole := MeshInstance3D.new()
+			sole.mesh = MeshKit.box(Vector3(0.13, 0.035, 0.30), 1.0)
+			sole.material_override = gold
+			sole.position = Vector3(sx, 0.96, 0.0)
+			add_child(sole)
+			var peg := MeshInstance3D.new()
+			peg.mesh = MeshKit.tube(0.055, [[0.0, 0.016], [0.7, 0.014], [1.0, 0.024]], 8)
+			peg.material_override = gold
+			peg.position = Vector3(sx, 0.975, -0.07)
+			add_child(peg)
+		_glow = _light(Color(1.0, 0.82, 0.38), 2.2, 11.0, Vector3(0.0, 1.35, 0.0))
+
+	func interact_prompt() -> String:
+		return "Consecrate the Golden Paduka upon the Chitrakoot pedestal"
+
+	func interact(player) -> void:
+		consecrated = true
+		GameState.set_flag("paduka_consecrated", true)
+		GameState.set_flag("respawn_point", [global_position.x, global_position.y, global_position.z])
+		if player != null and player.has_method("heal"):
+			player.heal(GameState.max_health)
+		GameState.stamina = GameState.max_stamina
+		_add_prana(100.0)
+		if _glow != null:
+			_glow.light_energy = 3.4
+		AudioDirector.play_3d("shrine_activate", global_position, -2.0)
+		_notify_quest("chitrakoot_paduka")
+		EventBus.notify.emit(
+			"The Golden Paduka of Chitrakoot",
+			"The lotus sandals gleam with righteous light. Health & Prana restored; respawn consecrated.",
+			"quest"
+		)
+
+	func sync_from_state() -> void:
+		consecrated = bool(GameState.get_flag("paduka_consecrated", false))
+
+
+# ---------------------------------------------------------------------------
+## 3. Tulsi Vrindavan — Sacred stepped terracotta-and-stone Tulsi planter outside
+## the Panchavati Parnashala with a 3D basil shrub and brass diya.
+class TulsiVrindavan:
+	extends Base
+	var harvested: bool = false
+
+	func post_place() -> void:
+		interact_range = 3.4
+		var stone := Mats.pbr("temple_stone", 1.2)
+		var terra := Mats.pbr("terracotta", 1.4)
+		var leaf_mat := Mats.flat(Color(0.22, 0.56, 0.24), 0.72)
+		var step1 := MeshInstance3D.new()
+		step1.mesh = MeshKit.box(Vector3(1.10, 0.24, 1.10), 1.0)
+		step1.material_override = stone
+		step1.position = Vector3(0.0, 0.12, 0.0)
+		add_child(step1)
+		var pillar := MeshInstance3D.new()
+		pillar.mesh = MeshKit.box(Vector3(0.68, 0.66, 0.68), 1.0)
+		pillar.material_override = terra
+		pillar.position = Vector3(0.0, 0.57, 0.0)
+		add_child(pillar)
+		# Sacred 3D Tulsi shrub crown
+		for i in range(7):
+			var a: float = TAU * float(i) / 7.0
+			var r: float = 0.14 if i > 0 else 0.0
+			var tuft := MeshInstance3D.new()
+			tuft.mesh = MeshKit.ovoid(0.14, 0.22, 0.5, 8, 6)
+			tuft.material_override = leaf_mat
+			tuft.position = Vector3(cos(a) * r, 1.02 + (0.06 if i == 0 else 0.0), sin(a) * r)
+			add_child(tuft)
+		# Brass diya in front niche
+		var diya := MeshInstance3D.new()
+		diya.mesh = MeshKit.profile_loft(0.08, [[0.0, 0.05, 0.05], [1.0, 0.09, 0.09]], 10)
+		diya.material_override = Mats.brass()
+		diya.position = Vector3(0.0, 0.26, 0.42)
+		add_child(diya)
+		_light(Color(1.0, 0.76, 0.34), 1.5, 7.5, Vector3(0.0, 0.42, 0.46))
+
+	func interact_prompt() -> String:
+		if not harvested:
+			return "Gather Soma Tulsi and pray at the Panchavati Vrindavan"
+		return "Offer reverence at the Tulsi Vrindavan (Restore Prana)"
+
+	func interact(_player) -> void:
+		if not harvested:
+			harvested = true
+			GameState.set_flag("tulsi_harvested", true)
+			GameState.add_item("soma_tulsi", 1)
+		_add_prana(50.0)
+		AudioDirector.play_3d("heal", global_position, -3.0)
+		EventBus.notify.emit(
+			"Panchavati Tulsi Vrindavan",
+			"Fragrant sacred basil steadies your breath and replenishes your Prana.",
+			"item"
+		)
+
+	func sync_from_state() -> void:
+		harvested = bool(GameState.get_flag("tulsi_harvested", false))
+
+
+# ---------------------------------------------------------------------------
+## 4. Golden Deer (Kanchana Mriga) — Aranya Kanda: Maricha's radiant metallic-gold
+## buck with silver antlers and glowing sapphire eyes.
+class GoldenDeer:
+	extends Base
+	var unmasked: bool = false
+	var _buck: Node3D
+	var _glow: OmniLight3D
+
+	func _ready() -> void:
+		super._ready()
+		add_to_group("arrow_target")
+
+	func post_place() -> void:
+		interact_range = 4.2
+		_buck = Node3D.new()
+		_buck.name = "BuckVisual"
+		add_child(_buck)
+
+		var gold := StandardMaterial3D.new()
+		gold.albedo_color = Color(0.98, 0.80, 0.22)
+		gold.metallic = 0.88
+		gold.roughness = 0.18
+		gold.emission_enabled = true
+		gold.emission = Color(0.96, 0.74, 0.18)
+		gold.emission_energy_multiplier = 0.40
+
+		var silver := StandardMaterial3D.new()
+		silver.albedo_color = Color(0.92, 0.95, 1.0)
+		silver.metallic = 0.92
+		silver.roughness = 0.14
+
+		var sapphire := StandardMaterial3D.new()
+		sapphire.albedo_color = Color(0.18, 0.52, 1.0)
+		sapphire.emission_enabled = true
+		sapphire.emission = Color(0.22, 0.62, 1.0)
+		sapphire.emission_energy_multiplier = 3.8
+		sapphire.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+
+		# Torso
+		var torso := MeshInstance3D.new()
+		torso.mesh = MeshKit.ovoid(0.24, 0.56, 0.5, 12, 10)
+		torso.material_override = gold
+		torso.position = Vector3(0.0, 0.78, 0.0)
+		torso.rotation = Vector3(PI * 0.5, 0.0, 0.0)
+		_buck.add_child(torso)
+		# Four slender golden legs
+		for lx in [-0.13, 0.13]:
+			for lz in [-0.32, 0.32]:
+				var leg := MeshInstance3D.new()
+				leg.mesh = MeshKit.tube(0.76, [[0.0, 0.032], [0.6, 0.044], [1.0, 0.056]], 8)
+				leg.material_override = gold
+				leg.position = Vector3(lx, 0.0, lz)
+				_buck.add_child(leg)
+		# Neck & Head
+		var neck := MeshInstance3D.new()
+		neck.mesh = MeshKit.tube(0.46, [[0.0, 0.10], [1.0, 0.068]], 10)
+		neck.material_override = gold
+		neck.position = Vector3(0.0, 0.86, -0.36)
+		neck.rotation = Vector3(0.32, 0.0, 0.0)
+		_buck.add_child(neck)
+		var head := MeshInstance3D.new()
+		head.mesh = MeshKit.ovoid(0.10, 0.22, 0.5, 10, 8)
+		head.material_override = gold
+		head.position = Vector3(0.0, 1.28, -0.52)
+		head.rotation = Vector3(PI * 0.42, 0.0, 0.0)
+		_buck.add_child(head)
+		# Sapphire eyes
+		for sx in [-0.075, 0.075]:
+			var eye := MeshInstance3D.new()
+			eye.mesh = MeshKit.sphere(0.022, 8, 6)
+			eye.material_override = sapphire
+			eye.position = Vector3(sx, 1.32, -0.56)
+			_buck.add_child(eye)
+		# Silver branching antlers
+		for sx in [-1.0, 1.0]:
+			var beam := MeshInstance3D.new()
+			beam.mesh = MeshKit.tube(0.48, [[0.0, 0.018], [0.6, 0.013], [1.0, 0.005]], 8, 0.22, Vector3(0.08 * sx, 0.0, 0.08))
+			beam.material_override = silver
+			beam.position = Vector3(0.06 * sx, 1.36, -0.46)
+			beam.rotation = Vector3(-0.24, 0.0, -0.32 * sx)
+			_buck.add_child(beam)
+
+		# Arrow target collision body so arrows can strike the Golden Deer directly
+		var sb := StaticBody3D.new()
+		sb.collision_layer = 8
+		sb.collision_mask = 0
+		var col := CollisionShape3D.new()
+		var box := BoxShape3D.new()
+		box.size = Vector3(0.8, 1.5, 1.3)
+		col.shape = box
+		col.position = Vector3(0.0, 0.75, 0.0)
+		sb.add_child(col)
+		add_child(sb)
+
+		_glow = _light(Color(1.0, 0.84, 0.32), 2.5, 12.0, Vector3(0.0, 1.2, 0.0))
+
+	func interact_prompt() -> String:
+		if unmasked:
+			return "Inspect the shattered golden illusion of Maricha"
+		return "Pursue and unmask the Golden Deer (Kanchana Mriga)"
+
+	func interact(_player) -> void:
+		_trigger_unmask()
+
+	func on_arrow_hit(_astra: int = 0, _arrow: Node = null) -> void:
+		_trigger_unmask()
+
+	func _trigger_unmask() -> void:
+		var q := quests()
+		if q != null and q.has_method("is_started") and not bool(q.call("is_started", "q_aranya_kanda")):
+			if q.has_method("start"):
+				q.call("start", "q_aranya_kanda")
+		unmasked = true
+		GameState.set_flag("golden_deer_unmasked", true)
+		if _buck != null:
+			_buck.scale = Vector3(0.92, 0.45, 0.92)
+		if _glow != null:
+			_glow.light_color = Color(0.95, 0.36, 0.18)
+		AudioDirector.play_3d("shrine_activate", global_position, -1.0)
+		EventBus.hit_feedback.emit(global_position + Vector3(0, 1.0, 0), 0.85, "crit")
+		_notify_quest("golden_deer")
+		EventBus.notify.emit(
+			"Maricha Unmasked!",
+			"In a burst of golden sparks the sapphire-eyed buck dissolves, revealing Maricha's Rakshasa ambush!",
+			"quest"
+		)
+
+	func sync_from_state() -> void:
+		unmasked = bool(GameState.get_flag("golden_deer_unmasked", false))
+		if unmasked and _buck != null:
+			_buck.scale = Vector3(0.92, 0.45, 0.92)
+
+	func _process(_d: float) -> void:
+		if not unmasked and _buck != null:
+			_buck.position.y = sin(Base.t() * 2.6) * 0.04
+
+
+# ---------------------------------------------------------------------------
+## 5. Jatayu Memorial — Aranya Kanda: Heroic 3D sculpture of the giant vulture-king
+## Jatayu with bronze-and-gold outstretched wings, feathered crest, and golden beak.
+class JatayuMemorial:
+	extends Base
+	var blessed: bool = false
+	var _glow: OmniLight3D
+
+	func post_place() -> void:
+		interact_range = 4.2
+		var crag_mat := Mats.pbr("rock", 1.8)
+		var bronze := StandardMaterial3D.new()
+		bronze.albedo_color = Color(0.68, 0.50, 0.28)
+		bronze.metallic = 0.72
+		bronze.roughness = 0.30
+		var gold := Mats.brass()
+		# Mossy crag plinth
+		var crag := MeshInstance3D.new()
+		crag.mesh = MeshKit.boulder(1.18, 709)
+		crag.material_override = crag_mat
+		crag.scale = Vector3(1.5, 0.68, 1.3)
+		crag.position = Vector3(0.0, 0.36, 0.0)
+		add_child(crag)
+		# Heroic eagle/vulture body
+		var body := MeshInstance3D.new()
+		body.mesh = MeshKit.ovoid(0.46, 0.92, 0.5, 14, 10)
+		body.material_override = bronze
+		body.position = Vector3(0.0, 1.06, 0.0)
+		body.rotation = Vector3(0.42, 0.0, 0.0)
+		add_child(body)
+		# Head, feathered crest, and hooked golden beak
+		var head := MeshInstance3D.new()
+		head.mesh = MeshKit.sphere(0.28, 12, 10)
+		head.material_override = bronze
+		head.position = Vector3(0.0, 1.62, -0.44)
+		add_child(head)
+		var beak := MeshInstance3D.new()
+		beak.mesh = MeshKit.tube(0.38, [[0.0, 0.11], [0.6, 0.06], [1.0, 0.008]], 10, 0.25, Vector3(0.0, -0.08, 0.0))
+		beak.material_override = gold
+		beak.position = Vector3(0.0, 1.58, -0.64)
+		beak.rotation = Vector3(-PI * 0.46, 0.0, 0.0)
+		add_child(beak)
+		var crest := MeshInstance3D.new()
+		crest.mesh = MeshKit.box(Vector3(0.08, 0.24, 0.36), 1.0)
+		crest.material_override = gold
+		crest.position = Vector3(0.0, 1.82, -0.36)
+		crest.rotation = Vector3(-0.35, 0.0, 0.0)
+		add_child(crest)
+		# Outstretched bronze-and-gold wings
+		for sx in [-1.0, 1.0]:
+			var wing := MeshInstance3D.new()
+			wing.mesh = MeshKit.box(Vector3(1.85, 0.10, 0.78), 1.2)
+			wing.material_override = bronze
+			wing.position = Vector3(1.12 * sx, 1.24, 0.08)
+			wing.rotation = Vector3(0.18, -0.16 * sx, 0.24 * sx)
+			add_child(wing)
+			for f in range(4):
+				var pinion := MeshInstance3D.new()
+				pinion.mesh = MeshKit.tube(0.75, [[0.0, 0.055], [1.0, 0.015]], 8)
+				pinion.material_override = gold
+				pinion.position = Vector3((0.75 + float(f) * 0.36) * sx, 1.22 + float(f) * 0.06, 0.32)
+				pinion.rotation = Vector3(PI * 0.45, 0.12 * sx, 0.0)
+				add_child(pinion)
+		_glow = _light(Color(1.0, 0.80, 0.38), 2.1, 11.0, Vector3(0.0, 1.9, 0.0))
+
+	func interact_prompt() -> String:
+		return "Hear the dying words of Vulture-King Jatayu"
+
+	func interact(_player) -> void:
+		blessed = true
+		GameState.set_flag("jatayu_blessed", true)
+		_add_prana(25.0)
+		if _glow != null:
+			_glow.light_energy = 3.5
+		AudioDirector.play_3d("shrine_activate", global_position, -2.0)
+		_notify_quest("jatayu_memorial")
+		EventBus.notify.emit(
+			"Jatayu's Vigil",
+			"\"Ravana bore Sita southward toward Lanka, O Rama...\" Bathed in your blessing, noble Jatayu ascends in light. (+25 Prana)",
+			"quest"
+		)
+
+	func sync_from_state() -> void:
+		blessed = bool(GameState.get_flag("jatayu_blessed", false))
+
+
+# ---------------------------------------------------------------------------
+## 6. Sapta Tala Trial — Kishkindha Kanda: Seven Sacred Sala Trees bound with
+## vermilion bands aligned in a row behind a carved trial stone.
+class SaptaTalaTrial:
+	extends Base
+	var pierced: bool = false
+	var _rings: Array = []
+
+	func _ready() -> void:
+		super._ready()
+		add_to_group("arrow_target")
+
+	func post_place() -> void:
+		interact_range = 4.4
+		var stone_mat := Mats.pbr("carved_stone", 1.2)
+		var bark_mat := Interactables.alt_pbr("bark_banyan", 2.0)
+		var vermilion := StandardMaterial3D.new()
+		vermilion.albedo_color = Color(0.92, 0.22, 0.12)
+		vermilion.emission_enabled = true
+		vermilion.emission = Color(0.95, 0.32, 0.14)
+		vermilion.emission_energy_multiplier = 1.2
+		# Carved trial stone at the front of the alignment
+		var plinth := MeshInstance3D.new()
+		plinth.mesh = MeshKit.profile_loft(1.18, [[0.0, 0.42, 0.32], [0.8, 0.34, 0.26], [1.0, 0.38, 0.28]], 10)
+		plinth.material_override = stone_mat
+		add_child(plinth)
+		# 7 tall sacred Sala trunks aligned in a row behind the stone
+		for i in range(7):
+			var tz: float = -2.2 - float(i) * 1.65
+			var tx: float = sin(float(i) * 0.9) * 0.12
+			var trunk := MeshInstance3D.new()
+			trunk.mesh = MeshKit.tube(5.4 + float(i % 3) * 0.4, [[0.0, 0.26], [0.5, 0.22], [1.0, 0.17]], 10)
+			trunk.material_override = bark_mat
+			trunk.position = Vector3(tx, 0.0, tz)
+			add_child(trunk)
+			var band := MeshInstance3D.new()
+			band.mesh = MeshKit.tube(0.18, [[0.0, 0.25], [1.0, 0.25]], 12)
+			band.material_override = vermilion
+			band.position = Vector3(tx, 1.35, tz)
+			add_child(band)
+			_rings.append(band)
+
+		# Arrow target collision shape on the trial stone and tree line
+		var sb := StaticBody3D.new()
+		sb.collision_layer = 8
+		sb.collision_mask = 0
+		var col := CollisionShape3D.new()
+		var box := BoxShape3D.new()
+		box.size = Vector3(1.2, 3.2, 13.0)
+		col.shape = box
+		col.position = Vector3(0.0, 1.6, -6.0)
+		sb.add_child(col)
+		add_child(sb)
+		_light(Color(1.0, 0.72, 0.30), 1.9, 10.0, Vector3(0.0, 1.6, -1.0))
+
+	func interact_prompt() -> String:
+		if pierced:
+			return "Inspect the Seven Pierced Sala Trees (Sapta Tala)"
+		return "Loose an arrow through the Seven Sacred Sala Trees (Sapta Tala)"
+
+	func interact(_player) -> void:
+		_trigger_pierce()
+
+	func on_arrow_hit(_astra: int = 0, _arrow: Node = null) -> void:
+		_trigger_pierce()
+
+	func _trigger_pierce() -> void:
+		pierced = true
+		GameState.set_flag("sapta_tala_pierced", true)
+		for b in _rings:
+			if b is MeshInstance3D:
+				var m := (b as MeshInstance3D).material_override as StandardMaterial3D
+				if m != null:
+					m.emission = Color(0.45, 0.95, 1.0)
+					m.emission_energy_multiplier = 4.2
+		AudioDirector.play_3d("bell_temple", global_position, 1.5)
+		EventBus.hit_feedback.emit(global_position + Vector3(0, 1.4, -2.0), 0.9, "crit")
+		_notify_quest("sapta_tala")
+		EventBus.notify.emit(
+			"Sapta Tala Pierced!",
+			"A single arrow roars like Vayu's tempest through all Seven Sacred Sala Trees at once!",
+			"quest"
+		)
+
+	func sync_from_state() -> void:
+		pierced = bool(GameState.get_flag("sapta_tala_pierced", false))
+
+
+# ---------------------------------------------------------------------------
+## 7. Surya Altar — Yuddha Kanda: Golden Aditya Hridayam Sun Chakra altar at the
+## eastern Lookout overlooking the valley.
+class SuryaAltar:
+	extends Base
+	var chanted: bool = false
+	var _chakra: Node3D
+	var _glow: OmniLight3D
+
+	func post_place() -> void:
+		interact_range = 3.8
+		var stone := Mats.pbr("carved_stone", 1.2)
+		var sun_gold := StandardMaterial3D.new()
+		sun_gold.albedo_color = Color(1.0, 0.84, 0.28)
+		sun_gold.metallic = 0.90
+		sun_gold.roughness = 0.16
+		sun_gold.emission_enabled = true
+		sun_gold.emission = Color(1.0, 0.72, 0.20)
+		sun_gold.emission_energy_multiplier = 1.6
+
+		var pedestal := MeshInstance3D.new()
+		pedestal.mesh = MeshKit.profile_loft(1.12, [[0.0, 0.62, 0.62], [0.45, 0.46, 0.46], [0.85, 0.42, 0.42], [1.0, 0.56, 0.56]], 16)
+		pedestal.material_override = stone
+		add_child(pedestal)
+
+		_chakra = Node3D.new()
+		_chakra.position = Vector3(0.0, 1.62, 0.0)
+		add_child(_chakra)
+		var disc := MeshInstance3D.new()
+		disc.mesh = MeshKit.ovoid(0.38, 0.38, 0.5, 16, 10)
+		disc.scale = Vector3(1.0, 1.0, 0.22)
+		disc.material_override = sun_gold
+		_chakra.add_child(disc)
+		for i in range(12):
+			var a: float = TAU * float(i) / 12.0
+			var ray := MeshInstance3D.new()
+			ray.mesh = MeshKit.tube(0.24, [[0.0, 0.036], [1.0, 0.005]], 6)
+			ray.material_override = sun_gold
+			ray.position = Vector3(cos(a) * 0.36, sin(a) * 0.36, 0.0)
+			ray.rotation = Vector3(0.0, 0.0, a - PI * 0.5)
+			_chakra.add_child(ray)
+
+		_glow = _light(Color(1.0, 0.78, 0.30), 2.8, 14.0, Vector3(0.0, 1.65, 0.0))
+
+	func interact_prompt() -> String:
+		return "Chant the Aditya Hridayam at the Surya Altar"
+
+	func interact(player) -> void:
+		chanted = true
+		GameState.set_flag("aditya_hridayam_chanted", true)
+		if player != null and player.has_method("heal"):
+			player.heal(GameState.max_health)
+		GameState.stamina = GameState.max_stamina
+		_add_prana(100.0)
+		if _glow != null:
+			_glow.light_energy = 4.2
+		AudioDirector.play_3d("shrine_activate", global_position, 0.0)
+		_notify_quest("surya_altar")
+		EventBus.notify.emit(
+			"Aditya Hridayam",
+			"You chant the ancient hymn to Surya, Lord of Effulgence. Prana is refilled to 100% and Brahmastra awakens!",
+			"quest"
+		)
+
+	func sync_from_state() -> void:
+		chanted = bool(GameState.get_flag("aditya_hridayam_chanted", false))
+
+	func _process(delta: float) -> void:
+		if _chakra != null:
+			_chakra.rotation.z += delta * (0.85 if chanted else 0.32)
+
+
+# ---------------------------------------------------------------------------
+## 8. Rama Setu Stone — Yuddha Kanda: Floating pumice bridge stones across the
+## river ford inscribed with glowing golden RAMA runes.
+class RamaSetuStone:
+	extends Base
+	var inscribed: bool = false
+	var _stones: Array = []
+	var _runes: Array = []
+	var _glow: OmniLight3D
+
+	func post_place() -> void:
+		interact_range = 4.2
+		var pumice := Mats.pbr("rock", 1.6)
+		var rune_mat := StandardMaterial3D.new()
+		rune_mat.albedo_color = Color(1.0, 0.84, 0.32)
+		rune_mat.emission_enabled = true
+		rune_mat.emission = Color(1.0, 0.72, 0.22)
+		rune_mat.emission_energy_multiplier = 2.6
+		rune_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+
+		# Cluster of 6 floating pumice stones forming a causeway at the crossing
+		for i in range(6):
+			var st := MeshInstance3D.new()
+			st.mesh = MeshKit.boulder(0.56, 401 + i * 29)
+			st.material_override = pumice
+			st.scale = Vector3(1.25, 0.42, 0.95)
+			st.position = Vector3(float(i - 2) * 1.35, 0.22 + float(i % 2) * 0.04, sin(float(i) * 0.8) * 0.42)
+			add_child(st)
+			_stones.append(st)
+			# Golden RAMA rune bar carved atop each floating stone
+			var rune := MeshInstance3D.new()
+			rune.mesh = MeshKit.box(Vector3(0.46, 0.03, 0.14), 1.0)
+			rune.material_override = rune_mat
+			rune.position = st.position + Vector3(0.0, 0.22, 0.0)
+			add_child(rune)
+			_runes.append(rune)
+
+		_glow = _light(Color(1.0, 0.80, 0.34), 2.0, 12.0, Vector3(0.0, 0.85, 0.0))
+
+	func interact_prompt() -> String:
+		if inscribed:
+			return "Walk the consecrated floating stones of Rama Setu"
+		return "Inscribe RAMA upon the floating Setu stones"
+
+	func interact(_player) -> void:
+		inscribed = true
+		GameState.set_flag("rama_setu_inscribed", true)
+		if _glow != null:
+			_glow.light_energy = 3.8
+		for r in _runes:
+			if r is MeshInstance3D:
+				var m := (r as MeshInstance3D).material_override as StandardMaterial3D
+				if m != null:
+					m.emission_energy_multiplier = 5.5
+		AudioDirector.play_3d("shrine_activate", global_position, -1.0)
+		_notify_quest("rama_setu_stone")
+		EventBus.notify.emit(
+			"Rama Setu Consecrated",
+			"Inscribed with the name of RAMA, the heavy stones float effortlessly upon the water!",
+			"quest"
+		)
+
+	func sync_from_state() -> void:
+		inscribed = bool(GameState.get_flag("rama_setu_inscribed", false))
+
+	func _process(_d: float) -> void:
+		var time_s := Base.t()
+		for i in range(_stones.size()):
+			var bob: float = sin(time_s * 1.8 + float(i) * 0.9) * 0.025
+			var st := _stones[i] as Node3D
+			var rn := _runes[i] as Node3D
+			if st != null:
+				st.position.y = 0.22 + bob
+			if rn != null:
+				rn.position.y = 0.44 + bob

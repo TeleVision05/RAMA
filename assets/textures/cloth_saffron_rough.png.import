@@ -4,15 +4,16 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://blycukiqbgsvf"
 path.s3tc="res://.godot/imported/cloth_saffron_rough.png-c569f89d657f345d62bd9438b6e8bfbf.s3tc.ctex"
+path.etc2="res://.godot/imported/cloth_saffron_rough.png-c569f89d657f345d62bd9438b6e8bfbf.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/cloth_saffron_rough.png"
-dest_files=["res://.godot/imported/cloth_saffron_rough.png-c569f89d657f345d62bd9438b6e8bfbf.s3tc.ctex"]
+dest_files=["res://.godot/imported/cloth_saffron_rough.png-c569f89d657f345d62bd9438b6e8bfbf.s3tc.ctex", "res://.godot/imported/cloth_saffron_rough.png-c569f89d657f345d62bd9438b6e8bfbf.etc2.ctex"]
 
 [params]
 

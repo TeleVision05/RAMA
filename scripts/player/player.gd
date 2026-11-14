@@ -4,9 +4,9 @@ extends CharacterBody3D
 ## with coyote time and input buffering, a dodge roll with invulnerability frames,
 ## bow aiming with a draw charge, a melee combo, wading and swimming.
 ##
-## The visual is a ProcRig — no imported character, no animation clips. Everything the
-## body does is computed in code, which is why the state machine below also drives the
-## pose directly rather than triggering animation names.
+## The visual is a ProcRig carrying the skinned "king" glb character (HumanoidModel), whose
+## animation clips the rig picks from the state below; the state machine also drives the
+## procedural pose directly (aim, IK) rather than only triggering animation names.
 
 signal state_changed(state: String)
 
@@ -70,10 +70,14 @@ var _stam_delay: float = 0.0
 var _invuln: float = 0.0
 var _dead: bool = false
 var _land_impact: float = 0.0
+var _parry_t: float = -1.0
+var _parry_cd: float = 0.0
+var _counter_buff: float = 0.0
 
 var aiming: bool = false
 var draw_charge: float = 0.0
 var using_bow: bool = true
+var crouching: bool = false
 var water_depth: float = 0.0
 var swimming: bool = false
 
@@ -104,10 +108,14 @@ func _ready() -> void:
 		rig
 		. configure(
 			{
+				"model": "king",
 				"seed": 11,
 				"skin": "skin_warm",
+				"skin_tint": Color(0.55, 0.72, 0.92),
 				"cloth": "cloth_saffron",
 				"cloth2": "cloth_white",
+				"tilaka": true,
+				"channavira": true,
 				"topknot": true,
 				"jewellery": true,
 				"sash": true,
@@ -136,7 +144,7 @@ func _attach_gear() -> void:
 
 	quiver_node = Weapons.quiver()
 	rig.chest.add_child(quiver_node)
-	quiver_node.position = Vector3(-0.10, -0.02, -0.12)
+	quiver_node.position = Vector3(-0.10, -0.02, 0.13)
 	quiver_node.rotation = Vector3(0.30, 0, -0.42)
 
 
@@ -193,6 +201,12 @@ func _tick_timers(delta: float) -> void:
 	_invuln = maxf(0.0, _invuln - delta)
 	_hurt_t = maxf(0.0, _hurt_t - delta)
 	_land_impact = maxf(0.0, _land_impact - delta * 2.5)
+	_parry_cd = maxf(0.0, _parry_cd - delta)
+	_counter_buff = maxf(0.0, _counter_buff - delta)
+	if _parry_t >= 0.0:
+		_parry_t += delta
+		if _parry_t >= 0.38:
+			_parry_t = -1.0
 	if _dodge_t >= 0.0:
 		_dodge_t += delta
 		if _dodge_t >= DODGE_TIME:
@@ -226,6 +240,8 @@ func _wish_direction() -> Vector3:
 func _target_speed() -> float:
 	if aiming:
 		return SPEED_AIM
+	if crouching:
+		return SPEED_WALK * 0.92
 	if Input.is_action_pressed("sprint") and GameState.stamina > 1.0 and not _input_locked:
 		return SPEED_SPRINT
 	return SPEED_RUN
@@ -237,8 +253,14 @@ func _ground_and_air(delta: float, wish: Vector3) -> void:
 	# Wading slows you down and makes the water splash.
 	var wade: float = clampf(water_depth / SWIM_DEPTH, 0.0, 1.0)
 
+	if not _input_locked and Input.is_action_just_pressed("crouch"):
+		crouching = not crouching
+	if not _input_locked and Input.is_action_pressed("sprint") and wish.length_squared() > 0.01:
+		crouching = false
+
 	if not _input_locked and Input.is_action_just_pressed("jump"):
 		_jump_buf = JUMP_BUFFER
+		crouching = false
 	if _jump_buf > 0.0 and _coyote > 0.0 and _dodge_t < 0.0 and _melee_t < 0.0:
 		velocity.y = JUMP_VELOCITY * lerpf(1.0, 0.6, wade)
 		_jump_buf = 0.0
@@ -248,6 +270,7 @@ func _ground_and_air(delta: float, wish: Vector3) -> void:
 
 	if not _input_locked and Input.is_action_just_pressed("dodge") and _dodge_t < 0.0 and is_on_floor() and GameState.stamina >= STAM_DODGE:
 		_dodge_t = 0.0
+		crouching = false
 		_dodge_dir = wish if wish.length_squared() > 0.01 else -global_transform.basis.z
 		GameState.stamina -= STAM_DODGE
 		_stam_delay = STAM_REGEN_DELAY
@@ -291,9 +314,13 @@ func _ground_and_air(delta: float, wish: Vector3) -> void:
 
 func _swim(delta: float, wish: Vector3) -> void:
 	_set_state(S.SWIM)
+	crouching = false
 	var surface := world.map.water_y_at(global_position.x, global_position.z)
 	var target_y := surface - 0.55
 	velocity.y = lerpf(velocity.y, (target_y - global_position.y) * 4.0, 1.0 - pow(0.001, delta))
+	if not _input_locked and Input.is_action_just_pressed("jump"):
+		velocity.y = JUMP_VELOCITY * 0.75
+		AudioDirector.play_3d("jump", global_position, -6.0)
 	var horiz := Vector3(velocity.x, 0, velocity.z)
 	if wish.length_squared() > 0.001:
 		horiz = horiz.move_toward(wish * SPEED_SWIM, 6.0 * delta)
@@ -303,8 +330,6 @@ func _swim(delta: float, wish: Vector3) -> void:
 	velocity.x = horiz.x
 	velocity.z = horiz.z
 	rotation.y = facing_yaw
-	aiming = false
-	draw_charge = 0.0
 
 
 static func _approach_angle(cur: float, target: float, max_step: float) -> float:
@@ -314,10 +339,12 @@ static func _approach_angle(cur: float, target: float, max_step: float) -> float
 
 # --- combat ---------------------------------------------------------------
 func _update_combat(delta: float) -> void:
-	if _input_locked or swimming or _dodge_t >= 0.0:
+	if _input_locked or _dodge_t >= 0.0:
 		aiming = false
 		draw_charge = maxf(0.0, draw_charge - delta * 3.0)
 		return
+
+	_handle_hotkeys()
 
 	if Input.is_action_just_pressed("swap_weapon"):
 		using_bow = not using_bow
@@ -327,11 +354,20 @@ func _update_combat(delta: float) -> void:
 		draw_charge = 0.0
 		AudioDirector.play_2d("sword_unsheathe" if not using_bow else "arrow_pickup", -8.0)
 
+	# Kshatriya Parry (F, or RMB when wielding the Nandaka sword).
+	var want_parry: bool = Input.is_action_just_pressed("parry") or (not using_bow and Input.is_action_just_pressed("aim"))
+	if want_parry and _parry_cd <= 0.0 and _parry_t < 0.0:
+		_start_parry()
+
 	if using_bow:
 		var want_aim: bool = Input.is_action_pressed("aim") and GameState.stamina > 0.5
 		if want_aim and not aiming:
 			AudioDirector.play_2d("bow_draw", -6.0)
-		if aiming and not want_aim and draw_charge > 0.16:
+		# Allow LMB while aiming to loose immediately and keep drawing the next arrow,
+		# OR releasing RMB to loose (keeping playtest.gd & acceptance_test.gd 100% compatible).
+		if aiming and Input.is_action_just_pressed("attack") and draw_charge > 0.16:
+			_fire_arrow()
+		elif aiming and not want_aim and draw_charge > 0.16:
 			_fire_arrow()
 		aiming = want_aim
 		if aiming:
@@ -368,6 +404,61 @@ func _update_combat(delta: float) -> void:
 				_melee_queued = false
 
 
+func _handle_hotkeys() -> void:
+	if Input.is_action_just_pressed("quick_heal"):
+		var used := false
+		for item_id in ["healing_salve", "healing_herb", "herb", "shabari_berries", "mango"]:
+			if GameState.use_item(item_id):
+				used = true
+				break
+		if not used:
+			AudioDirector.play_2d("ui_close", -10.0)
+			EventBus.notify.emit("No Healing Provisions", "Gather herbs or salves to heal.", "warn")
+
+	var next_astra := -1
+	if Input.is_action_just_pressed("cycle_astra"):
+		next_astra = (GameState.active_astra + 1) % 5
+	elif Input.is_action_just_pressed("astra_1"):
+		next_astra = 0
+	elif Input.is_action_just_pressed("astra_2"):
+		next_astra = 1
+	elif Input.is_action_just_pressed("astra_3"):
+		next_astra = 2
+	elif Input.is_action_just_pressed("astra_4"):
+		next_astra = 3
+	elif Input.is_action_just_pressed("astra_5"):
+		next_astra = 4
+	if next_astra >= 0 and next_astra != GameState.active_astra:
+		GameState.active_astra = next_astra
+		AudioDirector.play_2d("ui_click", -6.0)
+		var aname: String = GameState.ASTRA_NAMES[next_astra]
+		var mantra: String = GameState.ASTRA_MANTRAS[next_astra]
+		var sub: String = GameState.ASTRA_SUBTITLES[next_astra]
+		EventBus.notify.emit(aname + " — " + mantra, sub, "info")
+
+
+func _start_parry() -> void:
+	_parry_t = 0.0
+	_parry_cd = 0.65
+	AudioDirector.play_3d("sword_swing_2", global_position, -6.0)
+	if get_parent():
+		var ward := MeshInstance3D.new()
+		ward.mesh = MeshKit.tube(0.05, [[0.0, 0.72], [0.5, 0.76], [1.0, 0.72]], 18)
+		var m := StandardMaterial3D.new()
+		m.albedo_color = Color(1.0, 0.85, 0.32, 0.78)
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.cull_mode = BaseMaterial3D.CULL_DISABLED
+		ward.material_override = m
+		get_parent().add_child(ward)
+		ward.global_position = global_position + Vector3(0, 1.05, 0)
+		var tw := ward.create_tween()
+		tw.set_parallel(true)
+		tw.tween_property(ward, "scale", Vector3.ONE * 1.45, 0.35)
+		tw.tween_property(m, "albedo_color:a", 0.0, 0.35)
+		tw.chain().tween_callback(ward.queue_free)
+
+
 func _melee_duration() -> float:
 	return [0.62, 0.58, 0.78][_melee_index % 3]
 
@@ -376,17 +467,53 @@ func _start_melee() -> void:
 	_melee_t = 0.0
 	_melee_hit_done = false
 	_melee_index = (_melee_index + 1) % 3
+	crouching = false
 	GameState.stamina -= STAM_MELEE
 	_stam_delay = STAM_REGEN_DELAY
 	_set_state(S.MELEE)
 	EventBus.melee_swing.emit(_melee_index)
 	AudioDirector.play_3d("sword_swing_%d" % (1 + _melee_index % 3), global_position, -4.0)
+	_spawn_sword_slash_arc()
+
+
+func _spawn_sword_slash_arc() -> void:
+	if get_parent() == null:
+		return
+	var arc := MeshInstance3D.new()
+	var path := PackedVector3Array()
+	var rads := PackedFloat32Array()
+	var steps := 9
+	var dir_sign := 1.0 if (_melee_index % 2 == 1) else -1.0
+	for i in range(steps + 1):
+		var t: float = float(i) / float(steps)
+		var ang: float = lerpf(-1.05, 1.05, t) * dir_sign
+		var dy: float = lerpf(0.28, -0.22, t) if (_melee_index % 3 != 2) else lerpf(0.45, -0.35, t)
+		path.append(Vector3(sin(ang) * 1.35, dy, -cos(ang) * 1.35))
+		rads.append(sin(t * PI) * 0.065 + 0.006)
+	arc.mesh = MeshKit.sweep(path, rads, 6, 0.22, Vector3.UP)
+	var m := StandardMaterial3D.new()
+	m.albedo_color = Color(1.0, 0.88, 0.42, 0.85) if _counter_buff > 0.0 else Color(0.92, 0.95, 1.0, 0.68)
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	arc.material_override = m
+	get_parent().add_child(arc)
+	arc.global_position = global_position + Vector3(0, 1.15, 0)
+	arc.rotation.y = facing_yaw
+	var tw := arc.create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(arc, "scale", Vector3.ONE * 1.18, 0.25)
+	tw.tween_property(m, "albedo_color:a", 0.0, 0.25)
+	tw.chain().tween_callback(arc.queue_free)
 
 
 func _do_melee_hit() -> void:
 	var origin := global_position + Vector3(0, 1.0, 0)
 	var fwd := -global_transform.basis.z
 	var hit_any := false
+	var countered := _counter_buff > 0.0
+	if countered:
+		_counter_buff = 0.0
 	for e in get_tree().get_nodes_in_group("enemy"):
 		if not is_instance_valid(e) or not (e is Node3D):
 			continue
@@ -397,12 +524,13 @@ func _do_melee_hit() -> void:
 			continue
 		if fwd.angle_to(to.normalized()) > MELEE_ARC * 0.5:
 			continue
-		var dmg: float = [22.0, 20.0, 34.0][_melee_index % 3]
-		var crit: bool = _melee_index % 3 == 2
+		var dmg: float = [22.0, 20.0, 34.0][_melee_index % 3] * (2.0 if countered else 1.0)
+		var crit: bool = (_melee_index % 3 == 2) or countered
 		if e.has_method("take_damage"):
 			e.take_damage(dmg, self, e.global_position + Vector3(0, 1.0, 0), crit)
 		hit_any = true
 	if hit_any:
+		GameState.prana = minf(GameState.max_prana, GameState.prana + 6.0)
 		AudioDirector.play_3d("sword_hit_flesh", global_position + fwd * 1.2, -2.0)
 		EventBus.hit_feedback.emit(global_position + fwd * 1.4, 0.75, "melee")
 	else:
@@ -415,18 +543,30 @@ func _fire_arrow() -> void:
 		AudioDirector.play_2d("ui_close", -10.0)
 		EventBus.notify.emit("Out of arrows", "Gather more, or use the sword (Q).", "warn")
 		return
-	GameState.arrows -= 1
+	if bool(GameState.get_flag("akshaya_tunira", false)):
+		GameState.arrows = maxi(1, GameState.arrows - 1)
+	else:
+		GameState.arrows -= 1
 	var charge := draw_charge
 	draw_charge = 0.0
+	var astra := GameState.active_astra
+	var cost: float = float(GameState.ASTRA_COSTS[clampi(astra, 0, 4)])
+	if astra > 0:
+		if GameState.prana >= cost:
+			GameState.prana -= cost
+		else:
+			astra = 0
+			EventBus.notify.emit("Low Prana", "Fired standard Shara shaft.", "warn")
 	var origin: Vector3 = (rig.hand_attach["L"] as Node3D).global_position + Vector3(0, 0.05, 0)
 	var dir := aim_direction()
-	var speed: float = lerpf(ARROW_SPEED_MIN, ARROW_SPEED_MAX, charge)
-	var a := Arrow.spawn(get_parent(), origin, dir * speed, self, lerpf(14.0, 48.0, charge), charge)
+	var speed: float = lerpf(ARROW_SPEED_MIN, ARROW_SPEED_MAX, charge) * (1.22 if astra >= 3 else 1.0)
+	var base_dmg: float = lerpf(14.0, 48.0, charge) * (1.35 if astra == 4 else (1.15 if astra > 0 else 1.0))
+	var a := Arrow.spawn(get_parent(), origin, dir * speed, self, base_dmg, charge, astra)
 	if a and world:
 		a.world = world
 	EventBus.arrow_fired.emit(origin, dir, charge)
 	AudioDirector.play_3d("bow_release", global_position, -2.0)
-	EventBus.hit_feedback.emit(global_position, 0.20 + charge * 0.28, "shoot")
+	EventBus.hit_feedback.emit(global_position, 0.20 + charge * 0.28 + (0.20 if astra > 0 else 0.0), "shoot")
 
 
 ## Where the bow is pointing: the camera's aim ray, so what the crosshair covers is
@@ -455,11 +595,29 @@ func _update_stamina(delta: float) -> void:
 	if GameState.health < GameState.max_health and not GameState.in_combat:
 		GameState.health = minf(GameState.max_health, GameState.health + 2.6 * delta)
 
+	var is_day: bool = GameState.time_of_day >= 6.0 and GameState.time_of_day <= 18.5
+	var prana_rate: float = 5.5 if is_day else 3.5
+	if GameState.prana < GameState.max_prana:
+		GameState.prana = minf(GameState.max_prana, GameState.prana + prana_rate * delta)
+
 
 func take_damage(amount: float, source: Node = null, _hit_pos: Vector3 = Vector3.ZERO, _crit: bool = false) -> void:
 	if _dead or _invuln > 0.0:
 		return
 	if _dodge_t >= DODGE_IFRAME.x and _dodge_t <= DODGE_IFRAME.y:
+		return
+	if _parry_t >= 0.0:
+		_parry_t = -1.0
+		_invuln = 0.50
+		_counter_buff = 3.5
+		GameState.prana = minf(GameState.max_prana, GameState.prana + 22.0)
+		GameState.stamina = minf(GameState.max_stamina, GameState.stamina + 18.0)
+		AudioDirector.play_3d("bell_temple", global_position, -4.0)
+		EventBus.hit_feedback.emit(global_position, 0.9, "block")
+		EventBus.notify.emit("Kshatriya Parry!", "Attack deflected — Counter-Strike primed (+22 Prana).", "quest")
+		if source and is_instance_valid(source) and source.has_method("take_damage"):
+			var src_pos: Vector3 = (source as Node3D).global_position if source is Node3D else global_position
+			source.take_damage(15.0, self, src_pos + Vector3(0, 1.0, 0), true)
 		return
 	GameState.health = maxf(0.0, GameState.health - amount)
 	_hurt_t = 0.34
@@ -553,10 +711,13 @@ func _drive_rig(delta: float) -> void:
 				"on_floor": is_on_floor() or swimming,
 				"air_time": _air_time,
 				"dodge": clampf(_dodge_t / DODGE_TIME, 0.0, 1.0) if _dodge_t >= 0.0 else 0.0,
-				"crouch": 0.32 if swimming else 0.0,
+				"crouch": 0.32 if swimming else (0.52 if crouching else 0.0),
 			}
 		)
 	)
+	if _parry_t >= 0.0:
+		rig.shoulder["R"].basis = rig.shoulder["R"].basis.slerp(Basis.from_euler(Vector3(-1.15, 0.45, -0.75)), 0.75)
+		rig.elbow["R"].basis = rig.elbow["R"].basis.slerp(Basis.from_euler(Vector3(-1.35, 0.0, 0.0)), 0.75)
 	# Carried across the body; brought upright as the draw begins.
 	if bow_node:
 		bow_node.rotation = bow_node.rotation.lerp(Vector3(0.10, 0.0, lerpf(1.20, 0.06, rig.aim_weight)), 1.0 - pow(0.0005, delta))
@@ -564,6 +725,25 @@ func _drive_rig(delta: float) -> void:
 		if s:
 			s.position.z = 0.14 - draw_charge * 0.19
 			s.scale = Vector3(1.0, 1.0, 1.0 + draw_charge * 0.4)
+		var ag := bow_node.get_node_or_null("AstraGlow") as MeshInstance3D
+		if ag:
+			var astra := GameState.active_astra
+			ag.visible = aiming and draw_charge > 0.05 and astra > 0
+			if ag.visible:
+				var acol: Color = [
+					Color(1.0, 0.92, 0.70, 0.6),
+					Color(1.0, 0.48, 0.10, 0.82),
+					Color(0.18, 0.80, 1.0, 0.80),
+					Color(0.55, 1.0, 0.82, 0.80),
+					Color(1.0, 0.95, 0.48, 0.92),
+				][clampi(astra, 0, 4)]
+				ag.scale = Vector3.ONE * (0.65 + draw_charge * 0.85)
+				if ag.material_override is StandardMaterial3D:
+					(ag.material_override as StandardMaterial3D).albedo_color = acol
+				var alight := ag.get_node_or_null("Light") as OmniLight3D
+				if alight:
+					alight.light_color = Color(acol.r, acol.g, acol.b)
+					alight.light_energy = 1.0 + draw_charge * 2.2
 
 
 func _on_footstep(_side: String, pos: Vector3, sp: float) -> void:
@@ -605,6 +785,10 @@ func _publish_state() -> void:
 
 func state_name() -> String:
 	return _state_name
+
+
+func is_crouching() -> bool:
+	return crouching
 
 
 func is_dead() -> bool:

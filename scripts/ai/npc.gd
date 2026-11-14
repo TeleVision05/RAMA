@@ -64,6 +64,11 @@ static var debug_face: bool = false
 var map: WorldMap
 var sky: SkySystem
 var rig: ProcRig
+## Distance level of detail (NPCLod.Level); the director sets it from the player's distance.
+var lod: int = NPCLod.Level.NEAR
+var _lod_geoms: Array = []
+var _lod_acc: float = 0.0
+var _lod_tick: int = 0
 var prop: Node3D
 var bark: Label3D
 
@@ -200,8 +205,20 @@ func _rig_config(height: float) -> Dictionary:
 		"beard": bool(look_cfg.get("beard", false)),
 		"skin_tint": look_cfg.get("skin_tint", Color(1, 1, 1)),
 		"cloth_tint": look_cfg.get("cloth_tint", Color(1, 1, 1)),
+		"vanara": bool(look_cfg.get("vanara", false)),
+		"channavira": bool(look_cfg.get("channavira", false)),
 		"seed": hash(id),
 	}
+	var model_name: String = "farmer"
+	if role == Role.MOTHER or id.contains("sita") or id.contains("ila") or id.contains("shanta") or id.contains("priya"):
+		model_name = "woman"
+	elif role == Role.GUARD or id.contains("guard") or id.contains("lakshmana"):
+		model_name = "adventurer"
+	elif role == Role.ELDER or role == Role.HERMIT or id.contains("sage") or id.contains("vasishtha") or id.contains("viswamitra"):
+		model_name = "king"
+	c["model"] = model_name
+	if look_cfg.has("garment"):
+		c["garment"] = String(look_cfg["garment"])
 	return c
 
 
@@ -580,6 +597,16 @@ func _attach_prop() -> void:
 			prop = net_mesh()
 			rig.hand_attach["R"].add_child(prop)
 			prop.position = Vector3(0.0, -0.06, 0.03)
+		"bow":
+			prop = Weapons.bow(0.94)
+			rig.hand_attach["L"].add_child(prop)
+			prop.position = Vector3(0.0, 0.02, 0.04)
+			prop.rotation = Vector3(0.08, 0.0, 0.06)
+		"gada":
+			prop = Weapons.gada()
+			rig.hand_attach["R"].add_child(prop)
+			prop.position = Vector3(0.02, 0.04, 0.03)
+			prop.rotation = Vector3(0.12, 0.0, 0.05)
 		_:
 			prop = null
 
@@ -677,6 +704,29 @@ static func net_mesh() -> Node3D:
 	return root
 
 
+## Hanuman's golden Kaumodaki-style Gada mace fallback.
+static func gada_mesh() -> Node3D:
+	var root := Node3D.new()
+	root.name = "Gada"
+	var gold := Mats.pbr("brass", 2.0)
+	var haft := MeshInstance3D.new()
+	haft.mesh = MeshKit.tube(0.82, [[0.0, 0.018], [0.75, 0.022], [1.0, 0.028]], 10)
+	haft.material_override = gold
+	haft.position = Vector3(0.0, -0.22, 0.0)
+	root.add_child(haft)
+	var bulb := MeshInstance3D.new()
+	bulb.mesh = MeshKit.ovoid(0.135, 0.165, 0.5, 14, 12)
+	bulb.material_override = gold
+	bulb.position = Vector3(0.0, 0.64, 0.0)
+	root.add_child(bulb)
+	var finial := MeshInstance3D.new()
+	finial.mesh = MeshKit.tube(0.10, [[0.0, 0.038], [0.5, 0.022], [1.0, 0.004]], 10)
+	finial.material_override = gold
+	finial.position = Vector3(0.0, 0.79, 0.0)
+	root.add_child(finial)
+	return root
+
+
 # ===========================================================================
 #  interactable contract
 # ===========================================================================
@@ -737,6 +787,18 @@ func set_active(on: bool) -> void:
 
 func is_active() -> bool:
 	return _active
+
+
+## Called by the director a few times a second with the distance to the player.
+func update_lod(distance: float) -> void:
+	var want := NPCLod.level_for(distance, lod)
+	if want == lod:
+		return
+	if _lod_geoms.is_empty():
+		_lod_geoms = NPCLod.collect(rig)
+	lod = want
+	_lod_acc = 0.0
+	NPCLod.apply(rig, _lod_geoms, lod)
 
 
 ## Teleport onto the current schedule anchor, grounded.
@@ -1098,6 +1160,15 @@ static func _approach_angle(cur: float, target: float, max_step: float) -> float
 
 # --- presentation ----------------------------------------------------------
 func _drive_rig(delta: float) -> void:
+	if lod != NPCLod.Level.NEAR:
+		# Far villagers are a few pixels tall: skip the pose entirely when hidden, and
+		# update it every few ticks (with the time that passed) when merely distant.
+		_lod_acc += delta
+		_lod_tick += 1
+		if lod == NPCLod.Level.FAR or _lod_tick % NPCLod.MID_EVERY != 0:
+			return
+		delta = _lod_acc
+		_lod_acc = 0.0
 	var sp := Vector2(velocity.x, velocity.z).length()
 
 	# Head tracking: they notice you well before you are close enough to talk.
