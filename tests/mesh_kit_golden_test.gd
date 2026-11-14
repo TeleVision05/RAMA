@@ -4,8 +4,13 @@ extends SceneTree
 ## refactored without changing a single vertex.
 ##
 ## Each line of the golden file: name, vertex count, index count, bounding box and mean
-## vertex position (rounded to 0.01), and a hash of the exact vertices.
-##   default   compares counts, box and mean (stable across platforms; this is what CI runs)
+## vertex position (rounded to 0.01), a hash of the exact vertices, and the sum of every
+## vertex's |x|+|y|+|z|.
+##   default   compares counts, box and mean (rounded, so stable across platforms) and the
+##             coordinate sum with a relative tolerance of 2e-5 (what CI runs). The sum is
+##             what catches a small change: the box and mean are rounded to 0.01, so a 1%
+##             change to a head constant used to pass; it moves the sum by far more than the
+##             tolerance. Float differences between platforms are around 1e-6 of the sum.
 ##   --exact   also compares the hash of the exact vertices (same machine and engine only)
 ##   --update  rewrites the golden file from the current code
 ## Run:  Godot --headless --path . --script tests/mesh_kit_golden_test.gd -- --exact
@@ -107,6 +112,7 @@ func _describe(m: ArrayMesh) -> Array:
 	var lo := Vector3(1e9, 1e9, 1e9)
 	var hi := Vector3(-1e9, -1e9, -1e9)
 	var sum := Vector3.ZERO
+	var abs_sum := 0.0
 	var ctx := HashingContext.new()
 	ctx.start(HashingContext.HASH_SHA256)
 	for s in range(m.get_surface_count()):
@@ -119,12 +125,22 @@ func _describe(m: ArrayMesh) -> Array:
 			lo = lo.min(p)
 			hi = hi.max(p)
 			sum += p
+			abs_sum += absf(p.x) + absf(p.y) + absf(p.z)
 		ctx.update(v.to_byte_array())
 		if ia != null:
 			ctx.update((ia as PackedInt32Array).to_byte_array())
 	var mean := sum / float(maxi(verts, 1))
 	var stable := "%d|%d|%s|%s|%s" % [verts, idx, _q(lo), _q(hi), _q(mean)]
-	return [stable, ctx.finish().hex_encode().substr(0, 16)]
+	return [stable, ctx.finish().hex_encode().substr(0, 16), "%.4f" % abs_sum]
+
+
+## Coordinate sums agree to 2e-5 of their size (and 0.001 for tiny ones); "-" means none.
+func _same_sum(a: String, b: String) -> bool:
+	if a == "-" or b == "-":
+		return a == b
+	var x := float(a)
+	var y := float(b)
+	return absf(x - y) <= maxf(0.001, 2e-5 * absf(x))
 
 
 func _initialize() -> void:
@@ -136,9 +152,9 @@ func _run() -> void:
 	var lines: Array[String] = []
 	for c in _cases():
 		var d := _describe((c[1] as Callable).call())
-		lines.append("%s = %s = %s" % [c[0], d[0], d[1]])
+		lines.append("%s = %s = %s = %s" % [c[0], d[0], d[1], d[2] if d.size() > 2 else "-"])
 	for r in _scalars():
-		lines.append("%s = %s = -" % [r[0], r[1]])
+		lines.append("%s = %s = - = -" % [r[0], r[1]])
 	if args.has("--update"):
 		var f := FileAccess.open(GOLDEN, FileAccess.WRITE)
 		f.store_string("\n".join(lines) + "\n")
@@ -155,6 +171,8 @@ func _run() -> void:
 		var b: PackedStringArray = (lines[i] as String).split(" = ")
 		if a[0] != b[0] or a[1] != b[1]:
 			fails.append("%s: golden '%s', now '%s'" % [b[0], a[1], b[1]])
+		elif a.size() > 3 and b.size() > 3 and not _same_sum(a[3], b[3]):
+			fails.append("%s: the vertices moved (coordinate sum %s, now %s)" % [b[0], a[3], b[3]])
 		elif args.has("--exact") and a.size() > 2 and b.size() > 2 and a[2] != b[2]:
 			fails.append("%s: exact vertices differ (%s vs %s)" % [b[0], a[2], b[2]])
 	print("%d cases compared%s" % [lines.size(), " (exact)" if args.has("--exact") else ""])
