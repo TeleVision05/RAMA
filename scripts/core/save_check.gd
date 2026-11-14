@@ -28,11 +28,24 @@ const NUMERIC_FIELDS := [
 	"play_seconds",
 ]
 const DICT_FIELDS := ["inventory", "quests", "discovered", "flags"]
+## Largest values a real game can reach, with room to spare. A hand-edited or damaged
+## file that holds more (1e300 health, a billion arrows) is refused rather than loaded.
+const STAT_LIMIT := 10000.0
+const COUNT_LIMIT := 1000000.0
+const ASTRA_LIMIT := 99
+const CLOCK_LIMIT := 24.0
+const COORD_LIMIT := 100000.0
+const SECONDS_LIMIT := 1.0e9
+const STATS := ["health", "stamina", "prana", "max_health", "max_stamina", "max_prana"]
+const COUNTS := ["arrows", "kills", "day"]
 
 
 ## Parse the text of a save file. Returns {"ok": bool, "data": Dictionary, "message": String}.
 static func parse_text(text: String, source: String = "save") -> Dictionary:
 	var json := JSON.new()
+	# Some editors put a byte-order mark at the start of a file; it is not part of the JSON.
+	if text.begins_with("\uFEFF"):
+		text = text.substr(1)
 	if json.parse(text) != OK:
 		return _fail(MSG_DAMAGED, "%s: not valid JSON (%s at line %d)" % [source, json.get_error_message(), json.get_error_line()])
 	if typeof(json.data) != TYPE_DICTIONARY:
@@ -62,6 +75,9 @@ static func problem_with(d: Dictionary) -> String:
 	for k in DICT_FIELDS:
 		if d.has(k) and typeof(d[k]) != TYPE_DICTIONARY:
 			return "field %s is not an object" % k
+	var bad := _range_problem(d)
+	if bad != "":
+		return bad
 	if d.has("pos"):
 		var p: Variant = d["pos"]
 		if typeof(p) != TYPE_ARRAY or (p as Array).size() != 3:
@@ -69,12 +85,50 @@ static func problem_with(d: Dictionary) -> String:
 		for c in p:
 			if not _is_number(c):
 				return "pos holds a non-number"
+			if absf(float(c)) > COORD_LIMIT:
+				return "pos is out of range"
+	return _nested_problem(d)
+
+
+## A number that is present but impossible: negative, or far past anything a game reaches.
+static func _range_problem(d: Dictionary) -> String:
+	for k in STATS:
+		if d.has(k) and (float(d[k]) < 0.0 or float(d[k]) > STAT_LIMIT):
+			return "field %s is out of range" % k
+	for k in COUNTS:
+		if d.has(k) and (float(d[k]) < 0.0 or float(d[k]) > COUNT_LIMIT):
+			return "field %s is out of range" % k
+	if d.has("active_astra") and (float(d["active_astra"]) < 0.0 or float(d["active_astra"]) > ASTRA_LIMIT):
+		return "active_astra is out of range"
+	if d.has("time_of_day") and (float(d["time_of_day"]) < 0.0 or float(d["time_of_day"]) > CLOCK_LIMIT):
+		return "time_of_day is out of range"
+	if d.has("yaw") and absf(float(d["yaw"])) > 1000.0:
+		return "yaw is out of range"
+	if d.has("play_seconds") and (float(d["play_seconds"]) < 0.0 or float(d["play_seconds"]) > SECONDS_LIMIT):
+		return "play_seconds is out of range"
+	return ""
+
+
+## The dictionaries inside the save: what the game indexes into when it loads them.
+static func _nested_problem(d: Dictionary) -> String:
+	for n in (d.get("inventory", {}) as Dictionary).values():
+		if not _is_number(n) or float(n) < 0.0 or float(n) > COUNT_LIMIT:
+			return "an inventory count is not a sensible number"
+	var seen: Variant = (d.get("flags", {}) as Dictionary).get("dlg_seen", null)
+	if seen != null and typeof(seen) != TYPE_DICTIONARY:
+		return "flags.dlg_seen is not an object"
 	for q in (d.get("quests", {}) as Dictionary).values():
 		if typeof(q) != TYPE_DICTIONARY:
 			return "a quest entry is not an object"
+		var state: Variant = (q as Dictionary).get("state", "")
+		if typeof(state) != TYPE_STRING:
+			return "a quest's state is not text"
 		var o: Variant = (q as Dictionary).get("objectives", {})
 		if typeof(o) != TYPE_DICTIONARY:
 			return "a quest's objectives are not an object"
+		for progress in (o as Dictionary).values():
+			if not _is_number(progress) or float(progress) < 0.0 or float(progress) > COUNT_LIMIT:
+				return "a quest objective's progress is not a sensible number"
 	return ""
 
 

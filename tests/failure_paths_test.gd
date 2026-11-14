@@ -113,6 +113,36 @@ func _check_saves() -> void:
 	_expect_refused("quest entry is a number", '{"version": 3, "quests": {"a": 5}}', SaveCheck.MSG_DAMAGED)
 	_expect_refused("inventory is text", '{"version": 3, "inventory": "none"}', SaveCheck.MSG_DAMAGED)
 	_expect_refused("from a newer game", '{"version": 999}', SaveCheck.MSG_NEWER)
+	_check_awkward_fields()
+
+
+## Fields that parse as the right JSON type but would still break the game later:
+## `dialogue.gd` assigns flags.dlg_seen to a typed Dictionary, a quest's state is compared
+## as text, and impossible stats or counts are not a save this game wrote.
+func _check_awkward_fields() -> void:
+	var cases := {
+		"dlg_seen is text": '{"version": 3, "flags": {"dlg_seen": "yes"}}',
+		"dlg_seen is a list": '{"version": 3, "flags": {"dlg_seen": [1]}}',
+		"quest state is a number": '{"version": 3, "quests": {"a": {"state": 7, "objectives": {}}}}',
+		"objective is text": '{"version": 3, "quests": {"a": {"state": "active", "objectives": {"x": "done"}}}}',
+		"objective is negative": '{"version": 3, "quests": {"a": {"state": "active", "objectives": {"x": -4}}}}',
+		"inventory count is a list": '{"version": 3, "inventory": {"bell": [1]}}',
+		"health is astronomical": '{"version": 3, "health": 1e300}',
+		"health is negative": '{"version": 3, "health": -5}',
+		"arrows is a billion": '{"version": 3, "arrows": 99999999999}',
+		"day is negative": '{"version": 3, "day": -1}',
+		"clock past 24": '{"version": 3, "time_of_day": 31}',
+		"position is far outside the world": '{"version": 3, "pos": [1e12, 0, 0]}',
+	}
+	for label in cases:
+		_expect_refused(label, String(cases[label]), SaveCheck.MSG_DAMAGED)
+	# A byte-order mark at the start is not damage; a normal save with the right fields loads.
+	_write(0, "\uFEFF" + '{"version": 3, "health": 50, "flags": {"dlg_seen": {"elder/a": true}}}')
+	GameState.reset()
+	if not GameState.load_from_slot(0) or GameState.health != 50.0:
+		fails.append("a save that starts with a byte-order mark did not load")
+	elif not GameState.flags.get("dlg_seen", {}).has("elder/a"):
+		fails.append("the dialogue flags of a good save were not loaded")
 
 
 # --- renderer ---------------------------------------------------------------
