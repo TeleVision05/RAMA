@@ -105,6 +105,9 @@ SUITES = [
     Suite("riggolden", "tests/proc_rig_golden_test.gd", "headless", 180),
     # A fresh bake still matches the golden figures (guards the world_map.gd split).
     Suite("mapgolden", "tests/world_map_golden_test.gd", "headless", 300),
+    # Every character model stays person-sized in every retargeted animation clip (the walk
+    # once flung a skirted villager's legs across the sky); skins the vertices on the CPU.
+    Suite("retarget", "tests/humanoid_retarget_test.gd", "headless", 300),
     # Terrain builds from the baked map with its shader.
     Suite("terrain", "tests/terrain_test.gd", "headless", 300),
     # Synthetic input drives the player: walk, sprint, jump, dodge, bow, melee.

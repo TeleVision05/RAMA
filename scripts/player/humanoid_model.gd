@@ -41,11 +41,14 @@ const CLIP_MAP := {
 static var _cached_anims: Dictionary = {}
 # ANIM_SOURCES key -> {source clip name: Animation}, filled by _load_raw_sources().
 static var _raw_sources: Dictionary = {}
+# ANIM_SOURCES key -> HumanoidRetarget.rig_data() of that source's skeleton.
+static var _src_rigs: Dictionary = {}
 
 var model_instance: Node3D
 var skeleton: Skeleton3D
 var anim_player: AnimationPlayer
 var current_anim: String = ""
+var model_path: String = ""
 
 # Bone attachments
 var attach_hand_l: BoneAttachment3D
@@ -63,6 +66,7 @@ static func build(model_key: String) -> HumanoidModel:
 		push_warning("Failed to load model %s at %s" % [model_key, path])
 		return root
 
+	root.model_path = path
 	var inst := packed.instantiate() as Node3D
 	root.model_instance = inst
 	root.add_child(inst)
@@ -110,69 +114,37 @@ func _setup_animation_player() -> void:
 	anim_player.name = "AnimPlayer"
 	model_instance.add_child(anim_player)
 
-	var lib := _get_or_build_library(skeleton, model_instance)
+	var lib := _get_or_build_library(skeleton, model_instance, model_path)
 	if lib:
 		anim_player.add_animation_library("", lib)
 		anim_player.playback_default_blend_time = 0.20
 		play("idle")
 
 
-static func _get_or_build_library(skel: Skeleton3D, model_root: Node3D) -> AnimationLibrary:
+static func _get_or_build_library(skel: Skeleton3D, model_root: Node3D, path_key: String) -> AnimationLibrary:
 	var skel_path := model_root.get_path_to(skel)
-	var cache_key := String(skel_path)
-	if _cached_anims.has(cache_key):
-		return _cached_anims[cache_key]
-
-	# Build bone mapping
-	var bone_name_map := {}
-	for b in skel.get_bone_count():
-		var bn := skel.get_bone_name(b)
-		bone_name_map[bn.to_lower()] = bn
+	# Per model file: two characters with the same skeleton path can still be built
+	# differently (the woman's hips and upper legs sit elsewhere), and a clip retargeted
+	# onto one is wrong on the other.
+	if _cached_anims.has(path_key):
+		return _cached_anims[path_key]
 
 	var lib := AnimationLibrary.new()
-
 	_load_raw_sources()
+	var dst_rig := HumanoidRetarget.rig_data(skel, model_root)
 
 	for clip_name in CLIP_MAP:
 		var info: Array = CLIP_MAP[clip_name]
 		var src_key: String = info[0]
 		var raw_name: String = info[1]
-		var should_loop: bool = info[2]
-
 		var src_clips: Dictionary = _raw_sources.get(src_key, {})
-		if not src_clips.has(raw_name):
+		if not src_clips.has(raw_name) or not _src_rigs.has(src_key):
 			continue
-
-		var anim := (src_clips[raw_name] as Animation).duplicate() as Animation
-		if should_loop:
-			anim.loop_mode = Animation.LOOP_LINEAR
-		else:
-			anim.loop_mode = Animation.LOOP_NONE
-
-		# Retarget track paths to the skeleton
-		var tracks_to_remove: Array[int] = []
-		for t in range(anim.get_track_count()):
-			var orig_path := String(anim.track_get_path(t))
-			var parts := orig_path.split(":")
-			if parts.size() == 2:
-				var b_lower := parts[1].to_lower()
-				if bone_name_map.has(b_lower):
-					var real_bone: String = bone_name_map[b_lower]
-					var new_path := "%s:%s" % [skel_path, real_bone]
-					anim.track_set_path(t, NodePath(new_path))
-				else:
-					tracks_to_remove.append(t)
-			else:
-				tracks_to_remove.append(t)
-
-		# Remove unmatched tracks backwards
-		tracks_to_remove.reverse()
-		for t in tracks_to_remove:
-			anim.remove_track(t)
-
+		var anim := HumanoidRetarget.retarget(src_clips[raw_name], _src_rigs[src_key], dst_rig, String(skel_path))
+		anim.loop_mode = Animation.LOOP_LINEAR if bool(info[2]) else Animation.LOOP_NONE
 		lib.add_animation(clip_name, anim)
 
-	_cached_anims[cache_key] = lib
+	_cached_anims[path_key] = lib
 	return lib
 
 
@@ -188,6 +160,9 @@ static func _load_raw_sources() -> void:
 		var packed: PackedScene = load(ANIM_SOURCES[src_key])
 		if packed:
 			var scene := packed.instantiate()
+			var skels := scene.find_children("*", "Skeleton3D")
+			if not skels.is_empty():
+				_src_rigs[src_key] = HumanoidRetarget.rig_data(skels[0] as Skeleton3D, scene)
 			for c in scene.find_children("*", "AnimationPlayer"):
 				var ap := c as AnimationPlayer
 				for clip_name in CLIP_MAP:
