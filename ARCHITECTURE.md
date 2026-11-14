@@ -288,7 +288,7 @@ the repo rather than living in one machine's `.git/`.
 `project.godot` is staged:
 
 1. **`gdlint`** against `.gdlintrc` on the staged `.gd` files — style and naming.
-2. **The fast test suites** (`tools/run_tests.sh --fast`: parse, input, assets, audio;
+2. **The fast test suites** (`tools/run_tests.sh --fast`: parse, input, assets, solids, meshkit, npclod, audio;
    about 10 s, headless). `parse` loads every script — this is the important one. A
    GDScript parse error does not stop the game booting; the script simply fails to load
    and the node it backs silently never appears. That is how the wildlife system went

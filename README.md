@@ -16,10 +16,11 @@ characters (Rama, Sita, Lakshmana, sages, guards and villagers), from Quaternius
 lists each file with its source, author and licence.
 
 **Status (2026-11-13): release candidate, draft.** The quiet test gate (`tools/run_tests.sh`)
-runs 14 suites. On the last full run 13 passed and the frame-time suite (`perf`) was
-**not measured** because the machine was too busy for a trustworthy figure (the gate
-reports that as BUSY, never as a pass). CI runs the 10 headless suites on every push;
-the 4 that need a renderer run on a Mac. See [ROADMAP.md](ROADMAP.md) for what is next.
+runs 19 suites and all 19 passed on the last full run, including the four that need a
+renderer (they run off-screen on a Mac). The frame-time figures from that run were taken at
+a load average of 15 to 20, so treat them as indicative: mean 36 fps over six legs, worst leg
+(deep wood) 31 fps, village 38 fps; the gate is 20 fps. CI runs the 15 headless suites on every
+push. See [ROADMAP.md](ROADMAP.md) for what is next.
 
 ---
 
@@ -88,9 +89,9 @@ Ramayana companions), and 10 discoverable landmarks bring the valley to life.
 ## Test
 
 ```bash
-tools/run_tests.sh                              # the full 14-suite gate; quiet: no window, no focus, no sound
-tools/run_tests.sh --headless-only              # the 10 suites that need no renderer (what CI runs)
-tools/run_tests.sh --fast                       # the five few-second suites (the pre-commit hook)
+tools/run_tests.sh                              # the full 19-suite gate; quiet: no window, no focus, no sound
+tools/run_tests.sh --headless-only              # the 15 suites that need no renderer (what CI runs)
+tools/run_tests.sh --fast                       # the seven few-second suites (the pre-commit hook)
 tools/run_tests.sh quests ui                    # just these suites; logs in build/test-logs/
 tools/gd.sh scene res://scenes/playtest.tscn    # drives the game, asserts movement + combat
 tools/gd.sh scene res://scenes/asset_test.tscn  # every texture, sound and shader loads
@@ -101,11 +102,27 @@ tools/gd.sh test tests/terrain_test.gd          # meshing, LODs, triangle budget
 Render harnesses write PNGs to `build/screenshots/` so results can be looked at rather
 than assumed.
 
-## Download
+## Screenshots
 
-A macOS build (unsigned release candidate) is attached to the draft release on GitHub.
-It is not notarized: after unzipping, right-click `RAMA.app` and choose Open, or run
+![The waterfall at dusk](docs/media/falls.jpg)
+![The river road and the bridge](docs/media/river.jpg)
+![A conversation with the village elder](docs/media/dialogue.jpg)
+
+Frames from the 2026-11-13 gameplay recording (`tests/showcase.gd`, rendered off-screen
+with Godot's movie writer). A short gameplay video is attached to the release.
+
+## Download for macOS
+
+The macOS build (a universal binary, unsigned release candidate; only the Apple Silicon half has been run) is attached to the
+[Releases page](https://github.com/TeleVision05/RAMA/releases). It is ad-hoc signed, not
+notarized, so macOS will refuse a plain double-click. Unzip it, then **right-click
+`RAMA.app` and choose Open**, and confirm once; or run
 `xattr -dr com.apple.quarantine RAMA.app`.
+
+To build it yourself (export templates for 4.7.2 installed): `godot --headless --path .
+--export-release "macOS" build/export/RAMA.app`, then `codesign --force --deep -s -
+build/export/RAMA.app`. To check the result without opening a window:
+`tools/run_tests.sh --exported build/export/RAMA.app`.
 
 ## License
 

@@ -394,3 +394,36 @@ at load 15 to 120 all day.
 - Exit-time engine warnings (AudioStream playbacks; ParticleProcessMaterial
   shaders) are reproduced in an empty project and documented in
   `tools/gate_suites.py`.
+
+
+## 18. Gameplay fixes, three splits, the macOS build and the video, 2026-11-13
+
+**Villager level of detail.** Every mesh of a rig is drawn again into each sun-shadow split,
+so a villager is expensive far beyond its pixels. `NPCLod` (near under 25 m, mid to 90 m,
+far beyond, 6 m margin) turns shadows off at mid range and hides and stops animating at far
+range. First attempt used 45 m for the near range; the A/B in `tests/perf_test.gd` showed no
+saving, because from 40 m out every villager was still inside it. Measured at the High tier,
+embedded renderer, fixed camera 6 m up looking at the square, two runs, load average 16 to 47
+(draw counts do not depend on load): villagers hidden 1481-1662 draws, LOD off 2518-2788, LOD
+on 1813-2040. About 75 draws per villager without, 25 with.
+
+**Loading screen and warm-up.** The bake reports progress by phase and a new game shows
+`LoadingScreen` while it builds, then looks round four ways behind the screen. Worst frame in
+the first 30 s of a sprint through village, river road and shrine (`tests/first_30s_probe.gd`,
+three runs each, load 16 to 47, so indicative): 442, 559, 853 ms without; 81, 93, 116 ms with.
+
+**Failure paths.** Damaged or wrong-shaped saves are refused before they touch the game state
+(`SaveCheck`), a cut-off world cache is rejected by size and re-baked, a card without Forward+
+plays on the Low tier. Each says what happened and what to do; `tests/failure_paths_test.gd`
+checks the wording contains no technical term.
+
+**Splits** (each behind a golden-file test written first, compared under `--exact`, i.e. a
+hash of the vertices, baked arrays or joint axes, before and after): `mesh_kit.gd` 1559 lines to
+5 files, `world_map.gd` 1148 to 6, `proc_rig.gd` 1656 to 6; the inheritance-chain technique
+keeps `MeshKit.x`, `WorldMap.x` and `ProcRig.x` working. The world cache fingerprint now covers
+every file of the bake. `.gdlintrc` `max-file-lines` 2600 to 2550.
+
+**Build and media.** `export_presets.cfg` exports a universal macOS app; `tools/run_tests.sh
+--exported RAMA.app` runs `scripts/core/smoke_check.gd` in it, headless. The video is rendered
+off-screen (`--embedded --write-movie`, 1600x900 recorded, scaled to 1280x720); the focus guard
+saw no change of frontmost application.
