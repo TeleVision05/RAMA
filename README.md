@@ -16,10 +16,11 @@ characters (Rama, Sita, Lakshmana, sages, guards and villagers), from Quaternius
 lists each file with its source, author and licence.
 
 **Status (2026-11-13): release candidate, draft.** The quiet test gate (`tools/run_tests.sh`)
-runs 19 suites and all 19 passed on the last full run, including the four that need a
-renderer (they run off-screen on a Mac). The frame-time figures from that run were taken at
-a load average of 15 to 20, so treat them as indicative: mean 36 fps over six legs, worst leg
-(deep wood) 31 fps, village 38 fps; the gate is 20 fps. CI runs the 15 headless suites on every
+runs 20 suites and all 20 passed on the last full run, including the four that need a
+renderer (they run off-screen on a Mac). The frame-time figures from that run were taken on a
+development laptop that was in use (load average about 5), and they are CPU frame times (the GPU
+column reads 0 off-screen), so treat them as indicative: mean 41 fps over six legs, worst leg
+(deep wood) 38 fps, village 44 fps; the gate is 20 fps. CI runs the 16 headless suites on every
 push. See [ROADMAP.md](ROADMAP.md) for what is next.
 
 ---

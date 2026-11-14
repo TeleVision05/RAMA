@@ -42,7 +42,7 @@ the `scenes/qa3d_*.tscn` harnesses.
 |---|---|---|
 | vegetation | 3D leaves, grass ribbons, petals and palm pinnae are implemented but never rendered and inspected | `scripts/world/veg3d_leaf.gd`, `ground3d_flora.gd`, `tree_builder.gd`, `vegetation.gd`; harnesses `scenes/qa3d_edgeon.tscn`, `qa3d_cover.tscn`, `qa3d_world.tscn` |
 | performance | Villagers drop shadows beyond 25 m and are hidden beyond 90 m (`NPCLod`). From a fixed camera in the village the 14 villagers cost about 75 draw calls each without LOD and about 25 with it (village 2518-2788 draws without, 1813-2040 with, at the High tier, 2026-11-13, load average 16-47; draw counts do not depend on load). `perf` asserts a budget of 2300. Enemies have no distance LOD yet | `scripts/ai/npc_lod.gd`, `tests/perf_test.gd` |
-| performance | `perf` passes (2026-11-13: mean 36 fps, worst leg 31 fps, gate 20 fps) but was measured at a load average of 15 to 20, so the figures are indicative; a run on a quiet machine is still owed | `tools/run_tests.sh perf` |
+| performance | `perf` passes (2026-11-13: mean 41 fps, worst leg 38 fps, gate 20 fps; CPU frame times, the GPU column is 0 off-screen) but was measured at a load average of about 5 on a laptop in use, so the figures are indicative; a run on a quiet machine is still owed | `tools/run_tests.sh perf` |
 | rendering | A new game warms the shaders behind a loading screen (four views from the spawn point), which cut the worst frame in the first 30 s of play from 442-853 ms to 81-116 ms (three runs each, load average 16-47, so indicative). Regions the spawn view does not show (river, forest, shrine) can still hitch on first entry | `scripts/core/game.gd`, `tests/probes/first_30s_probe.gd` |
 | rendering | distant foliage billboards alpha-dither against the sky; the horizon ends at the world edge with no backdrop | `scripts/world/vegetation.gd` FAR LOD, `scripts/world/sky_system.gd` |
 | repo hygiene | 26 scripts are still over the 500-line house limit and are known debt (line counts on 2026-11-13): `quest/interactables.gd` 2545, `world/architecture.gd` 2278, `ai/enemy_types.gd` 1713, `quest/dialogue_data.gd` 1616, `ai/enemy.gd` 1550, `world/tree_builder.gd` 1486, `world/wildlife.gd` 1456, `ai/npc.gd` 1412, `ui/hud.gd` 1391, `world/vegetation.gd` 1227, `world/vfx.gd` 1143, `world/settlement.gd` 1142, `world/ground3d_flora.gd` 1066, `world/water.gd` 996, `ai/beast_rig.gd` 905, `quest/quest_system.gd` 879, `player/player.gd` 795, `ui/inventory_panel.gd` 784, `ai/creature_kit.gd` 782, `ai/npc_director.gd` 730, `ui/journal_panel.gd` 677, `quest/quest_data.gd` 606, `ui/dialogue_box.gd` 578, `ui/theme.gd` 551, `world/veg3d_leaf.gd` 534, `ai/enemy_director.gd` 514; and the test scripts `enemy_test.gd` 1231, `npc_test.gd` 1063, `quest_test.gd` 985, `ui_test.gd` 781. Split so far, each behind a golden-file test: `mesh_kit.gd` (now 6 files), `world_map.gd` (6 files), `proc_rig.gd` (6 files). `.gdlintrc` `max-file-lines` is 2550, just above the largest, and only goes down | `scripts/`, `.gdlintrc` |
@@ -60,7 +60,7 @@ the `scenes/qa3d_*.tscn` harnesses.
 - [ ] Run the full `tools/run_tests.sh` including `perf` on a quiet machine
 - [ ] Record the result and the renders in `DEVELOPMENT_LOG.md` §16 or a new section
 
-**Done when:** `tools/run_tests.sh` prints `== ALL PASS ==` with all 19 suites, and the
+**Done when:** `tools/run_tests.sh` prints `== ALL PASS ==` with all 20 suites, and the
 close-up PNGs are committed to the log entry with a one-line verdict each.
 
 ### M2 — Re-baseline performance and add character LOD
@@ -107,7 +107,7 @@ and `tests/acceptance_test.gd` has a checklist row for each new mechanic.
 - [ ] No script grows past its current size; new systems land under 500 lines
 - [ ] Delete `overhaul/3d-and-depth` once M1 confirms `main` is sound
 
-**Done when:** `tools/run_tests.sh` still runs 19 suites from their new location and
+**Done when:** `tools/run_tests.sh` still runs 20 suites from their new location and
 `git branch -a` shows only `main`.
 
 ## Won't do / out of scope
@@ -123,7 +123,7 @@ and `tests/acceptance_test.gd` has a checklist row for each new mechanic.
   touch them, not as a project of their own.
 - Exports for Windows or Linux. The only preset is macOS (`export_presets.cfg`, unsigned);
   the renderer is Forward+/Metal.
-- CI for the rendered suites. `.github/workflows/ci.yml` runs gdlint and the 15 headless
+- CI for the rendered suites. `.github/workflows/ci.yml` runs gdlint and the 16 headless
   suites on ubuntu-latest. `quests`, `perf`, `accept` and `ui` need the macOS embedded
   renderer and a GPU, so they run on the owner's Mac. Check with
   `tools/run_tests.sh --list`.
