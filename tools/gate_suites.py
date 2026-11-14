@@ -101,6 +101,8 @@ SUITES = [
     # A damaged save, a cut-off world cache and an unsupported renderer all end safely;
     # the loading screen's progress only moves forward.
     Suite("failsafe", "res://scenes/failsafe_test.tscn", "headless", 300),
+    # ProcRig builds and poses exactly as before (golden file; guards the proc_rig.gd split).
+    Suite("riggolden", "tests/proc_rig_golden_test.gd", "headless", 180),
     # A fresh bake still matches the golden figures (guards the world_map.gd split).
     Suite("mapgolden", "tests/world_map_golden_test.gd", "headless", 300),
     # Terrain builds from the baked map with its shader.
