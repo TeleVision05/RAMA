@@ -32,7 +32,7 @@ var _active: Array = []
 ## for every enemy: reading `global_position` off twenty-five nodes twenty-five times
 ## is 625 `get_global_transform` calls a pass, each of which can walk a dirty parent
 ## chain. Gathering them ONCE here makes that O(n) instead of O(n*n) and turns the
-## inner loops into flat array reads. Measured 2026-08-28 with `tests/enemy_prof.gd`.
+## inner loops into flat array reads. Measured 2026-08-28 with `tests/probes/enemy_prof.gd`.
 var _active_pos := PackedVector3Array()
 var _active_rad := PackedFloat32Array()
 var _ranked: Array = []

@@ -1,7 +1,7 @@
 extends SceneTree
 ## Isolates the hard straight seam that runs across the river in the low bank shots.
 ##
-##   ~/tools/Godot.app/Contents/MacOS/Godot --path . --script tests/probe_water_seam.gd
+##   ~/tools/Godot.app/Contents/MacOS/Godot --path . --script tests/probes/probe_water_seam.gd
 ##
 ## Four renders of ONE viewpoint, each killing a different suspect, so the seam can be
 ## attributed instead of guessed at:

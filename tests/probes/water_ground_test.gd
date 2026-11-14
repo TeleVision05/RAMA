@@ -1,7 +1,7 @@
 extends SceneTree
 ## GROUNDING AUDIT for RiverWater. Headless.
 ##
-##   tools/gd.sh test tests/water_ground_test.gd
+##   tools/gd.sh test tests/probes/water_ground_test.gd
 ##
 ## Everything this system places has to agree with WorldMap. Four independent checks,
 ## each of which can fail on its own:

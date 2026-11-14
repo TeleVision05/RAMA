@@ -11,7 +11,7 @@ extends SceneTree
 ## exactly what it did for its first two hundred and forty-four instances. _mm_usable()
 ## below refuses to report a MultiMesh result it cannot trust.
 ##
-## tests/qa_settle_ground.gd is the stricter successor: it also checks BURIAL, exempts
+## tests/probes/qa_settle_ground.gd is the stricter successor: it also checks BURIAL, exempts
 ## nothing by name, and resolves what is holding each object up.
 
 

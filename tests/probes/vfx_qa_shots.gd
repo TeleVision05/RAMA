@@ -3,7 +3,7 @@ extends Node
 ##
 ##   ~/tools/Godot.app/Contents/MacOS/Godot --path . res://scenes/vfx_qa_shots.tscn -- --only=a,b
 ##
-## Why this exists alongside tests/vfx_wildlife_test.gd: that harness builds a bare
+## Why this exists alongside tests/probes/vfx_wildlife_test.gd: that harness builds a bare
 ## WorldRoot and adds only VFX and Wildlife, so its twelve PNGs contain no trees, no
 ## huts, no shrine and NO WATER. Judging "does the mist read as mist lying on the
 ## river" against a picture with no river in it is not a judgement. This one boots the

@@ -429,7 +429,7 @@ var _blink_dir: float = 1.0
 # ===========================================================================
 ## What the head actually came out as, measured off the geometry.
 ##
-## This is a contract, not a debug aid: `tests/npc_test.gd` asserts on every number in
+## This is a contract, not a debug aid: `tests/probes/npc_test.gd` asserts on every number in
 ## it, because "they have faces now" has been wrong twice in this project — once with
 ## the features buried inside the skull, once with the hair cap sized so it drew
 ## entirely inside the head and left twelve villagers bald in seventeen screenshots

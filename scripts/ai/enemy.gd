@@ -108,7 +108,7 @@ var _grounded: bool = true
 ## time the body moves. On a frame slow enough to run three physics ticks that is
 ## three times the work for one drawn frame.
 ##
-## Measured 2026-08-28 with `tests/enemy_prof.gd` (25 enemies fighting, median of
+## Measured 2026-08-28 with `tests/probes/enemy_prof.gd` (25 enemies fighting, median of
 ## paired in-process differences): `_physics_process` cost 11.60 ms/frame while the
 ## GDScript inside it accounted for only ~5.5 ms. The rest was this.
 ##
@@ -348,7 +348,7 @@ func _physics_process(delta: float) -> void:
 	# away does not need its position integrated sixty times a second — the pose it is
 	# drawn with is only recomputed half that often anyway.
 	#
-	# Measured with `tests/enemy_prof.gd`, 25 enemies fighting, median of paired
+	# Measured with `tests/probes/enemy_prof.gd`, 25 enemies fighting, median of paired
 	# in-process differences (ARCHITECTURE.md's rule for frame cost): moving the back
 	# ranks to 30 Hz is the single largest saving in this loop, because `_motion` was
 	# the only thing in the file still running at the full tick rate for everybody.
@@ -972,7 +972,7 @@ const GROUND_GLUE := 0.10  # tolerance before it counts as airborne
 
 
 ## `global_position` is read ONCE into a local, integrated entirely in that local, and
-## written back ONCE. Measured 2026-08-28 with `tests/enemy_prof.gd`: the previous
+## written back ONCE. Measured 2026-08-28 with `tests/probes/enemy_prof.gd`: the previous
 ## version touched `global_position.x`, `.z` and `.y` as three separate property
 ## writes, and every one of them is a full `set_global_transform` that dirties the
 ## physics server AND every one of the ~30 mesh instances hanging off the rig. Three
@@ -1179,7 +1179,7 @@ func _steer(dt: float, want: Vector3) -> Vector3:
 		repel.append(dv.normalized() * (1.0 - dl / 2.4))
 
 	# Score the fan against the terrain first, WITHOUT touching the physics server.
-	# Three economies, all measured with `tests/enemy_prof.gd` on 2026-08-28 (25
+	# Three economies, all measured with `tests/probes/enemy_prof.gd` on 2026-08-28 (25
 	# enemies fighting, median of paired in-process differences):
 	#
 	#  * `slope_at` is four `height_at` calls behind a `normalized()`, and this loop

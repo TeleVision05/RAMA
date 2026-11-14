@@ -108,7 +108,7 @@ than assumed.
 ![The river road and the bridge](docs/media/river.jpg)
 ![A conversation with the village elder](docs/media/dialogue.jpg)
 
-Frames from the 2026-11-13 gameplay recording (`tests/showcase.gd`, rendered off-screen
+Frames from the 2026-11-13 gameplay recording (`tests/probes/showcase.gd`, rendered off-screen
 with Godot's movie writer). A short gameplay video is attached to the release.
 
 ## Download for macOS

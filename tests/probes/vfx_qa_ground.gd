@@ -6,7 +6,7 @@ extends SceneTree
 ## water_y_at and reports the worst offender by name. Nothing here is sampled - every
 ## instance is checked at every stop.
 ##
-##   ~/tools/Godot.app/Contents/MacOS/Godot --headless --path . --script tests/vfx_qa_ground.gd
+##   ~/tools/Godot.app/Contents/MacOS/Godot --headless --path . --script tests/probes/vfx_qa_ground.gd
 
 var fails := 0
 var worst := {}  # label -> [value, description]

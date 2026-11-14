@@ -3,7 +3,7 @@ extends SceneTree
 ## into it, walks the focus to each viewpoint, lets the simulation settle and writes a
 ## PNG per shot into build/screenshots/. Look at the PNGs; that is the point.
 ##
-##   ~/tools/Godot.app/Contents/MacOS/Godot --path . --script tests/vfx_wildlife_test.gd
+##   ~/tools/Godot.app/Contents/MacOS/Godot --path . --script tests/probes/vfx_wildlife_test.gd
 ##
 ## Not --headless: headless renders nothing and every image comes out empty.
 

@@ -1,4 +1,4 @@
 [gd_scene load_steps=2 format=3]
-[ext_resource type="Script" path="res://tests/rig_warm.gd" id="1"]
+[ext_resource type="Script" path="res://tests/probes/rig_warm.gd" id="1"]
 [node name="RigWarm" type="Node"]
 script = ExtResource("1")

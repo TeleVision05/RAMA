@@ -93,7 +93,7 @@ uniform float translucency : hint_range(0.0, 3.0) = 1.05;
 // where it is the only light the leaf has. The result is a canopy that renders BLACK
 // from underneath — which is the single commonest way the player sees foliage.
 //
-// Measured 2026-08-28 at the forest canopy_under framing (tests/qa_dark_ab.gd), median
+// Measured 2026-08-28 at the forest canopy_under framing (tests/probes/qa_dark_ab.gd), median
 // luminance over the non-sky pixels:
 //
 //   as shipped                    26.9   (36.7% of canopy pixels below luminance 10)

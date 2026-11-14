@@ -334,7 +334,7 @@ static func _build_rakshasa(kind: int, owner_node: Node3D, seed_v: int) -> Dicti
 ## (toe at +0.20 * foot) are all authored at positive Z. So a rakshasa charges you
 ## showing the back of its head, the back of its chest and the backs of its feet.
 ##
-## Measured 2026-08-28: `tests/enemy_test.gd` reports `eyes_at_camera` for every
+## Measured 2026-08-28: `tests/probes/enemy_test.gd` reports `eyes_at_camera` for every
 ## portrait, and before the head half of this fix it was -1.00 for all three humanoid
 ## archetypes while the Vyaghra (BeastRig, built to the right convention) was +1.00.
 ## The torso and foot half was found the same day from build/screenshots/creature_
@@ -733,7 +733,7 @@ static func _build_head_forms(rig: ProcRig, kind: int, seed_v: int, mats: Dictio
 		var px: float = sin(a) * dh * SKULL_HALFW * r
 		var py: float = (SKULL_MID + dy * (SKULL_TOP - SKULL_MID)) * r
 		var pz: float = -cos(a) * dh * absf(SKULL_FRONT) * r
-		# Never on the eye. `tests/qa_creature_probe.gd` fires a ray at each iris and
+		# Never on the eye. `tests/probes/qa_creature_probe.gd` fires a ray at each iris and
 		# names what it hits; on the champion it caught a wart sitting over the right
 		# one. A defect that only appears on SOME seeds is worse than one that appears
 		# on all of them, because the render you happen to take can miss it.
@@ -1323,7 +1323,7 @@ static func _archer_kit(rig: ProcRig, mats: Dictionary) -> void:
 	]
 	CreatureKit.solid(rig.chest, strap, mats.leather, "Strap")
 
-	# Chalk. It must not cross the EYE BAND, which `tests/qa_creature_probe.gd` measures
+	# Chalk. It must not cross the EYE BAND, which `tests/probes/qa_creature_probe.gd` measures
 	# at y 0.83..0.95 r: the first version was one band centred on y 1.00 r and its AABB
 	# came back at y 0.80..1.01 r, z -0.95..-0.76 r — spanning both eyes and 0.1 r in
 	# FRONT of them. The archer photographed with a blank pale plank where its face
@@ -1635,7 +1635,7 @@ static var last_eye_count: int = 0
 ## measured dimension. Couplings like that do not fail loudly — they silently stop
 ## matching, and the art regresses with every test still green. (That is exactly how
 ## the amber eye went missing for a whole art pass.) So each one records what it
-## found, and `tests/creature_shots.gd` prints the lot.
+## found, and `tests/probes/creature_shots.gd` prints the lot.
 static var build_audit: Dictionary = {}
 
 

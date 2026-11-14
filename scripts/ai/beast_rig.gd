@@ -243,7 +243,7 @@ func _build_ribcage(m_coat: Material, m_pale: Material) -> void:
 				# ellipsoid hung in the air ahead of the chest, between the forelegs and
 				# attached to nothing. Head-on it photographed as a white sac slung under
 				# the animal (build/screenshots/creature_vyaghra_head.png). Re-check with
-				# `tests/qa_creature_probe.gd` if the torso is ever re-dimensioned.
+				# `tests/probes/qa_creature_probe.gd` if the torso is ever re-dimensioned.
 				CreatureKit.part(
 					MeshKit.ovoid(0.084, 0.20, 0.5, 12, 7), Vector3(0, -0.128, -0.002), Vector3(PI * 0.5, 0, 0), Vector3(1.0, 1.0, 0.62)
 				),

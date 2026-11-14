@@ -435,7 +435,7 @@ static func _build_tuft(variant: int, lod: int) -> ArrayMesh:
 	# an LOD is for: keep the aggregate, drop the detail. At 7 m a blade is two pixels
 	# across and nobody can tell 22 mm from 33 mm, but they can tell grass from dirt.
 	#
-	# Measured 2026-08-28 with tests/qa3d_cover.gd, WITH the LAYER_FRAC rise in
+	# Measured 2026-08-28 with tests/probes/qa3d_cover.gd, WITH the LAYER_FRAC rise in
 	# vegetation.gd, as screen area the cover occupies in a meadow frame:
 	#     near 2 m  8.9 -> 9.8%     mid 12 m  8.9 -> 10.3%     far 30 m  10.4 -> 7.8%
 	# So this is a real but SMALL win, not the fix. Instances rose 39% for 13% more

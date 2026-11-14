@@ -43,11 +43,11 @@ the `scenes/qa3d_*.tscn` harnesses.
 | vegetation | 3D leaves, grass ribbons, petals and palm pinnae are implemented but never rendered and inspected | `scripts/world/veg3d_leaf.gd`, `ground3d_flora.gd`, `tree_builder.gd`, `vegetation.gd`; harnesses `scenes/qa3d_edgeon.tscn`, `qa3d_cover.tscn`, `qa3d_world.tscn` |
 | performance | Villagers drop shadows beyond 25 m and are hidden beyond 90 m (`NPCLod`). From a fixed camera in the village the 14 villagers cost about 75 draw calls each without LOD and about 25 with it (village 2518-2788 draws without, 1813-2040 with, at the High tier, 2026-11-13, load average 16-47; draw counts do not depend on load). `perf` asserts a budget of 2300. Enemies have no distance LOD yet | `scripts/ai/npc_lod.gd`, `tests/perf_test.gd` |
 | performance | `perf` passes (2026-11-13: mean 36 fps, worst leg 31 fps, gate 20 fps) but was measured at a load average of 15 to 20, so the figures are indicative; a run on a quiet machine is still owed | `tools/run_tests.sh perf` |
-| rendering | A new game warms the shaders behind a loading screen (four views from the spawn point), which cut the worst frame in the first 30 s of play from 442-853 ms to 81-116 ms (three runs each, load average 16-47, so indicative). Regions the spawn view does not show (river, forest, shrine) can still hitch on first entry | `scripts/core/game.gd`, `tests/first_30s_probe.gd` |
+| rendering | A new game warms the shaders behind a loading screen (four views from the spawn point), which cut the worst frame in the first 30 s of play from 442-853 ms to 81-116 ms (three runs each, load average 16-47, so indicative). Regions the spawn view does not show (river, forest, shrine) can still hitch on first entry | `scripts/core/game.gd`, `tests/probes/first_30s_probe.gd` |
 | rendering | distant foliage billboards alpha-dither against the sky; the horizon ends at the world edge with no backdrop | `scripts/world/vegetation.gd` FAR LOD, `scripts/world/sky_system.gd` |
 | repo hygiene | 26 scripts are still over the 500-line house limit and are known debt (line counts on 2026-11-13): `quest/interactables.gd` 2545, `world/architecture.gd` 2278, `ai/enemy_types.gd` 1713, `quest/dialogue_data.gd` 1616, `ai/enemy.gd` 1550, `world/tree_builder.gd` 1486, `world/wildlife.gd` 1456, `ai/npc.gd` 1412, `ui/hud.gd` 1391, `world/vegetation.gd` 1227, `world/vfx.gd` 1143, `world/settlement.gd` 1142, `world/ground3d_flora.gd` 1066, `world/water.gd` 996, `ai/beast_rig.gd` 905, `quest/quest_system.gd` 879, `player/player.gd` 795, `ui/inventory_panel.gd` 784, `ai/creature_kit.gd` 782, `ai/npc_director.gd` 730, `ui/journal_panel.gd` 677, `quest/quest_data.gd` 606, `ui/dialogue_box.gd` 578, `ui/theme.gd` 551, `world/veg3d_leaf.gd` 534, `ai/enemy_director.gd` 514; and the test scripts `enemy_test.gd` 1231, `npc_test.gd` 1063, `quest_test.gd` 985, `ui_test.gd` 781. Split so far, each behind a golden-file test: `mesh_kit.gd` (now 6 files), `world_map.gd` (6 files), `proc_rig.gd` (6 files). `.gdlintrc` `max-file-lines` is 2550, just above the largest, and only goes down | `scripts/`, `.gdlintrc` |
 | repo weight | about 165 MB of generated WAV and PNG are committed; history is not rewritten | owner decision |
-| repo hygiene | `tests/` holds 108 `.gd` files: the 19 gate suites alongside ~96 one-off probes and shot scripts (`_lodcount.gd`, `_prof2.gd`, `dhoti_probe.gd`, `facing_probe.gd`, …) with nothing marking which is which | `tests/`, `scenes/` |
+| repo hygiene | `tests/` holds the 20 gate suites (and `golden/`, `engine_repro/`); the 97 one-off probes and shot scripts (`_lodcount.gd`, `_prof2.gd`, `dhoti_probe.gd`, `facing_probe.gd`, …) live in `tests/probes/` (moved 2026-11-13). `scenes/qa_veg_split.tscn` still points at a script that does not exist (it did not before the move either) | `tests/`, `scenes/` |
 | branches | `overhaul/3d-and-depth` is redundant with `main` and its remote copy lacks `8a7bf4e` | `git branch -vv` |
 
 ## Milestones
@@ -64,7 +64,7 @@ the `scenes/qa3d_*.tscn` harnesses.
 close-up PNGs are committed to the log entry with a one-line verdict each.
 
 ### M2 — Re-baseline performance and add character LOD
-- [ ] Run `tests/perf_test.gd` and `tests/draw_audit.gd` with nothing else on the machine;
+- [ ] Run `tests/perf_test.gd` and `tests/probes/draw_audit.gd` with nothing else on the machine;
       write the numbers and the load average into the log
 - [ ] Distance LOD that swaps a character for one merged mesh past ~30 m (the trick already
       used for the settlement), for NPCs and enemies
@@ -79,7 +79,7 @@ log, and `draw_audit` shows the village character share below its ~450 baseline.
 - [ ] Contact shadows, terrain detail normals with slope-aware blending, better water,
       sun shafts, colour grading, better night — keeping the `Quality` tiers distinct
 
-**Done when:** `tests/flythrough.gd` re-renders its 10 viewpoints and each is committed
+**Done when:** `tests/probes/flythrough.gd` re-renders its 10 viewpoints and each is committed
 next to the previous render for comparison; `perf_test` still passes at every `Quality`
 tier.
 
@@ -88,7 +88,7 @@ tier.
       the camera the player actually sees (behind, walking away)
 - [ ] Close whatever the stopped QA agents left: hands, feet, faces, hair, cloth motion,
       distinct rakshasa silhouettes, better animals
-- [ ] Keep `tests/rig_test.gd`, `npc_test.gd`, `enemy_test.gd` green
+- [ ] Keep `tests/probes/rig_test.gd`, `npc_test.gd`, `enemy_test.gd` green
 
 **Done when:** each rendered sheet is in `build/screenshots/` with a verdict in the log,
 and `playtest` + `acceptance` pass.
@@ -102,8 +102,8 @@ and `playtest` + `acceptance` pass.
 and `tests/acceptance_test.gd` has a checklist row for each new mechanic.
 
 ### M6 — Repo hygiene
-- [ ] Separate the 19 gate suites from the one-off probes in `tests/` (subfolder or a
-      naming rule documented in `ARCHITECTURE.md`)
+- [x] Separate the gate suites from the one-off probes in `tests/` (probes are in
+      `tests/probes/`; the gate suites are listed in `tools/gate_suites.py`)
 - [ ] No script grows past its current size; new systems land under 500 lines
 - [ ] Delete `overhaul/3d-and-depth` once M1 confirms `main` is sound
 

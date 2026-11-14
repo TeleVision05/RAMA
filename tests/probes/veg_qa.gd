@@ -3,7 +3,7 @@ extends SceneTree
 ## itself: this walks the MultiMesh buffers that are actually uploaded for drawing and
 ## checks every visible instance against WorldMap.height_at.
 ##
-##   ~/tools/Godot.app/Contents/MacOS/Godot --headless --path . --script tests/veg_qa.gd
+##   ~/tools/Godot.app/Contents/MacOS/Godot --headless --path . --script tests/probes/veg_qa.gd
 ##
 ## Checks
 ##   1. GROUNDING   every drawn instance sits on the heightfield within tolerance

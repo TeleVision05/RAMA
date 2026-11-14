@@ -3,7 +3,7 @@ extends SceneTree
 ## the brief names. Ground-level shots are what decide whether the forest is dense and
 ## enclosing; the aerial and lookout shots decide whether it reads as a canopy.
 ##
-##   ~/tools/Godot.app/Contents/MacOS/Godot --path . --script tests/vegetation_test.gd
+##   ~/tools/Godot.app/Contents/MacOS/Godot --path . --script tests/probes/vegetation_test.gd
 ## (no --headless: headless renders nothing)
 
 const OUT := "res://build/screenshots/%s.png"

@@ -1,7 +1,7 @@
 extends SceneTree
 ## What the water system costs, measured rather than asserted.
 ##
-##   ~/tools/Godot.app/Contents/MacOS/Godot --path . --script tests/water_perf.gd
+##   ~/tools/Godot.app/Contents/MacOS/Godot --path . --script tests/probes/water_perf.gd
 ##
 ## (windowed, NOT --headless: a headless run renders nothing and every frame time is the
 ## cost of an empty loop.)

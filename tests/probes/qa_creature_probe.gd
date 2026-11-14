@@ -8,7 +8,7 @@ extends SceneTree
 ##
 ## A face that photographs as a blank plank is not a lighting problem, and squinting at
 ## a PNG cannot tell you which of eleven meshes is the plank. This can.
-##   ~/tools/Godot.app/Contents/MacOS/Godot --headless --path . --script tests/qa_creature_probe.gd
+##   ~/tools/Godot.app/Contents/MacOS/Godot --headless --path . --script tests/probes/qa_creature_probe.gd
 
 const KINDS := [EnemyTypes.Kind.WARRIOR, EnemyTypes.Kind.ARCHER, EnemyTypes.Kind.ELITE]
 

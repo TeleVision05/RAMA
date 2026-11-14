@@ -3,7 +3,7 @@ extends SceneTree
 ## world around them. This is the fast loop: it renders in a couple of seconds, so the
 ## geometry can be judged and fixed before anything is measured in the real game.
 ##
-##   ~/tools/Godot.app/Contents/MacOS/Godot --path . --script tests/ground3d_gallery.gd
+##   ~/tools/Godot.app/Contents/MacOS/Godot --path . --script tests/probes/ground3d_gallery.gd
 ## (no --headless: headless renders nothing)
 
 const OUT := "res://build/screenshots/%s.png"

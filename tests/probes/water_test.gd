@@ -3,7 +3,7 @@ extends SceneTree
 ## generated geometry numerically, then renders the named viewpoints so the result can
 ## actually be LOOKED at.
 ##
-##   ~/tools/Godot.app/Contents/MacOS/Godot --path . --script tests/water_test.gd
+##   ~/tools/Godot.app/Contents/MacOS/Godot --path . --script tests/probes/water_test.gd
 ##
 ## (no --headless: headless renders an empty image)
 

@@ -6,7 +6,7 @@ extends Node
 ## while this is being measured, so a before/after across two builds says nothing about
 ## this layer. The cover is toggled on and off every few frames at one viewpoint and the
 ## MEDIAN of the paired differences is reported. A mean is still dragged around by a
-## single streaming hitch. See tests/ui_qa_perf.gd for the worked example this follows.
+## single streaming hitch. See tests/probes/ui_qa_perf.gd for the worked example this follows.
 
 const SPOTS := [
 	["village meadow", Vector2(-150, 80)],

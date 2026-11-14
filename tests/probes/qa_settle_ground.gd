@@ -4,7 +4,7 @@ extends SceneTree
 ## MUST BE RUN WINDOWED (no --headless). The headless dummy RenderingServer discards
 ## MultiMesh instance buffers: get_instance_transform() returns identity for every
 ## instance and multimesh.buffer is empty, so any headless audit of a MultiMesh is
-## vacuously green. tests/settle_audit.gd is headless and therefore never checked a
+## vacuously green. tests/probes/settle_audit.gd is headless and therefore never checked a
 ## single one of the 250-odd scattered props.
 ##
 ## What this checks, per PLACED OBJECT (a direct child of Settlement, taking the union

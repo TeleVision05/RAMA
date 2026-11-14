@@ -81,7 +81,7 @@ First version had a barrel torso; rebuilt as a lofted elliptical ribcage. Skin s
 its whole texture once per limb, which read as wood grain — fixed with UV scale.
 
 `MeshKit` provides the primitives (loft, profile loft, limb, ovoid, boulder…), all
-tangent-generating and clockwise-wound, with `tests/meshkit_test.gd` rendering them to
+tangent-generating and clockwise-wound, with `tests/probes/meshkit_test.gd` rendering them to
 prove the winding rather than trusting the derivation.
 
 ## 6. Gameplay
@@ -224,7 +224,7 @@ the joints stay separate. **1246 draws -> 1014**, and 66 nodes per character -> 
 
 ## 10. What the camera taught us
 
-`tests/framing_test.gd` projects Rama's head and feet to screen space and raycasts from
+`tests/probes/framing_test.gd` projects Rama's head and feet to screen space and raycasts from
 the camera to him. It caught something no frame-rate number would have: **a tree trunk
 sitting exactly between the camera and the player.** Trees, huts and boulders had no
 collision at all, so the spring arm passed straight through them — and the player could
@@ -409,7 +409,7 @@ on 1813-2040. About 75 draws per villager without, 25 with.
 
 **Loading screen and warm-up.** The bake reports progress by phase and a new game shows
 `LoadingScreen` while it builds, then looks round four ways behind the screen. Worst frame in
-the first 30 s of a sprint through village, river road and shrine (`tests/first_30s_probe.gd`,
+the first 30 s of a sprint through village, river road and shrine (`tests/probes/first_30s_probe.gd`,
 three runs each, load 16 to 47, so indicative): 442, 559, 853 ms without; 81, 93, 116 ms with.
 
 **Failure paths.** Damaged or wrong-shaped saves are refused before they touch the game state

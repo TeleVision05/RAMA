@@ -1,7 +1,7 @@
 extends SceneTree
 ## QA PERFORMANCE, isolated. Terrain + sky + Settlement and nothing else.
 ##
-## The full-game harness (tests/qa_settle_perf.gd) is the number that matters, but its
+## The full-game harness (tests/probes/qa_settle_perf.gd) is the number that matters, but its
 ## baseline frame carries vegetation, wildlife, VFX, water and the NPC directors, and on
 ## a machine running several other Godot sessions the variance of all that is larger
 ## than the effect being measured. Here the frame contains only the terrain and this

@@ -4,7 +4,7 @@ extends SceneTree
 ## response actually fires, that the night-only effects are night-only, and that the
 ## triangle budget is what the header claims.
 ##
-##   tools/gd.sh test tests/vfx_wildlife_headless.gd
+##   tools/gd.sh test tests/probes/vfx_wildlife_headless.gd
 
 var fails := 0
 

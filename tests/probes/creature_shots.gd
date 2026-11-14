@@ -1,7 +1,7 @@
 extends SceneTree
 ## Studio harness for the rakshasas and the vyaghra.
 ##
-## `tests/enemy_shots.gd` photographs them in the village, which is where they are
+## `tests/probes/enemy_shots.gd` photographs them in the village, which is where they are
 ## finally judged but a slow and noisy loop: it boots a whole session, the sun moves,
 ## the grass is taller than the tiger and one of the four frames it produced was the
 ## death screen. This renders the same four archetypes in a controlled studio so the
@@ -9,7 +9,7 @@ extends SceneTree
 ## beast mid-stride from the side.
 ##
 ## Run it as a WINDOWED script (no --headless): the dummy renderer saves black PNGs.
-##   ~/tools/Godot.app/Contents/MacOS/Godot --path . --script tests/creature_shots.gd
+##   ~/tools/Godot.app/Contents/MacOS/Godot --path . --script tests/probes/creature_shots.gd
 ## Optional user args after `--`: a shot name to render only that one.
 
 const OUT := "res://build/screenshots/creature_%s.png"

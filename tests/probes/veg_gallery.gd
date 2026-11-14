@@ -3,7 +3,7 @@ extends SceneTree
 ## the row at each LOD, then close-ups. This is the fast loop for judging SILHOUETTE and
 ## MATERIAL — the world flythrough is for judging density and placement.
 ##
-##   ~/tools/Godot.app/Contents/MacOS/Godot --path . --script tests/veg_gallery.gd
+##   ~/tools/Godot.app/Contents/MacOS/Godot --path . --script tests/probes/veg_gallery.gd
 ## (no --headless: headless renders nothing)
 
 const OUT := "res://build/screenshots/%s.png"

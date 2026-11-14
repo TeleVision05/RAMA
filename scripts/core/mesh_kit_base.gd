@@ -8,7 +8,7 @@ extends RefCounted
 ## WINDING: Godot treats CLOCKWISE as front-facing. Concretely, for a triangle
 ## (P0, P1, P2) to be visible from direction N, `cross(P1-P0, P2-P0)` must point
 ## AWAY from the viewer, i.e. equal -N. Every helper here follows that, and
-## tests/meshkit_test.gd renders them to prove it rather than trusting the derivation.
+## tests/probes/meshkit_test.gd renders them to prove it rather than trusting the derivation.
 
 ## Generated meshes are pure functions of their arguments, so they are memoised.
 ## Building one ProcRig means generating ~40 meshes; with 26 enemies and 12 villagers

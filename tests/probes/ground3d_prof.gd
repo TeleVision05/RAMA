@@ -16,7 +16,7 @@ func _init() -> void:
 	var t1 := Time.get_ticks_usec()
 	print("sample_grid   %6.2f ms  (%d nodes)" % [(t1 - t0) / 1000.0, g.size()])
 
-	# Mirror tests/vegetation_test.gd: thirteen IMMEDIATE full-window builds scattered
+	# Mirror tests/probes/vegetation_test.gd: thirteen IMMEDIATE full-window builds scattered
 	# across the map first, then the walk. The walk was measured at 73 ms a step there
 	# and 3.6 ms here, and the only difference is this preamble.
 	for s in [
