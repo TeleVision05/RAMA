@@ -83,6 +83,8 @@ Across a 768 × 768 m hand-composed valley spanning the **Godavari**, **Panchava
 4. **Kishkindha Kanda — *Hanuman & The Seven Sala Trees***: Meet **Mahavira Hanuman** (wielding his golden *Gada*) on the Rishyamukha crag and pierce all seven trunks of the **Sapta Tala** with a single wind-infused arrow.
 5. **Yuddha Kanda — *Aditya Hridayam & The Fall of Ravana***: Receive the **Akshaya Tunira** (inexhaustible quiver) and **Brahmastra** from **Sage Agastya**, chant the *Aditya Hridayam* at the **Surya Altar**, consecrate the floating **Rama Setu Stone**, and vanquishthe ten-headed **Dasagriva Ravana** and **Kumbhakarna** in the Southern Badlands.
 
+In the current build the quests tell how Rama receives each Divya Astra but do not gate them: all five are selectable with `1` – `5` from the start, each costing its Prana (0, 18, 18, 20 and 40), and a shot with too little Prana falls back to the standard *Shara*.
+
 Alongside the Five Kandas, the three village quests (**The Path Through the Forest**,
 **The Forgotten Shrine**, and **Into the Wild**), 18 scheduled NPCs (12 villagers + 6
 Ramayana companions), and 10 discoverable landmarks bring the valley to life.
