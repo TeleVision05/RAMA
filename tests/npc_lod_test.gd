@@ -54,15 +54,15 @@ func _check_thresholds(fails: Array[String]) -> void:
 	var L := NPCLod.Level
 	var cases := [
 		[10.0, L.NEAR, L.NEAR],
-		[44.0, L.NEAR, L.NEAR],
-		[46.0, L.NEAR, L.MID],
+		[24.0, L.NEAR, L.NEAR],
+		[26.0, L.NEAR, L.MID],
 		[89.0, L.MID, L.MID],
 		[91.0, L.MID, L.FAR],
 		[300.0, L.NEAR, L.FAR],
-		# Margin: already MID at 41 m stays MID (45 - 6 = 39); NEAR at 41 m stays NEAR.
-		[41.0, L.MID, L.MID],
-		[41.0, L.NEAR, L.NEAR],
-		[38.0, L.MID, L.NEAR],
+		# Margin: already MID at 21 m stays MID (25 - 6 = 19); NEAR at 21 m stays NEAR.
+		[21.0, L.MID, L.MID],
+		[21.0, L.NEAR, L.NEAR],
+		[18.0, L.MID, L.NEAR],
 		# Already FAR at 85 m stays FAR (90 - 6 = 84); MID at 85 m stays MID.
 		[85.0, L.FAR, L.FAR],
 		[85.0, L.MID, L.MID],

@@ -7,7 +7,14 @@ extends Node
 ## Each leg is also warmed up first, because the first pass through a region pays
 ## one-off shader compilation that a player pays once at load, not every frame.
 
+## What the village may cost from either camera in `_village_draws`, with villager level of
+## detail on (measured 1872 to 2040 over two runs, so about 12 per cent headroom), and the
+## most the level of detail may leave of the cost without it (measured 72 to 74 per cent).
+const VILLAGE_DRAW_BUDGET := 2300
+const VILLAGE_LOD_MAX_SHARE := 0.85
+
 var game: Game
+var _village_fails: Array[String] = []
 
 
 func _ready() -> void:
@@ -50,6 +57,10 @@ func _run() -> void:
 	var vp := get_viewport().get_viewport_rid()
 	RenderingServer.viewport_set_measure_render_time(vp, true)
 	print("warm-up done")
+	await _village_draws()
+	if OS.get_cmdline_user_args().has("--village-only"):
+		_finish_village_only()
+		return
 
 	var legs := [
 		["village", Vector2(-140, 60), Vector2(-96, 30)],
@@ -136,6 +147,74 @@ func _run() -> void:
 			% ["met" if worst < 16.7 else "not met", "met" if worst < 33.3 else "not met", "met" if worst < 50.0 else "NOT MET"]
 		)
 	)
-	var ok: bool = worst < 50.0
-	print("RESULT: " + ("PASS" if ok else "FAIL (a leg averaged under 20 fps — not playable)"))
+	var ok: bool = worst < 50.0 and _village_fails.is_empty()
+	for f in _village_fails:
+		print("  ! " + f)
+	print("RESULT: " + ("PASS" if ok else "FAIL (a leg averaged under 20 fps, or the village is over its draw budget)"))
 	get_tree().quit(0 if ok else 1)
+
+
+## Draw calls in the village from two fixed cameras (6 m up, 40 m south and 55 m east of
+## the square, looking at it), with the villagers hidden, drawn without level of detail,
+## and drawn with it. Draw counts do not depend on machine load, so they are asserted.
+## Measured 2026-11-13 at the High tier, two runs: hidden 1481 to 1662, off 2518 to 2788,
+## on 1813 to 2040, so the 14 villagers cost about 75 draws each without level of detail
+## and about 25 with it.
+func _village_draws() -> void:
+	var p := game.player
+	var v := Vector2(WorldMap.P_VILLAGE.x, WorldMap.P_VILLAGE.y)
+	var vg: float = game.world.map.height_at(v.x, v.y)
+	print("village draw calls (counts do not depend on machine load)")
+	for spot in [["from the south", Vector2(0.0, 40.0)], ["from the east", Vector2(55.0, 0.0)]]:
+		var q: Vector2 = v + (spot[1] as Vector2)
+		p.global_position = Vector3(q.x, game.world.map.height_at(q.x, q.y) + 0.2, q.y)
+		game.world.terrain.update_focus(p.global_position, true)
+		var cam := Camera3D.new()
+		add_child(cam)
+		cam.global_position = Vector3(q.x, game.world.map.height_at(q.x, q.y) + 6.0, q.y)
+		cam.look_at(Vector3(v.x, vg + 2.0, v.y))
+		cam.current = true
+		for w in range(90):
+			await get_tree().process_frame
+		var hidden := await _avg_draws(false, true)
+		var off := await _avg_draws(false, false)
+		var on := await _avg_draws(true, false)
+		print("  %-15s villagers hidden %5.0f   lod off %5.0f   lod on %5.0f   (near/mid/far %s)" % [spot[0], hidden, off, on, _lod_census()])
+		if on > off * VILLAGE_LOD_MAX_SHARE:
+			_village_fails.append("%s: level of detail saved too little (%.0f draws on, %.0f off)" % [spot[0], on, off])
+		if on > VILLAGE_DRAW_BUDGET:
+			_village_fails.append("%s: %.0f draw calls is over the village budget of %d" % [spot[0], on, VILLAGE_DRAW_BUDGET])
+		cam.queue_free()
+	game.cam.camera().current = true
+	NPCLod.enabled = true
+	for n in get_tree().get_nodes_in_group("npc"):
+		(n as NPC).visible = (n as NPC).is_active()
+
+
+func _avg_draws(lod_on: bool, hide_villagers: bool) -> float:
+	NPCLod.enabled = lod_on
+	for n in get_tree().get_nodes_in_group("npc"):
+		(n as NPC).visible = not hide_villagers
+	# The director re-evaluates levels four times a second; give it several passes.
+	for i in range(60):
+		await get_tree().process_frame
+	var acc := 0.0
+	for i in range(20):
+		await get_tree().process_frame
+		acc += Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)
+	return acc / 20.0
+
+
+func _lod_census() -> String:
+	var c := [0, 0, 0]
+	for n in get_tree().get_nodes_in_group("npc"):
+		if n is NPC and (n as NPC).is_active():
+			c[(n as NPC).lod] += 1
+	return "%d/%d/%d" % c
+
+
+func _finish_village_only() -> void:
+	for f in _village_fails:
+		print("  ! " + f)
+	print("RESULT: " + ("PASS" if _village_fails.is_empty() else "FAIL (village draw budget)"))
+	get_tree().quit(0 if _village_fails.is_empty() else 1)

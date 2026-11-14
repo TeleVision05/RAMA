@@ -9,7 +9,7 @@ extends RefCounted
 ## animation updates; one 100 m away is not drawn or animated at all. Streaming (120 m
 ## in, 138 m out) is unchanged.
 ##
-## NEAR   inside MID_IN     full detail, every frame
+## NEAR   inside MID_IN     full detail, every frame (25 m is conversation and close-up range)
 ## MID    MID_IN..FAR_IN    no shadow, pose updated every MID_EVERY-th tick
 ## FAR    beyond FAR_IN     hidden, not animated
 ##
@@ -18,14 +18,20 @@ extends RefCounted
 
 enum Level { NEAR, MID, FAR }
 
-const MID_IN := 45.0
+const MID_IN := 25.0
 const FAR_IN := 90.0
 const HYST := 6.0
 const MID_EVERY := 3
 
+## Off switch for measuring: the perf suite turns it off to count the draw calls the
+## village costs without level of detail. Always on in the game.
+static var enabled: bool = true
+
 
 ## The level for a villager `d` metres away, given the level it has now.
 static func level_for(d: float, current: int) -> int:
+	if not enabled:
+		return Level.NEAR
 	var mid_in := MID_IN - (HYST if current >= Level.MID else 0.0)
 	var far_in := FAR_IN - (HYST if current >= Level.FAR else 0.0)
 	if d >= far_in:
